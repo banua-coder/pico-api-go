@@ -1,0 +1,768 @@
+{
+    "schemes": [
+        "https",
+        "http"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central Sulawesi), with additional national and provincial data for context. Features enhanced ODP/PDP grouping and hybrid pagination.",
+        "title": "Sulawesi Tengah COVID-19 Data API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "url": "https://github.com/banua-coder/pico-api-go",
+            "email": "support@banuacoder.com"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
+        "version": "2.0.2"
+    },
+    "host": "pico-api.banuacoder.com",
+    "basePath": "/api/v1",
+    "paths": {
+        "/": {
+            "get": {
+                "description": "Get a list of all available API endpoints with descriptions",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "API endpoint index",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/handler.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "description": "Check API health status and database connectivity",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "API is healthy",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/handler.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "503": {
+                        "description": "API is degraded (database issues)",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/handler.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/national": {
+            "get": {
+                "description": "Retrieve national COVID-19 cases data with optional date range filtering",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "national"
+                ],
+                "summary": "Get national COVID-19 cases",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start date (YYYY-MM-DD)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date (YYYY-MM-DD)",
+                        "name": "end_date",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/handler.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/models.NationalCaseResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/national/latest": {
+            "get": {
+                "description": "Retrieve the most recent national COVID-19 case data",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "national"
+                ],
+                "summary": "Get latest national COVID-19 case",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/handler.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.NationalCaseResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/provinces": {
+            "get": {
+                "description": "Retrieve all provinces with their latest COVID-19 case data by default. Use exclude_latest_case=true for basic province list only.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "provinces"
+                ],
+                "summary": "Get provinces with COVID-19 data",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "Exclude latest case data (default: false)",
+                        "name": "exclude_latest_case",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Basic province list when exclude_latest_case=true",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/handler.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/models.Province"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/provinces/cases": {
+            "get": {
+                "description": "Retrieve COVID-19 cases for all provinces or a specific province with hybrid pagination support",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "province-cases"
+                ],
+                "summary": "Get province COVID-19 cases",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Records per page (default: 50, max: 1000)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Records to skip (default: 0)",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Return all data without pagination",
+                        "name": "all",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start date (YYYY-MM-DD)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date (YYYY-MM-DD)",
+                        "name": "end_date",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "All data response when all=true",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/handler.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/models.ProvinceCaseResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/provinces/{provinceId}/cases": {
+            "get": {
+                "description": "Retrieve COVID-19 cases for all provinces or a specific province with hybrid pagination support",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "province-cases"
+                ],
+                "summary": "Get province COVID-19 cases",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Province ID (e.g., '31' for Jakarta)",
+                        "name": "provinceId",
+                        "in": "path"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Records per page (default: 50, max: 1000)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Records to skip (default: 0)",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Return all data without pagination",
+                        "name": "all",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start date (YYYY-MM-DD)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date (YYYY-MM-DD)",
+                        "name": "end_date",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "All data response when all=true",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/handler.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/models.ProvinceCaseResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "handler.Response": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "error": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.CasePercentages": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "number"
+                },
+                "deceased": {
+                    "type": "number"
+                },
+                "recovered": {
+                    "type": "number"
+                }
+            }
+        },
+        "models.CumulativeCases": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "integer"
+                },
+                "deceased": {
+                    "type": "integer"
+                },
+                "positive": {
+                    "type": "integer"
+                },
+                "recovered": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.DailyCases": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "integer"
+                },
+                "deceased": {
+                    "type": "integer"
+                },
+                "positive": {
+                    "type": "integer"
+                },
+                "recovered": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.DailyObservationData": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "integer"
+                },
+                "finished": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.DailySupervisionData": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "integer"
+                },
+                "finished": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.NationalCaseResponse": {
+            "type": "object",
+            "properties": {
+                "cumulative": {
+                    "$ref": "#/definitions/models.CumulativeCases"
+                },
+                "daily": {
+                    "$ref": "#/definitions/models.DailyCases"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "day": {
+                    "type": "integer"
+                },
+                "statistics": {
+                    "$ref": "#/definitions/models.NationalCaseStatistics"
+                }
+            }
+        },
+        "models.NationalCaseStatistics": {
+            "type": "object",
+            "properties": {
+                "percentages": {
+                    "$ref": "#/definitions/models.CasePercentages"
+                },
+                "reproduction_rate": {
+                    "$ref": "#/definitions/models.ReproductionRate"
+                }
+            }
+        },
+        "models.ObservationData": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "integer"
+                },
+                "finished": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.PaginatedResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "pagination": {
+                    "$ref": "#/definitions/models.PaginationMeta"
+                }
+            }
+        },
+        "models.PaginationMeta": {
+            "type": "object",
+            "properties": {
+                "has_next": {
+                    "type": "boolean"
+                },
+                "has_prev": {
+                    "type": "boolean"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.Province": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ProvinceCaseResponse": {
+            "type": "object",
+            "properties": {
+                "cumulative": {
+                    "$ref": "#/definitions/models.ProvinceCumulativeCases"
+                },
+                "daily": {
+                    "$ref": "#/definitions/models.ProvinceDailyCases"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "day": {
+                    "type": "integer"
+                },
+                "province": {
+                    "$ref": "#/definitions/models.Province"
+                },
+                "statistics": {
+                    "$ref": "#/definitions/models.ProvinceCaseStatistics"
+                }
+            }
+        },
+        "models.ProvinceCaseStatistics": {
+            "type": "object",
+            "properties": {
+                "percentages": {
+                    "$ref": "#/definitions/models.CasePercentages"
+                },
+                "reproduction_rate": {
+                    "$ref": "#/definitions/models.ReproductionRate"
+                }
+            }
+        },
+        "models.ProvinceCumulativeCases": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "integer"
+                },
+                "deceased": {
+                    "type": "integer"
+                },
+                "odp": {
+                    "$ref": "#/definitions/models.ObservationData"
+                },
+                "pdp": {
+                    "$ref": "#/definitions/models.SupervisionData"
+                },
+                "positive": {
+                    "type": "integer"
+                },
+                "recovered": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.ProvinceDailyCases": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "integer"
+                },
+                "deceased": {
+                    "type": "integer"
+                },
+                "odp": {
+                    "$ref": "#/definitions/models.DailyObservationData"
+                },
+                "pdp": {
+                    "$ref": "#/definitions/models.DailySupervisionData"
+                },
+                "positive": {
+                    "type": "integer"
+                },
+                "recovered": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.ProvinceWithLatestCase": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "latest_case": {
+                    "$ref": "#/definitions/models.ProvinceCaseResponse"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ReproductionRate": {
+            "type": "object",
+            "properties": {
+                "lower_bound": {
+                    "type": "number"
+                },
+                "upper_bound": {
+                    "type": "number"
+                },
+                "value": {
+                    "type": "number"
+                }
+            }
+        },
+        "models.SupervisionData": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "integer"
+                },
+                "finished": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "description": "Health check operations",
+            "name": "health"
+        },
+        {
+            "description": "National COVID-19 case operations (for context)",
+            "name": "national"
+        },
+        {
+            "description": "Province information and COVID-19 case operations (focus on Sulawesi Tengah)",
+            "name": "provinces"
+        },
+        {
+            "description": "Province-level COVID-19 case data with pagination support",
+            "name": "province-cases"
+        }
+    ]
+}

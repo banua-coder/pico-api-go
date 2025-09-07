@@ -42,6 +42,11 @@ func (m *MockCovidService) GetProvinces() ([]models.Province, error) {
 	return args.Get(0).([]models.Province), args.Error(1)
 }
 
+func (m *MockCovidService) GetProvincesWithLatestCase() ([]models.ProvinceWithLatestCase, error) {
+	args := m.Called()
+	return args.Get(0).([]models.ProvinceWithLatestCase), args.Error(1)
+}
+
 func (m *MockCovidService) GetProvinceCases(provinceID string) ([]models.ProvinceCaseWithDate, error) {
 	args := m.Called(provinceID)
 	return args.Get(0).([]models.ProvinceCaseWithDate), args.Error(1)
@@ -60,6 +65,27 @@ func (m *MockCovidService) GetAllProvinceCases() ([]models.ProvinceCaseWithDate,
 func (m *MockCovidService) GetAllProvinceCasesByDateRange(startDate, endDate string) ([]models.ProvinceCaseWithDate, error) {
 	args := m.Called(startDate, endDate)
 	return args.Get(0).([]models.ProvinceCaseWithDate), args.Error(1)
+}
+
+// Paginated methods
+func (m *MockCovidService) GetProvinceCasesPaginated(provinceID string, limit, offset int) ([]models.ProvinceCaseWithDate, int, error) {
+	args := m.Called(provinceID, limit, offset)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Int(1), args.Error(2)
+}
+
+func (m *MockCovidService) GetProvinceCasesByDateRangePaginated(provinceID, startDate, endDate string, limit, offset int) ([]models.ProvinceCaseWithDate, int, error) {
+	args := m.Called(provinceID, startDate, endDate, limit, offset)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Int(1), args.Error(2)
+}
+
+func (m *MockCovidService) GetAllProvinceCasesPaginated(limit, offset int) ([]models.ProvinceCaseWithDate, int, error) {
+	args := m.Called(limit, offset)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Int(1), args.Error(2)
+}
+
+func (m *MockCovidService) GetAllProvinceCasesByDateRangePaginated(startDate, endDate string, limit, offset int) ([]models.ProvinceCaseWithDate, int, error) {
+	args := m.Called(startDate, endDate, limit, offset)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Int(1), args.Error(2)
 }
 
 func TestCovidHandler_GetNationalCases(t *testing.T) {
@@ -188,12 +214,28 @@ func TestCovidHandler_GetProvinces(t *testing.T) {
 	mockService := new(MockCovidService)
 	handler := NewCovidHandler(mockService, nil)
 
-	expectedProvinces := []models.Province{
-		{ID: "11", Name: "Aceh"},
-		{ID: "31", Name: "DKI Jakarta"},
+	expectedProvinces := []models.ProvinceWithLatestCase{
+		{
+			Province: models.Province{ID: "11", Name: "Aceh"},
+			LatestCase: &models.ProvinceCaseResponse{
+				Day: 100,
+				Daily: models.ProvinceDailyCases{
+					Positive: 10,
+				},
+			},
+		},
+		{
+			Province: models.Province{ID: "31", Name: "DKI Jakarta"},
+			LatestCase: &models.ProvinceCaseResponse{
+				Day: 101,
+				Daily: models.ProvinceDailyCases{
+					Positive: 25,
+				},
+			},
+		},
 	}
 
-	mockService.On("GetProvinces").Return(expectedProvinces, nil)
+	mockService.On("GetProvincesWithLatestCase").Return(expectedProvinces, nil)
 
 	req, err := http.NewRequest("GET", "/api/v1/provinces", nil)
 	assert.NoError(t, err)
@@ -211,15 +253,16 @@ func TestCovidHandler_GetProvinces(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
-func TestCovidHandler_GetProvinceCases_AllProvinces(t *testing.T) {
+func TestCovidHandler_GetProvinceCases_AllProvinces_Paginated(t *testing.T) {
 	mockService := new(MockCovidService)
 	handler := NewCovidHandler(mockService, nil)
 
 	expectedCases := []models.ProvinceCaseWithDate{
 		{ProvinceCase: models.ProvinceCase{ID: 1, ProvinceID: "11", Positive: 50}},
 	}
+	expectedTotal := 100
 
-	mockService.On("GetAllProvinceCases").Return(expectedCases, nil)
+	mockService.On("GetAllProvinceCasesPaginated", 50, 0).Return(expectedCases, expectedTotal, nil)
 
 	req, err := http.NewRequest("GET", "/api/v1/provinces/cases", nil)
 	assert.NoError(t, err)
@@ -234,18 +277,34 @@ func TestCovidHandler_GetProvinceCases_AllProvinces(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "success", response.Status)
 
+	// Verify paginated response structure
+	paginatedData, ok := response.Data.(map[string]interface{})
+	assert.True(t, ok)
+	assert.Contains(t, paginatedData, "data")
+	assert.Contains(t, paginatedData, "pagination")
+
+	pagination, ok := paginatedData["pagination"].(map[string]interface{})
+	assert.True(t, ok)
+	assert.Equal(t, float64(50), pagination["limit"])
+	assert.Equal(t, float64(0), pagination["offset"])
+	assert.Equal(t, float64(100), pagination["total"])
+	assert.Equal(t, float64(1), pagination["page"])
+	assert.Equal(t, true, pagination["has_next"])
+	assert.Equal(t, false, pagination["has_prev"])
+
 	mockService.AssertExpectations(t)
 }
 
-func TestCovidHandler_GetProvinceCases_SpecificProvince(t *testing.T) {
+func TestCovidHandler_GetProvinceCases_SpecificProvince_Paginated(t *testing.T) {
 	mockService := new(MockCovidService)
 	handler := NewCovidHandler(mockService, nil)
 
 	expectedCases := []models.ProvinceCaseWithDate{
 		{ProvinceCase: models.ProvinceCase{ID: 1, ProvinceID: "11", Positive: 50}},
 	}
+	expectedTotal := 50
 
-	mockService.On("GetProvinceCases", "11").Return(expectedCases, nil)
+	mockService.On("GetProvinceCasesPaginated", "11", 50, 0).Return(expectedCases, expectedTotal, nil)
 
 	req, err := http.NewRequest("GET", "/api/v1/provinces/11/cases", nil)
 	assert.NoError(t, err)
@@ -262,7 +321,248 @@ func TestCovidHandler_GetProvinceCases_SpecificProvince(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "success", response.Status)
 
+	// Verify paginated response structure
+	paginatedData, ok := response.Data.(map[string]interface{})
+	assert.True(t, ok)
+	assert.Contains(t, paginatedData, "data")
+	assert.Contains(t, paginatedData, "pagination")
+
 	mockService.AssertExpectations(t)
+}
+
+func TestCovidHandler_GetProvinceCases_AllData(t *testing.T) {
+	mockService := new(MockCovidService)
+	handler := NewCovidHandler(mockService, nil)
+
+	expectedCases := []models.ProvinceCaseWithDate{
+		{ProvinceCase: models.ProvinceCase{ID: 1, ProvinceID: "11", Positive: 50}},
+		{ProvinceCase: models.ProvinceCase{ID: 2, ProvinceID: "31", Positive: 100}},
+	}
+
+	mockService.On("GetAllProvinceCases").Return(expectedCases, nil)
+
+	req, err := http.NewRequest("GET", "/api/v1/provinces/cases?all=true", nil)
+	assert.NoError(t, err)
+
+	rr := httptest.NewRecorder()
+	handler.GetProvinceCases(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	var response Response
+	err = json.Unmarshal(rr.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "success", response.Status)
+
+	// Verify non-paginated response structure (direct array)
+	responseArray, ok := response.Data.([]interface{})
+	assert.True(t, ok)
+	assert.Len(t, responseArray, 2)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestCovidHandler_GetProvinceCases_CustomPagination(t *testing.T) {
+	mockService := new(MockCovidService)
+	handler := NewCovidHandler(mockService, nil)
+
+	expectedCases := []models.ProvinceCaseWithDate{
+		{ProvinceCase: models.ProvinceCase{ID: 3, ProvinceID: "12", Positive: 25}},
+	}
+	expectedTotal := 200
+
+	mockService.On("GetAllProvinceCasesPaginated", 100, 50).Return(expectedCases, expectedTotal, nil)
+
+	req, err := http.NewRequest("GET", "/api/v1/provinces/cases?limit=100&offset=50", nil)
+	assert.NoError(t, err)
+
+	rr := httptest.NewRecorder()
+	handler.GetProvinceCases(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	var response Response
+	err = json.Unmarshal(rr.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "success", response.Status)
+
+	// Verify custom pagination metadata
+	paginatedData, ok := response.Data.(map[string]interface{})
+	assert.True(t, ok)
+	
+	pagination, ok := paginatedData["pagination"].(map[string]interface{})
+	assert.True(t, ok)
+	assert.Equal(t, float64(100), pagination["limit"])
+	assert.Equal(t, float64(50), pagination["offset"])
+	assert.Equal(t, float64(200), pagination["total"])
+	assert.Equal(t, float64(1), pagination["page"])
+	assert.Equal(t, true, pagination["has_next"])
+	assert.Equal(t, true, pagination["has_prev"])
+
+	mockService.AssertExpectations(t)
+}
+
+func TestCovidHandler_GetProvinceCases_DateRange_Paginated(t *testing.T) {
+	mockService := new(MockCovidService)
+	handler := NewCovidHandler(mockService, nil)
+
+	expectedCases := []models.ProvinceCaseWithDate{
+		{ProvinceCase: models.ProvinceCase{ID: 1, ProvinceID: "11", Positive: 50}},
+	}
+	expectedTotal := 30
+
+	mockService.On("GetAllProvinceCasesByDateRangePaginated", "2024-01-01", "2024-01-31", 50, 0).Return(expectedCases, expectedTotal, nil)
+
+	req, err := http.NewRequest("GET", "/api/v1/provinces/cases?start_date=2024-01-01&end_date=2024-01-31", nil)
+	assert.NoError(t, err)
+
+	rr := httptest.NewRecorder()
+	handler.GetProvinceCases(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	var response Response
+	err = json.Unmarshal(rr.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "success", response.Status)
+
+	// Verify paginated response
+	paginatedData, ok := response.Data.(map[string]interface{})
+	assert.True(t, ok)
+	assert.Contains(t, paginatedData, "pagination")
+
+	mockService.AssertExpectations(t)
+}
+
+func TestCovidHandler_GetProvinceCases_DateRange_AllData(t *testing.T) {
+	mockService := new(MockCovidService)
+	handler := NewCovidHandler(mockService, nil)
+
+	expectedCases := []models.ProvinceCaseWithDate{
+		{ProvinceCase: models.ProvinceCase{ID: 1, ProvinceID: "11", Positive: 50}},
+	}
+
+	mockService.On("GetAllProvinceCasesByDateRange", "2024-01-01", "2024-01-31").Return(expectedCases, nil)
+
+	req, err := http.NewRequest("GET", "/api/v1/provinces/cases?start_date=2024-01-01&end_date=2024-01-31&all=true", nil)
+	assert.NoError(t, err)
+
+	rr := httptest.NewRecorder()
+	handler.GetProvinceCases(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	var response Response
+	err = json.Unmarshal(rr.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "success", response.Status)
+
+	// Verify non-paginated response structure
+	responseArray, ok := response.Data.([]interface{})
+	assert.True(t, ok)
+	assert.Len(t, responseArray, 1)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestCovidHandler_GetProvinceCases_SpecificProvince_AllData(t *testing.T) {
+	mockService := new(MockCovidService)
+	handler := NewCovidHandler(mockService, nil)
+
+	expectedCases := []models.ProvinceCaseWithDate{
+		{ProvinceCase: models.ProvinceCase{ID: 1, ProvinceID: "31", Positive: 200}},
+	}
+
+	mockService.On("GetProvinceCases", "31").Return(expectedCases, nil)
+
+	req, err := http.NewRequest("GET", "/api/v1/provinces/31/cases?all=true", nil)
+	assert.NoError(t, err)
+
+	rr := httptest.NewRecorder()
+	router := mux.NewRouter()
+	router.HandleFunc("/api/v1/provinces/{provinceId}/cases", handler.GetProvinceCases)
+	router.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	var response Response
+	err = json.Unmarshal(rr.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "success", response.Status)
+
+	// Verify non-paginated response structure
+	responseArray, ok := response.Data.([]interface{})
+	assert.True(t, ok)
+	assert.Len(t, responseArray, 1)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestCovidHandler_GetProvinces_ExcludeLatestCase(t *testing.T) {
+	mockService := new(MockCovidService)
+	handler := NewCovidHandler(mockService, nil)
+
+	expectedProvinces := []models.Province{
+		{ID: "11", Name: "Aceh"},
+		{ID: "31", Name: "DKI Jakarta"},
+	}
+
+	mockService.On("GetProvinces").Return(expectedProvinces, nil)
+
+	req, err := http.NewRequest("GET", "/api/v1/provinces?exclude_latest_case=true", nil)
+	assert.NoError(t, err)
+
+	rr := httptest.NewRecorder()
+	handler.GetProvinces(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	var response Response
+	err = json.Unmarshal(rr.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "success", response.Status)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestCovidHandler_GetAPIIndex(t *testing.T) {
+	mockService := new(MockCovidService)
+	handler := NewCovidHandler(mockService, nil)
+
+	req, err := http.NewRequest("GET", "/api/v1", nil)
+	assert.NoError(t, err)
+
+	rr := httptest.NewRecorder()
+	handler.GetAPIIndex(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	var response Response
+	err = json.Unmarshal(rr.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "success", response.Status)
+
+	// Verify structure contains expected keys
+	data, ok := response.Data.(map[string]interface{})
+	assert.True(t, ok)
+	assert.Contains(t, data, "api")
+	assert.Contains(t, data, "documentation")
+	assert.Contains(t, data, "endpoints")
+	assert.Contains(t, data, "features")
+	assert.Contains(t, data, "examples")
+
+	// Verify API info
+	apiInfo, ok := data["api"].(map[string]interface{})
+	assert.True(t, ok)
+	assert.Equal(t, "Sulawesi Tengah COVID-19 Data API", apiInfo["title"])
+	assert.Equal(t, "2.0.2", apiInfo["version"])
+
+	// Verify endpoints structure
+	endpoints, ok := data["endpoints"].(map[string]interface{})
+	assert.True(t, ok)
+	assert.Contains(t, endpoints, "health")
+	assert.Contains(t, endpoints, "national")
+	assert.Contains(t, endpoints, "provinces")
 }
 
 func TestCovidHandler_HealthCheck(t *testing.T) {
@@ -286,7 +586,7 @@ func TestCovidHandler_HealthCheck(t *testing.T) {
 	assert.True(t, ok)
 	assert.Equal(t, "degraded", data["status"])
 	assert.Equal(t, "COVID-19 API", data["service"])
-	assert.Equal(t, "2.0.1", data["version"])
+	assert.Equal(t, "2.0.2", data["version"])
 	assert.Contains(t, data, "database")
 	
 	dbData, ok := data["database"].(map[string]interface{})

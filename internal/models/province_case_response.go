@@ -14,28 +14,48 @@ type ProvinceCaseResponse struct {
 
 // ProvinceDailyCases represents new cases for a single day in a province
 type ProvinceDailyCases struct {
-	Positive                         int64 `json:"positive"`
-	Recovered                        int64 `json:"recovered"`
-	Deceased                         int64 `json:"deceased"`
-	Active                           int64 `json:"active"`
-	PersonUnderObservation           int64 `json:"person_under_observation"`
-	FinishedPersonUnderObservation   int64 `json:"finished_person_under_observation"`
-	PersonUnderSupervision           int64 `json:"person_under_supervision"`
-	FinishedPersonUnderSupervision   int64 `json:"finished_person_under_supervision"`
+	Positive  int64                  `json:"positive"`
+	Recovered int64                  `json:"recovered"`
+	Deceased  int64                  `json:"deceased"`
+	Active    int64                  `json:"active"`
+	ODP       DailyObservationData   `json:"odp"`
+	PDP       DailySupervisionData   `json:"pdp"`
 }
 
 // ProvinceCumulativeCases represents total cases accumulated over time in a province
 type ProvinceCumulativeCases struct {
-	Positive                         int64 `json:"positive"`
-	Recovered                        int64 `json:"recovered"`
-	Deceased                         int64 `json:"deceased"`
-	Active                           int64 `json:"active"`
-	PersonUnderObservation           int64 `json:"person_under_observation"`
-	ActivePersonUnderObservation     int64 `json:"active_person_under_observation"`
-	FinishedPersonUnderObservation   int64 `json:"finished_person_under_observation"`
-	PersonUnderSupervision           int64 `json:"person_under_supervision"`
-	ActivePersonUnderSupervision     int64 `json:"active_person_under_supervision"`
-	FinishedPersonUnderSupervision   int64 `json:"finished_person_under_supervision"`
+	Positive  int64              `json:"positive"`
+	Recovered int64              `json:"recovered"`
+	Deceased  int64              `json:"deceased"`
+	Active    int64              `json:"active"`
+	ODP       ObservationData    `json:"odp"`
+	PDP       SupervisionData    `json:"pdp"`
+}
+
+// DailyObservationData represents daily Person Under Observation (ODP) data
+type DailyObservationData struct {
+	Active   int64 `json:"active"`
+	Finished int64 `json:"finished"`
+}
+
+// DailySupervisionData represents daily Patient Under Supervision (PDP) data
+type DailySupervisionData struct {
+	Active   int64 `json:"active"`
+	Finished int64 `json:"finished"`
+}
+
+// ObservationData represents cumulative Person Under Observation (ODP) data
+type ObservationData struct {
+	Active   int64 `json:"active"`
+	Finished int64 `json:"finished"`
+	Total    int64 `json:"total"`
+}
+
+// SupervisionData represents cumulative Patient Under Supervision (PDP) data
+type SupervisionData struct {
+	Active   int64 `json:"active"`
+	Finished int64 `json:"finished"`
+	Total    int64 `json:"total"`
 }
 
 // ProvinceCaseStatistics contains calculated statistics and metrics for province data
@@ -59,26 +79,34 @@ func (pc *ProvinceCase) TransformToResponse(date time.Time) ProvinceCaseResponse
 		Day:  pc.Day,
 		Date: date,
 		Daily: ProvinceDailyCases{
-			Positive:                         pc.Positive,
-			Recovered:                        pc.Recovered,
-			Deceased:                         pc.Deceased,
-			Active:                           dailyActive,
-			PersonUnderObservation:           pc.PersonUnderObservation,
-			FinishedPersonUnderObservation:   pc.FinishedPersonUnderObservation,
-			PersonUnderSupervision:           pc.PersonUnderSupervision,
-			FinishedPersonUnderSupervision:   pc.FinishedPersonUnderSupervision,
+			Positive:  pc.Positive,
+			Recovered: pc.Recovered,
+			Deceased:  pc.Deceased,
+			Active:    dailyActive,
+			ODP: DailyObservationData{
+				Active:   pc.PersonUnderObservation - pc.FinishedPersonUnderObservation,
+				Finished: pc.FinishedPersonUnderObservation,
+			},
+			PDP: DailySupervisionData{
+				Active:   pc.PersonUnderSupervision - pc.FinishedPersonUnderSupervision,
+				Finished: pc.FinishedPersonUnderSupervision,
+			},
 		},
 		Cumulative: ProvinceCumulativeCases{
-			Positive:                         pc.CumulativePositive,
-			Recovered:                        pc.CumulativeRecovered,
-			Deceased:                         pc.CumulativeDeceased,
-			Active:                           cumulativeActive,
-			PersonUnderObservation:           pc.CumulativePersonUnderObservation,
-			ActivePersonUnderObservation:     activePersonUnderObservation,
-			FinishedPersonUnderObservation:   pc.CumulativeFinishedPersonUnderObservation,
-			PersonUnderSupervision:           pc.CumulativePersonUnderSupervision,
-			ActivePersonUnderSupervision:     activePersonUnderSupervision,
-			FinishedPersonUnderSupervision:   pc.CumulativeFinishedPersonUnderSupervision,
+			Positive:  pc.CumulativePositive,
+			Recovered: pc.CumulativeRecovered,
+			Deceased:  pc.CumulativeDeceased,
+			Active:    cumulativeActive,
+			ODP: ObservationData{
+				Active:   activePersonUnderObservation,
+				Finished: pc.CumulativeFinishedPersonUnderObservation,
+				Total:    pc.CumulativePersonUnderObservation,
+			},
+			PDP: SupervisionData{
+				Active:   activePersonUnderSupervision,
+				Finished: pc.CumulativeFinishedPersonUnderSupervision,
+				Total:    pc.CumulativePersonUnderSupervision,
+			},
 		},
 		Statistics: ProvinceCaseStatistics{
 			Percentages: calculatePercentages(pc.CumulativePositive, pc.CumulativeRecovered, pc.CumulativeDeceased, cumulativeActive),
