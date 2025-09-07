@@ -20,7 +20,11 @@ func setupMockDB(t *testing.T) (*database.DB, sqlmock.Sqlmock) {
 
 func TestNationalCaseRepository_GetAll(t *testing.T) {
 	db, mock := setupMockDB(t)
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Logf("Error closing database: %v", err)
+		}
+	}()
 
 	repo := NewNationalCaseRepository(db)
 
@@ -51,7 +55,11 @@ func TestNationalCaseRepository_GetAll(t *testing.T) {
 
 func TestNationalCaseRepository_GetByDateRange(t *testing.T) {
 	db, mock := setupMockDB(t)
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Logf("Error closing database: %v", err)
+		}
+	}()
 
 	repo := NewNationalCaseRepository(db)
 
@@ -81,7 +89,11 @@ func TestNationalCaseRepository_GetByDateRange(t *testing.T) {
 
 func TestNationalCaseRepository_GetLatest(t *testing.T) {
 	db, mock := setupMockDB(t)
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Logf("Error closing database: %v", err)
+		}
+	}()
 
 	repo := NewNationalCaseRepository(db)
 
@@ -110,7 +122,11 @@ func TestNationalCaseRepository_GetLatest(t *testing.T) {
 
 func TestNationalCaseRepository_GetLatest_NotFound(t *testing.T) {
 	db, mock := setupMockDB(t)
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Logf("Error closing database: %v", err)
+		}
+	}()
 
 	repo := NewNationalCaseRepository(db)
 
@@ -127,7 +143,11 @@ func TestNationalCaseRepository_GetLatest_NotFound(t *testing.T) {
 
 func TestNationalCaseRepository_GetByDay(t *testing.T) {
 	db, mock := setupMockDB(t)
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Logf("Error closing database: %v", err)
+		}
+	}()
 
 	repo := NewNationalCaseRepository(db)
 
@@ -155,7 +175,11 @@ func TestNationalCaseRepository_GetByDay(t *testing.T) {
 
 func TestNationalCaseRepository_GetByDay_NotFound(t *testing.T) {
 	db, mock := setupMockDB(t)
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Logf("Error closing database: %v", err)
+		}
+	}()
 
 	repo := NewNationalCaseRepository(db)
 

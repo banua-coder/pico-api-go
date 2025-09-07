@@ -34,7 +34,11 @@ func (r *nationalCaseRepository) GetAll() ([]models.NationalCase, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to query national cases: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			fmt.Printf("Error closing rows: %v\n", err)
+		}
+	}()
 
 	var cases []models.NationalCase
 	for rows.Next() {
@@ -67,7 +71,11 @@ func (r *nationalCaseRepository) GetByDateRange(startDate, endDate time.Time) ([
 	if err != nil {
 		return nil, fmt.Errorf("failed to query national cases by date range: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			fmt.Printf("Error closing rows: %v\n", err)
+		}
+	}()
 
 	var cases []models.NationalCase
 	for rows.Next() {
