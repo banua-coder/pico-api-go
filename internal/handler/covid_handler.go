@@ -7,6 +7,7 @@ import (
 	"github.com/banua-coder/pico-api-go/internal/models"
 	"github.com/banua-coder/pico-api-go/internal/service"
 	"github.com/banua-coder/pico-api-go/pkg/database"
+	"github.com/banua-coder/pico-api-go/pkg/utils"
 	"github.com/gorilla/mux"
 )
 
@@ -92,58 +93,127 @@ func (h *CovidHandler) GetProvinces(w http.ResponseWriter, r *http.Request) {
 func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	provinceID := vars["provinceId"]
+	
+	// Parse query parameters
+	limit := utils.ParseIntQueryParam(r, "limit", 50)
+	offset := utils.ParseIntQueryParam(r, "offset", 0)
+	all := utils.ParseBoolQueryParam(r, "all")
+	startDate := r.URL.Query().Get("start_date")
+	endDate := r.URL.Query().Get("end_date")
+	
+	// Validate pagination params
+	limit, offset = utils.ValidatePaginationParams(limit, offset)
 
 	if provinceID == "" {
-		startDate := r.URL.Query().Get("start_date")
-		endDate := r.URL.Query().Get("end_date")
-
-		if startDate != "" && endDate != "" {
-			cases, err := h.covidService.GetAllProvinceCasesByDateRange(startDate, endDate)
+		// Handle all provinces cases
+		if all {
+			// Return all data without pagination
+			if startDate != "" && endDate != "" {
+				cases, err := h.covidService.GetAllProvinceCasesByDateRange(startDate, endDate)
+				if err != nil {
+					writeErrorResponse(w, http.StatusInternalServerError, err.Error())
+					return
+				}
+				responseData := models.TransformProvinceCaseSliceToResponse(cases)
+				writeSuccessResponse(w, responseData)
+				return
+			}
+			
+			cases, err := h.covidService.GetAllProvinceCases()
 			if err != nil {
 				writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
 			}
-			// Transform to new response structure
 			responseData := models.TransformProvinceCaseSliceToResponse(cases)
 			writeSuccessResponse(w, responseData)
 			return
 		}
-
-		cases, err := h.covidService.GetAllProvinceCases()
+		
+		// Return paginated data
+		if startDate != "" && endDate != "" {
+			cases, total, err := h.covidService.GetAllProvinceCasesByDateRangePaginated(startDate, endDate, limit, offset)
+			if err != nil {
+				writeErrorResponse(w, http.StatusInternalServerError, err.Error())
+				return
+			}
+			responseData := models.TransformProvinceCaseSliceToResponse(cases)
+			pagination := models.CalculatePaginationMeta(limit, offset, total)
+			paginatedResponse := models.PaginatedResponse{
+				Data:       responseData,
+				Pagination: pagination,
+			}
+			writeSuccessResponse(w, paginatedResponse)
+			return
+		}
+		
+		cases, total, err := h.covidService.GetAllProvinceCasesPaginated(limit, offset)
 		if err != nil {
 			writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		// Transform to new response structure
+		responseData := models.TransformProvinceCaseSliceToResponse(cases)
+		pagination := models.CalculatePaginationMeta(limit, offset, total)
+		paginatedResponse := models.PaginatedResponse{
+			Data:       responseData,
+			Pagination: pagination,
+		}
+		writeSuccessResponse(w, paginatedResponse)
+		return
+	}
+
+	// Handle specific province cases
+	if all {
+		// Return all data without pagination
+		if startDate != "" && endDate != "" {
+			cases, err := h.covidService.GetProvinceCasesByDateRange(provinceID, startDate, endDate)
+			if err != nil {
+				writeErrorResponse(w, http.StatusInternalServerError, err.Error())
+				return
+			}
+			responseData := models.TransformProvinceCaseSliceToResponse(cases)
+			writeSuccessResponse(w, responseData)
+			return
+		}
+		
+		cases, err := h.covidService.GetProvinceCases(provinceID)
+		if err != nil {
+			writeErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
 		responseData := models.TransformProvinceCaseSliceToResponse(cases)
 		writeSuccessResponse(w, responseData)
 		return
 	}
-
-	startDate := r.URL.Query().Get("start_date")
-	endDate := r.URL.Query().Get("end_date")
-
+	
+	// Return paginated data
 	if startDate != "" && endDate != "" {
-		cases, err := h.covidService.GetProvinceCasesByDateRange(provinceID, startDate, endDate)
+		cases, total, err := h.covidService.GetProvinceCasesByDateRangePaginated(provinceID, startDate, endDate, limit, offset)
 		if err != nil {
 			writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		// Transform to new response structure
 		responseData := models.TransformProvinceCaseSliceToResponse(cases)
-		writeSuccessResponse(w, responseData)
+		pagination := models.CalculatePaginationMeta(limit, offset, total)
+		paginatedResponse := models.PaginatedResponse{
+			Data:       responseData,
+			Pagination: pagination,
+		}
+		writeSuccessResponse(w, paginatedResponse)
 		return
 	}
-
-	cases, err := h.covidService.GetProvinceCases(provinceID)
+	
+	cases, total, err := h.covidService.GetProvinceCasesPaginated(provinceID, limit, offset)
 	if err != nil {
 		writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-
-	// Transform to new response structure
 	responseData := models.TransformProvinceCaseSliceToResponse(cases)
-	writeSuccessResponse(w, responseData)
+	pagination := models.CalculatePaginationMeta(limit, offset, total)
+	paginatedResponse := models.PaginatedResponse{
+		Data:       responseData,
+		Pagination: pagination,
+	}
+	writeSuccessResponse(w, paginatedResponse)
 }
 
 func (h *CovidHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
