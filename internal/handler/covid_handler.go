@@ -23,6 +23,19 @@ func NewCovidHandler(covidService service.CovidService, db *database.DB) *CovidH
 	}
 }
 
+// GetNationalCases godoc
+//
+//	@Summary		Get national COVID-19 cases
+//	@Description	Retrieve national COVID-19 cases data with optional date range filtering
+//	@Tags			national
+//	@Accept			json
+//	@Produce		json
+//	@Param			start_date	query		string	false	"Start date (YYYY-MM-DD)"
+//	@Param			end_date	query		string	false	"End date (YYYY-MM-DD)"
+//	@Success		200			{object}	Response{data=[]models.NationalCaseResponse}
+//	@Failure		400			{object}	Response
+//	@Failure		500			{object}	Response
+//	@Router			/national [get]
 func (h *CovidHandler) GetNationalCases(w http.ResponseWriter, r *http.Request) {
 	startDate := r.URL.Query().Get("start_date")
 	endDate := r.URL.Query().Get("end_date")
@@ -50,6 +63,17 @@ func (h *CovidHandler) GetNationalCases(w http.ResponseWriter, r *http.Request) 
 	writeSuccessResponse(w, responseData)
 }
 
+// GetLatestNationalCase godoc
+//
+//	@Summary		Get latest national COVID-19 case
+//	@Description	Retrieve the most recent national COVID-19 case data
+//	@Tags			national
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	Response{data=models.NationalCaseResponse}
+//	@Failure		404	{object}	Response
+//	@Failure		500	{object}	Response
+//	@Router			/national/latest [get]
 func (h *CovidHandler) GetLatestNationalCase(w http.ResponseWriter, r *http.Request) {
 	nationalCase, err := h.covidService.GetLatestNationalCase()
 	if err != nil {
@@ -67,6 +91,18 @@ func (h *CovidHandler) GetLatestNationalCase(w http.ResponseWriter, r *http.Requ
 	writeSuccessResponse(w, responseData)
 }
 
+// GetProvinces godoc
+//
+//	@Summary		Get provinces with COVID-19 data
+//	@Description	Retrieve all provinces with their latest COVID-19 case data by default. Use exclude_latest_case=true for basic province list only.
+//	@Tags			provinces
+//	@Accept			json
+//	@Produce		json
+//	@Param			exclude_latest_case	query		boolean	false	"Exclude latest case data (default: false)"
+//	@Success		200					{object}	Response{data=[]models.ProvinceWithLatestCase}	"Provinces with latest case data"
+//	@Success		200					{object}	Response{data=[]models.Province}				"Basic province list when exclude_latest_case=true"
+//	@Failure		500					{object}	Response
+//	@Router			/provinces [get]
 func (h *CovidHandler) GetProvinces(w http.ResponseWriter, r *http.Request) {
 	// Check if exclude_latest_case query parameter is set to get basic province list only
 	excludeLatestCase := r.URL.Query().Get("exclude_latest_case") == "true"
@@ -90,6 +126,25 @@ func (h *CovidHandler) GetProvinces(w http.ResponseWriter, r *http.Request) {
 	writeSuccessResponse(w, provincesWithCases)
 }
 
+// GetProvinceCases godoc
+//
+//	@Summary		Get province COVID-19 cases
+//	@Description	Retrieve COVID-19 cases for all provinces or a specific province with hybrid pagination support
+//	@Tags			province-cases
+//	@Accept			json
+//	@Produce		json
+//	@Param			provinceId	path		string	false	"Province ID (e.g., '31' for Jakarta)"
+//	@Param			limit		query		integer	false	"Records per page (default: 50, max: 1000)"
+//	@Param			offset		query		integer	false	"Records to skip (default: 0)"
+//	@Param			all			query		boolean	false	"Return all data without pagination"
+//	@Param			start_date	query		string	false	"Start date (YYYY-MM-DD)"
+//	@Param			end_date	query		string	false	"End date (YYYY-MM-DD)"
+//	@Success		200			{object}	Response{data=models.PaginatedResponse{data=[]models.ProvinceCaseResponse}}	"Paginated response"
+//	@Success		200			{object}	Response{data=[]models.ProvinceCaseResponse}							"All data response when all=true"
+//	@Failure		400			{object}	Response
+//	@Failure		500			{object}	Response
+//	@Router			/provinces/cases [get]
+//	@Router			/provinces/{provinceId}/cases [get]
 func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	provinceID := vars["provinceId"]
@@ -216,6 +271,16 @@ func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) 
 	writeSuccessResponse(w, paginatedResponse)
 }
 
+// HealthCheck godoc
+//
+//	@Summary		Health check
+//	@Description	Check API health status and database connectivity
+//	@Tags			health
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	Response{data=map[string]interface{}}	"API is healthy"
+//	@Success		503	{object}	Response{data=map[string]interface{}}	"API is degraded (database issues)"
+//	@Router			/health [get]
 func (h *CovidHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	health := map[string]interface{}{
 		"status":    "healthy",

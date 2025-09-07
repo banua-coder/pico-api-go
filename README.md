@@ -9,6 +9,7 @@ A Go backend service that provides REST API endpoints for COVID-19 data in Indon
 - 📊 R-rate (reproductive rate) data when available
 - 🔍 Date range filtering for all endpoints
 - 📄 **Hybrid pagination system** - efficient for apps, complete for charts
+- 📚 **Interactive API Documentation** - Auto-generated OpenAPI/Swagger docs
 - 🎯 **Smart query parameters** - flexible data retrieval options
 - 🚀 Fast and efficient MySQL database integration
 - 🔧 Clean architecture with repository and service layers
@@ -16,6 +17,16 @@ A Go backend service that provides REST API endpoints for COVID-19 data in Indon
 - 📝 Structured logging and error handling
 - 💾 Environment-based configuration
 - 🚀 **Automatic deployment** with GitHub Actions
+
+## 📚 API Documentation
+
+### Interactive Swagger UI
+- **Local development**: http://localhost:8080/swagger/index.html
+- **Production**: https://pico-api.banuacoder.com/swagger/index.html
+
+### OpenAPI Specification
+- YAML: [`docs/swagger.yaml`](docs/swagger.yaml)
+- JSON: [`docs/swagger.json`](docs/swagger.json)
 
 ## API Endpoints
 
@@ -198,6 +209,18 @@ The API will be available at `http://localhost:8080`
 ```bash
 go build -o pico-api-go cmd/main.go
 ./pico-api-go
+```
+
+### Regenerating API Documentation
+
+After modifying handlers or adding new endpoints, regenerate the Swagger docs:
+
+```bash
+# Install swag tool (one-time setup)
+go install github.com/swaggo/swag/cmd/swag@latest
+
+# Generate documentation
+swag init -g cmd/main.go -o ./docs
 ```
 
 ## Database Schema
