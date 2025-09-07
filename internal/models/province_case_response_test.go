@@ -151,7 +151,11 @@ func TestProvinceCase_TransformToResponse(t *testing.T) {
 						Recovered: 90.0, // (1800 / 2000) * 100
 						Deceased:  5.0,  // (100 / 2000) * 100
 					},
-					ReproductionRate: nil,
+					ReproductionRate: &ReproductionRate{
+						Value:      nil,
+						UpperBound: nil,
+						LowerBound: nil,
+					},
 				},
 				Province: &Province{
 					ID:   "ID-JB",
@@ -219,7 +223,11 @@ func TestProvinceCase_TransformToResponse(t *testing.T) {
 						Recovered: 0.0,
 						Deceased:  0.0,
 					},
-					ReproductionRate: nil,
+					ReproductionRate: &ReproductionRate{
+						Value:      nil,
+						UpperBound: nil,
+						LowerBound: nil,
+					},
 				},
 				Province: &Province{
 					ID:   "ID-AC",
