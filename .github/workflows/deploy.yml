@@ -145,16 +145,133 @@ jobs:
         echo "2. Monitor logs for any issues" >> $GITHUB_STEP_SUMMARY
         echo "3. Update documentation if needed" >> $GITHUB_STEP_SUMMARY
 
-  notification:
+  create-release:
     runs-on: ubuntu-latest
     needs: build-and-deploy
+    if: needs.build-and-deploy.result == 'success'
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Get version and release info
+      id: release_info
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/}
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        
+        # Check if this is a hotfix or regular release
+        if [[ $VERSION == *"-hotfix"* ]] || git log --oneline --grep="hotfix" -1 | grep -q "hotfix"; then
+          echo "type=hotfix" >> $GITHUB_OUTPUT
+        else
+          echo "type=release" >> $GITHUB_OUTPUT
+        fi
+        
+        # Get the previous tag for changelog range
+        PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -A1 "^${VERSION}$" | tail -n1)
+        if [ -z "$PREVIOUS_TAG" ] || [ "$PREVIOUS_TAG" = "$VERSION" ]; then
+          PREVIOUS_TAG=$(git tag --sort=-version:refname | head -n2 | tail -n1)
+        fi
+        echo "previous_tag=$PREVIOUS_TAG" >> $GITHUB_OUTPUT
+
+    - name: Generate release notes
+      id: release_notes
+      run: |
+        VERSION=${{ steps.release_info.outputs.version }}
+        PREVIOUS_TAG=${{ steps.release_info.outputs.previous_tag }}
+        TYPE=${{ steps.release_info.outputs.type }}
+        
+        # Create release notes file
+        cat > release_notes.md << 'EOF'
+        ## 🚀 Release ${{ steps.release_info.outputs.version }}
+        
+        **Release Type**: ${{ steps.release_info.outputs.type }}
+        **Deployment**: ✅ Successfully deployed to production
+        
+        ### What's Changed
+        
+        EOF
+        
+        # Get commits since last tag with better formatting
+        if [ -n "$PREVIOUS_TAG" ]; then
+          echo "Changes since $PREVIOUS_TAG:" >> release_notes.md
+          echo "" >> release_notes.md
+          
+          # Get commits with type categorization
+          git log --pretty=format:"- %s" "${PREVIOUS_TAG}..${VERSION}" | \
+          grep -v "Merge branch\|Merge pull request" | \
+          head -20 >> release_notes.md
+        else
+          echo "- Initial release" >> release_notes.md
+        fi
+        
+        # Add deployment information
+        cat >> release_notes.md << 'EOF'
+        
+        ### 📋 Deployment Details
+        
+        - **Binary**: Built with Go ${{ env.GO_VERSION }}
+        - **Platform**: Linux AMD64
+        - **Deployment Time**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')
+        - **Health Check**: ${{ secrets.HEALTH_CHECK_URL || 'Manual verification required' }}
+        
+        ### 🔗 Links
+        
+        - [API Documentation](https://pico-api.banuacoder.com/swagger/index.html)
+        - [Repository](https://github.com/banua-coder/pico-api-go)
+        - [Health Check](https://pico-api.banuacoder.com/api/v1/health)
+        EOF
+        
+        # Set multiline output for GitHub Actions
+        echo 'RELEASE_NOTES<<EOF' >> $GITHUB_OUTPUT
+        cat release_notes.md >> $GITHUB_OUTPUT
+        echo 'EOF' >> $GITHUB_OUTPUT
+
+    - name: Create GitHub Release
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        VERSION=${{ steps.release_info.outputs.version }}
+        TYPE=${{ steps.release_info.outputs.type }}
+        
+        # Determine if this is a prerelease
+        if [[ $VERSION == *"rc"* ]] || [[ $VERSION == *"beta"* ]] || [[ $VERSION == *"alpha"* ]]; then
+          PRERELEASE="--prerelease"
+        else
+          PRERELEASE=""
+        fi
+        
+        # Create the release
+        gh release create "$VERSION" \
+          --title "🚀 $VERSION" \
+          --notes "${{ steps.release_notes.outputs.RELEASE_NOTES }}" \
+          $PRERELEASE \
+          --target main
+
+
+  notification:
+    runs-on: ubuntu-latest
+    needs: [build-and-deploy, create-release]
     if: always()
     
     steps:
     - name: Notify deployment status
       run: |
-        if [ "${{ needs.build-and-deploy.result }}" == "success" ]; then
+        DEPLOY_STATUS="${{ needs.build-and-deploy.result }}"
+        RELEASE_STATUS="${{ needs.create-release.result }}"
+        
+        if [ "$DEPLOY_STATUS" == "success" ]; then
           echo "✅ Deployment successful for ${{ github.ref_name }}"
+          
+          if [ "$RELEASE_STATUS" == "success" ]; then
+            echo "✅ GitHub release created successfully"
+          else
+            echo "⚠️  GitHub release creation failed, but deployment succeeded"
+          fi
         else
           echo "❌ Deployment failed for ${{ github.ref_name }}"
           exit 1
