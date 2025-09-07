@@ -13,6 +13,7 @@ type CovidService interface {
 	GetNationalCasesByDateRange(startDate, endDate string) ([]models.NationalCase, error)
 	GetLatestNationalCase() (*models.NationalCase, error)
 	GetProvinces() ([]models.Province, error)
+	GetProvincesWithLatestCase() ([]models.ProvinceWithLatestCase, error)
 	GetProvinceCases(provinceID string) ([]models.ProvinceCaseWithDate, error)
 	GetProvinceCasesByDateRange(provinceID, startDate, endDate string) ([]models.ProvinceCaseWithDate, error)
 	GetAllProvinceCases() ([]models.ProvinceCaseWithDate, error)
@@ -77,6 +78,36 @@ func (s *covidService) GetProvinces() ([]models.Province, error) {
 		return nil, fmt.Errorf("failed to get provinces: %w", err)
 	}
 	return provinces, nil
+}
+
+func (s *covidService) GetProvincesWithLatestCase() ([]models.ProvinceWithLatestCase, error) {
+	provinces, err := s.provinceRepo.GetAll()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get provinces: %w", err)
+	}
+
+	result := make([]models.ProvinceWithLatestCase, len(provinces))
+	
+	for i, province := range provinces {
+		result[i] = models.ProvinceWithLatestCase{
+			Province: province,
+		}
+		
+		// Get latest case for this province
+		latestCase, err := s.provinceCaseRepo.GetLatestByProvinceID(province.ID)
+		if err != nil {
+			// If error or no data, continue without latest case
+			continue
+		}
+		
+		if latestCase != nil {
+			// Transform to response format
+			caseResponse := latestCase.TransformToResponse()
+			result[i].LatestCase = &caseResponse
+		}
+	}
+	
+	return result, nil
 }
 
 func (s *covidService) GetProvinceCases(provinceID string) ([]models.ProvinceCaseWithDate, error) {

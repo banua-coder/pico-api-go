@@ -67,6 +67,19 @@ func (h *CovidHandler) GetLatestNationalCase(w http.ResponseWriter, r *http.Requ
 }
 
 func (h *CovidHandler) GetProvinces(w http.ResponseWriter, r *http.Request) {
+	// Check if include_latest_case query parameter is set
+	includeLatestCase := r.URL.Query().Get("include_latest_case") == "true"
+	
+	if includeLatestCase {
+		provincesWithCases, err := h.covidService.GetProvincesWithLatestCase()
+		if err != nil {
+			writeErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		writeSuccessResponse(w, provincesWithCases)
+		return
+	}
+	
 	provinces, err := h.covidService.GetProvinces()
 	if err != nil {
 		writeErrorResponse(w, http.StatusInternalServerError, err.Error())
