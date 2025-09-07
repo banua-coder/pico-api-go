@@ -199,14 +199,14 @@ info:
     email: support@banuacoder.com
     name: API Support
     url: https://github.com/banua-coder/pico-api-go
-  description: A comprehensive REST API for COVID-19 data in Indonesia, including
-    national cases and province-level statistics with enhanced ODP/PDP grouping and
-    hybrid pagination.
+  description: A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central
+    Sulawesi), with additional national and provincial data for context. Features
+    enhanced ODP/PDP grouping and hybrid pagination.
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
   termsOfService: http://swagger.io/terms/
-  title: COVID-19 Indonesia API
+  title: Sulawesi Tengah COVID-19 Data API
   version: 2.0.2
 paths:
   /health:
@@ -455,9 +455,10 @@ swagger: "2.0"
 tags:
 - description: Health check operations
   name: health
-- description: National COVID-19 case operations
+- description: National COVID-19 case operations (for context)
   name: national
-- description: Province information and COVID-19 case operations
+- description: Province information and COVID-19 case operations (focus on Sulawesi
+    Tengah)
   name: provinces
 - description: Province-level COVID-19 case data with pagination support
   name: province-cases

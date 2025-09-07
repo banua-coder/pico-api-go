@@ -719,11 +719,11 @@ const docTemplate = `{
             "name": "health"
         },
         {
-            "description": "National COVID-19 case operations",
+            "description": "National COVID-19 case operations (for context)",
             "name": "national"
         },
         {
-            "description": "Province information and COVID-19 case operations",
+            "description": "Province information and COVID-19 case operations (focus on Sulawesi Tengah)",
             "name": "provinces"
         },
         {
@@ -739,8 +739,8 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "pico-api.banuacoder.com",
 	BasePath:         "/api/v1",
 	Schemes:          []string{"https", "http"},
-	Title:            "COVID-19 Indonesia API",
-	Description:      "A comprehensive REST API for COVID-19 data in Indonesia, including national cases and province-level statistics with enhanced ODP/PDP grouping and hybrid pagination.",
+	Title:            "Sulawesi Tengah COVID-19 Data API",
+	Description:      "A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central Sulawesi), with additional national and provincial data for context. Features enhanced ODP/PDP grouping and hybrid pagination.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

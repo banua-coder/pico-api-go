@@ -1,6 +1,6 @@
 # API Documentation
 
-This directory contains auto-generated OpenAPI/Swagger documentation for the COVID-19 Indonesia API.
+This directory contains auto-generated OpenAPI/Swagger documentation for the Sulawesi Tengah COVID-19 Data API.
 
 ## Files
 
@@ -45,7 +45,8 @@ This will update all files in this directory based on the Go code annotations.
 ## Key Features Documented
 
 - 🏥 **Health Check** - API status and database connectivity
-- 🇮🇩 **National Data** - COVID-19 statistics for Indonesia
+- 🏛️ **Sulawesi Tengah Focus** - Primary COVID-19 data for Central Sulawesi
+- 🇮🇩 **National Data** - COVID-19 statistics for Indonesia (reference context)
 - 🗺️ **Province Data** - Provincial COVID-19 information with latest case data by default
 - 📊 **Province Cases** - Detailed case data with hybrid pagination support
 - 📄 **Pagination** - Comprehensive pagination metadata and flexible data retrieval

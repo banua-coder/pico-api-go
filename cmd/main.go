@@ -1,8 +1,8 @@
-// Package main provides the entry point for the COVID-19 Indonesia API
+// Package main provides the entry point for the Sulawesi Tengah COVID-19 Data API
 //
-//	@title			COVID-19 Indonesia API
+//	@title			Sulawesi Tengah COVID-19 Data API
 //	@version		2.0.2
-//	@description	A comprehensive REST API for COVID-19 data in Indonesia, including national cases and province-level statistics with enhanced ODP/PDP grouping and hybrid pagination.
+//	@description	A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central Sulawesi), with additional national and provincial data for context. Features enhanced ODP/PDP grouping and hybrid pagination.
 //	@termsOfService	http://swagger.io/terms/
 //
 //	@contact.name	API Support
@@ -21,10 +21,10 @@
 //	@tag.description	Health check operations
 //
 //	@tag.name			national
-//	@tag.description	National COVID-19 case operations
+//	@tag.description	National COVID-19 case operations (for context)
 //
 //	@tag.name			provinces
-//	@tag.description	Province information and COVID-19 case operations
+//	@tag.description	Province information and COVID-19 case operations (focus on Sulawesi Tengah)
 //
 //	@tag.name			province-cases
 //	@tag.description	Province-level COVID-19 case data with pagination support

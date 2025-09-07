@@ -1,10 +1,11 @@
-# Pico API Go - COVID-19 Data API
+# Pico API Go - Sulawesi Tengah COVID-19 Data API
 
-A Go backend service that provides REST API endpoints for COVID-19 data in Indonesia, including national cases and province-level statistics.
+A Go backend service that provides REST API endpoints for COVID-19 data in Sulawesi Tengah (Central Sulawesi), with additional national and provincial data for context.
 
 ## Features
 
-- 🦠 National COVID-19 cases data with daily and cumulative statistics
+- 🏛️ **Sulawesi Tengah focused** COVID-19 data with comprehensive statistics
+- 🦠 National COVID-19 cases data for reference and context
 - 🗺️ Province-level COVID-19 data with enhanced ODP/PDP grouping
 - 📊 R-rate (reproductive rate) data when available
 - 🔍 Date range filtering for all endpoints

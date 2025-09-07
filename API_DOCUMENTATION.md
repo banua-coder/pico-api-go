@@ -1,11 +1,11 @@
-# COVID-19 Indonesia API Documentation
+# Sulawesi Tengah COVID-19 Data API Documentation
 
 Version: 2.0.2  
 Base URL: `https://pico-api.banuacoder.com/api/v1`
 
 ## Overview
 
-This API provides COVID-19 data for Indonesia, including national statistics and province-level data. The API supports both paginated responses (for efficient data loading) and complete datasets (for analytics and charts).
+This API provides COVID-19 data primarily focused on Sulawesi Tengah (Central Sulawesi), with additional national and provincial data for context. The API supports both paginated responses (for efficient data loading) and complete datasets (for analytics and charts).
 
 ## Response Format
 
