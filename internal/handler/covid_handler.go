@@ -137,15 +137,15 @@ func (h *CovidHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	health := map[string]interface{}{
 		"status":    "healthy",
 		"service":   "COVID-19 API",
-		"version":   "1.0.0",
+		"version":   "2.0.0",
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
 	}
-	
+
 	// Database health check
 	dbHealth := map[string]interface{}{
 		"status": "healthy",
 	}
-	
+
 	if h.db != nil {
 		if err := h.db.HealthCheck(); err != nil {
 			dbHealth["status"] = "unhealthy"
@@ -154,11 +154,11 @@ func (h *CovidHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 		} else {
 			stats := h.db.GetConnectionStats()
 			dbHealth["connections"] = map[string]int{
-				"open":        stats.OpenConnections,
-				"idle":        stats.Idle,
-				"in_use":      stats.InUse,
-				"max_open":    stats.MaxOpenConnections,
-				"wait_count":  int(stats.WaitCount),
+				"open":       stats.OpenConnections,
+				"idle":       stats.Idle,
+				"in_use":     stats.InUse,
+				"max_open":   stats.MaxOpenConnections,
+				"wait_count": int(stats.WaitCount),
 			}
 		}
 	} else {
@@ -166,15 +166,15 @@ func (h *CovidHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 		dbHealth["error"] = "database connection not initialized"
 		health["status"] = "degraded"
 	}
-	
+
 	health["database"] = dbHealth
-	
+
 	// Set appropriate HTTP status code based on health status
 	statusCode := http.StatusOK
 	if health["status"] == "degraded" || health["status"] == "unhealthy" {
 		statusCode = http.StatusServiceUnavailable
 	}
-	
+
 	writeJSONResponse(w, statusCode, Response{
 		Status: "success",
 		Data:   health,
