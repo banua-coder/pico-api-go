@@ -42,6 +42,11 @@ func (m *MockCovidService) GetProvinces() ([]models.Province, error) {
 	return args.Get(0).([]models.Province), args.Error(1)
 }
 
+func (m *MockCovidService) GetProvincesWithLatestCase() ([]models.ProvinceWithLatestCase, error) {
+	args := m.Called()
+	return args.Get(0).([]models.ProvinceWithLatestCase), args.Error(1)
+}
+
 func (m *MockCovidService) GetProvinceCases(provinceID string) ([]models.ProvinceCaseWithDate, error) {
 	args := m.Called(provinceID)
 	return args.Get(0).([]models.ProvinceCaseWithDate), args.Error(1)
@@ -286,7 +291,7 @@ func TestCovidHandler_HealthCheck(t *testing.T) {
 	assert.True(t, ok)
 	assert.Equal(t, "degraded", data["status"])
 	assert.Equal(t, "COVID-19 API", data["service"])
-	assert.Equal(t, "2.0.1", data["version"])
+	assert.Equal(t, "2.0.2", data["version"])
 	assert.Contains(t, data, "database")
 	
 	dbData, ok := data["database"].(map[string]interface{})
