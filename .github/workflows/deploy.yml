@@ -252,22 +252,6 @@ jobs:
           $PRERELEASE \
           --target main
 
-    - name: Upload release assets (optional)
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        VERSION=${{ steps.release_info.outputs.version }}
-        
-        # Recreate binary for release assets
-        CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s -X main.Version=$VERSION" -o pico-api-go-linux-amd64 ./cmd/main.go
-        
-        # Create release archive
-        tar -czf "pico-api-go-${VERSION}-linux-amd64.tar.gz" pico-api-go-linux-amd64
-        
-        # Upload assets to release
-        gh release upload "$VERSION" \
-          "pico-api-go-${VERSION}-linux-amd64.tar.gz" \
-          --clobber
 
   notification:
     runs-on: ubuntu-latest
