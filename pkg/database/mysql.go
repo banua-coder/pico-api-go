@@ -77,7 +77,9 @@ func NewMySQLConnectionWithConfig(cfg *config.DatabaseConfig, connCfg Connection
 		defer cancel()
 		
 		if err = db.PingContext(ctx); err != nil {
-			db.Close()
+			if closeErr := db.Close(); closeErr != nil {
+				log.Printf("Error closing database connection: %v", closeErr)
+			}
 			if attempt == connCfg.RetryAttempts {
 				return nil, fmt.Errorf("failed to ping database after %d attempts: %w", connCfg.RetryAttempts, err)
 			}

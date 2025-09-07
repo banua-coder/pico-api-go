@@ -10,7 +10,11 @@ import (
 
 func TestProvinceRepository_GetAll(t *testing.T) {
 	db, mock := setupMockDB(t)
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Logf("Error closing database: %v", err)
+		}
+	}()
 
 	repo := NewProvinceRepository(db)
 
@@ -38,7 +42,11 @@ func TestProvinceRepository_GetAll(t *testing.T) {
 
 func TestProvinceRepository_GetAll_Empty(t *testing.T) {
 	db, mock := setupMockDB(t)
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Logf("Error closing database: %v", err)
+		}
+	}()
 
 	repo := NewProvinceRepository(db)
 
@@ -57,7 +65,11 @@ func TestProvinceRepository_GetAll_Empty(t *testing.T) {
 
 func TestProvinceRepository_GetByID(t *testing.T) {
 	db, mock := setupMockDB(t)
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Logf("Error closing database: %v", err)
+		}
+	}()
 
 	repo := NewProvinceRepository(db)
 
@@ -81,7 +93,11 @@ func TestProvinceRepository_GetByID(t *testing.T) {
 
 func TestProvinceRepository_GetByID_NotFound(t *testing.T) {
 	db, mock := setupMockDB(t)
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Logf("Error closing database: %v", err)
+		}
+	}()
 
 	repo := NewProvinceRepository(db)
 
@@ -101,7 +117,11 @@ func TestProvinceRepository_GetByID_NotFound(t *testing.T) {
 
 func TestProvinceRepository_GetByID_DatabaseError(t *testing.T) {
 	db, mock := setupMockDB(t)
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Logf("Error closing database: %v", err)
+		}
+	}()
 
 	repo := NewProvinceRepository(db)
 

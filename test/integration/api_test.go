@@ -116,7 +116,11 @@ func TestAPI_HealthCheck(t *testing.T) {
 
 	resp, err := http.Get(server.URL + "/api/v1/health")
 	assert.NoError(t, err)
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Logf("Error closing response body: %v", err)
+		}
+	}()
 
 	assert.Equal(t, http.StatusServiceUnavailable, resp.StatusCode)
 	assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
@@ -154,7 +158,11 @@ func TestAPI_GetNationalCases(t *testing.T) {
 
 	resp, err := http.Get(server.URL + "/api/v1/national")
 	assert.NoError(t, err)
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Logf("Error closing response body: %v", err)
+		}
+	}()
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
@@ -181,7 +189,11 @@ func TestAPI_GetNationalCasesWithDateRange(t *testing.T) {
 
 	resp, err := http.Get(server.URL + "/api/v1/national?start_date=2020-03-01&end_date=2020-03-31")
 	assert.NoError(t, err)
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Logf("Error closing response body: %v", err)
+		}
+	}()
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
@@ -207,7 +219,11 @@ func TestAPI_GetLatestNationalCase(t *testing.T) {
 
 	resp, err := http.Get(server.URL + "/api/v1/national/latest")
 	assert.NoError(t, err)
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Logf("Error closing response body: %v", err)
+		}
+	}()
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
@@ -232,7 +248,11 @@ func TestAPI_GetProvinces(t *testing.T) {
 
 	resp, err := http.Get(server.URL + "/api/v1/provinces")
 	assert.NoError(t, err)
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Logf("Error closing response body: %v", err)
+		}
+	}()
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
@@ -263,7 +283,11 @@ func TestAPI_GetProvinceCases(t *testing.T) {
 
 	resp, err := http.Get(server.URL + "/api/v1/provinces/cases")
 	assert.NoError(t, err)
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Logf("Error closing response body: %v", err)
+		}
+	}()
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
@@ -285,7 +309,11 @@ func TestAPI_CORS(t *testing.T) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	assert.NoError(t, err)
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Logf("Error closing response body: %v", err)
+		}
+	}()
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assert.Equal(t, "*", resp.Header.Get("Access-Control-Allow-Origin"))
@@ -298,7 +326,11 @@ func TestAPI_InvalidEndpoint(t *testing.T) {
 
 	resp, err := http.Get(server.URL + "/api/v1/invalid")
 	assert.NoError(t, err)
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Logf("Error closing response body: %v", err)
+		}
+	}()
 
 	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
 }
