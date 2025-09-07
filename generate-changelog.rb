@@ -20,7 +20,7 @@ require 'optparse'
 # - Cross-platform compatibility (Ruby vs. bash-specific features)
 #
 # Features:
-# - Only runs from release branches (release/vx.x.x)
+# - Only runs from release or hotfix branches (release/vx.x.x or hotfix/vx.x.x)
 # - Categorizes commits by conventional commit types
 # - Determines semantic version increment automatically
 # - Updates CHANGELOG.md with proper formatting
@@ -38,6 +38,7 @@ class ChangelogGenerator
   COMMIT_CATEGORIES = {
     'feat' => { category: 'Added', breaking: false },
     'fix' => { category: 'Fixed', breaking: false },
+    'hotfix' => { category: 'Hotfixes', breaking: false },
     'docs' => { category: 'Documentation', breaking: false },
     'style' => { category: 'Style', breaking: false },
     'refactor' => { category: 'Changed', breaking: false },
@@ -49,8 +50,9 @@ class ChangelogGenerator
     'revert' => { category: 'Reverted', breaking: false }
   }.freeze
 
-  # Release branch pattern
+  # Release and hotfix branch patterns
   RELEASE_BRANCH_PATTERN = /^release\/v(\d+)\.(\d+)\.(\d+)$/
+  HOTFIX_BRANCH_PATTERN = /^hotfix\/v(\d+)\.(\d+)\.(\d+)$/
 
   # Changelog file path
   CHANGELOG_PATH = 'CHANGELOG.md'
@@ -128,10 +130,13 @@ class ChangelogGenerator
   # Parse version information from the current branch name
   #
   # @return [Hash] Version components (major, minor, patch)
-  # @raise [RuntimeError] if not on a valid release branch
+  # @raise [RuntimeError] if not on a valid release or hotfix branch
   def parse_version_from_branch
-    match = current_branch.match(RELEASE_BRANCH_PATTERN)
-    raise "Not on a release branch. Expected format: release/vX.Y.Z" unless match
+    release_match = current_branch.match(RELEASE_BRANCH_PATTERN)
+    hotfix_match = current_branch.match(HOTFIX_BRANCH_PATTERN)
+    match = release_match || hotfix_match
+    
+    raise "Not on a release or hotfix branch. Expected format: release/vX.Y.Z or hotfix/vX.Y.Z" unless match
 
     {
       major: match[1].to_i,
@@ -146,6 +151,14 @@ class ChangelogGenerator
   # @return [String] Version string (e.g., "v1.2.3")
   def version_string
     "v#{version_info[:major]}.#{version_info[:minor]}.#{version_info[:patch]}"
+  end
+
+  ##
+  # Check if we're currently on a hotfix branch
+  #
+  # @return [Boolean] true if on hotfix branch, false if on release branch
+  def hotfix_branch?
+    current_branch.match?(HOTFIX_BRANCH_PATTERN)
   end
 
   ##
@@ -296,19 +309,20 @@ class ChangelogGenerator
   def category_priority(category)
     priorities = {
       'Breaking Changes' => 1,
-      'Added' => 2,
-      'Changed' => 3,
-      'Fixed' => 4,
-      'Deprecated' => 5,
-      'Removed' => 6,
-      'Security' => 7,
-      'Performance' => 8,
-      'Documentation' => 9,
-      'Tests' => 10,
-      'CI/CD' => 11,
-      'Build' => 12,
-      'Maintenance' => 13,
-      'Other' => 14
+      'Hotfixes' => 2,
+      'Added' => 3,
+      'Changed' => 4,
+      'Fixed' => 5,
+      'Deprecated' => 6,
+      'Removed' => 7,
+      'Security' => 8,
+      'Performance' => 9,
+      'Documentation' => 10,
+      'Tests' => 11,
+      'CI/CD' => 12,
+      'Build' => 13,
+      'Maintenance' => 14,
+      'Other' => 15
     }
     priorities[category] || 99
   end
@@ -452,7 +466,7 @@ class CLI
       opts.separator "following conventional commit format and Keep a Changelog style."
       opts.separator ""
       opts.separator "Requirements:"
-      opts.separator "- Must be run from a release branch (release/vX.Y.Z)"
+      opts.separator "- Must be run from a release or hotfix branch (release/vX.Y.Z or hotfix/vX.Y.Z)"
       opts.separator "- Git repository with existing tags"
       opts.separator "- CHANGELOG.md file with [Unreleased] section"
       opts.separator ""

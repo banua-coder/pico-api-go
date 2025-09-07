@@ -41,7 +41,7 @@ type ProvinceCumulativeCases struct {
 // ProvinceCaseStatistics contains calculated statistics and metrics for province data
 type ProvinceCaseStatistics struct {
 	Percentages      CasePercentages   `json:"percentages"`
-	ReproductionRate *ReproductionRate `json:"reproduction_rate,omitempty"`
+	ReproductionRate *ReproductionRate `json:"reproduction_rate"`
 }
 
 // TransformToResponse converts a ProvinceCase model to the response format
@@ -86,13 +86,11 @@ func (pc *ProvinceCase) TransformToResponse(date time.Time) ProvinceCaseResponse
 		Province: pc.Province,
 	}
 
-	// Add reproduction rate if available
-	if pc.Rt != nil && pc.RtUpper != nil && pc.RtLower != nil {
-		response.Statistics.ReproductionRate = &ReproductionRate{
-			Value:      *pc.Rt,
-			UpperBound: *pc.RtUpper,
-			LowerBound: *pc.RtLower,
-		}
+	// Always include reproduction rate structure, even when values are null
+	response.Statistics.ReproductionRate = &ReproductionRate{
+		Value:      pc.Rt,
+		UpperBound: pc.RtUpper,
+		LowerBound: pc.RtLower,
 	}
 
 	return response

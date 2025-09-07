@@ -42,9 +42,9 @@ type CasePercentages struct {
 
 // ReproductionRate represents the R-value with confidence bounds
 type ReproductionRate struct {
-	Value      float64 `json:"value"`
-	UpperBound float64 `json:"upper_bound"`
-	LowerBound float64 `json:"lower_bound"`
+	Value      *float64 `json:"value"`
+	UpperBound *float64 `json:"upper_bound"`
+	LowerBound *float64 `json:"lower_bound"`
 }
 
 // TransformToResponse converts a NationalCase model to the response format
@@ -74,13 +74,11 @@ func (nc *NationalCase) TransformToResponse() NationalCaseResponse {
 		},
 	}
 
-	// Add reproduction rate if available
-	if nc.Rt != nil && nc.RtUpper != nil && nc.RtLower != nil {
-		response.Statistics.ReproductionRate = &ReproductionRate{
-			Value:      *nc.Rt,
-			UpperBound: *nc.RtUpper,
-			LowerBound: *nc.RtLower,
-		}
+	// Always include reproduction rate structure, even when values are null
+	response.Statistics.ReproductionRate = &ReproductionRate{
+		Value:      nc.Rt,
+		UpperBound: nc.RtUpper,
+		LowerBound: nc.RtLower,
 	}
 
 	return response

@@ -30,7 +30,7 @@ func (r *provinceCaseRepository) GetAll() ([]models.ProvinceCaseWithDate, error)
 			  pc.person_under_observation, pc.finished_person_under_observation,
 			  pc.person_under_supervision, pc.finished_person_under_supervision,
 			  pc.cumulative_positive, pc.cumulative_recovered, pc.cumulative_deceased,
-			  pc.cumulative_person_under_observation, pc.cumulative_finished_persoon_under_observation,
+			  pc.cumulative_person_under_observation, pc.cumulative_finished_person_under_observation,
 			  pc.cumulative_person_under_supervision, pc.cumulative_finished_person_under_supervision,
 			  pc.rt, pc.rt_upper, pc.rt_lower, nc.date, p.name
 			  FROM province_cases pc
@@ -46,7 +46,7 @@ func (r *provinceCaseRepository) GetByProvinceID(provinceID string) ([]models.Pr
 			  pc.person_under_observation, pc.finished_person_under_observation,
 			  pc.person_under_supervision, pc.finished_person_under_supervision,
 			  pc.cumulative_positive, pc.cumulative_recovered, pc.cumulative_deceased,
-			  pc.cumulative_person_under_observation, pc.cumulative_finished_persoon_under_observation,
+			  pc.cumulative_person_under_observation, pc.cumulative_finished_person_under_observation,
 			  pc.cumulative_person_under_supervision, pc.cumulative_finished_person_under_supervision,
 			  pc.rt, pc.rt_upper, pc.rt_lower, nc.date, p.name
 			  FROM province_cases pc
@@ -63,7 +63,7 @@ func (r *provinceCaseRepository) GetByProvinceIDAndDateRange(provinceID string, 
 			  pc.person_under_observation, pc.finished_person_under_observation,
 			  pc.person_under_supervision, pc.finished_person_under_supervision,
 			  pc.cumulative_positive, pc.cumulative_recovered, pc.cumulative_deceased,
-			  pc.cumulative_person_under_observation, pc.cumulative_finished_persoon_under_observation,
+			  pc.cumulative_person_under_observation, pc.cumulative_finished_person_under_observation,
 			  pc.cumulative_person_under_supervision, pc.cumulative_finished_person_under_supervision,
 			  pc.rt, pc.rt_upper, pc.rt_lower, nc.date, p.name
 			  FROM province_cases pc
@@ -80,7 +80,7 @@ func (r *provinceCaseRepository) GetByDateRange(startDate, endDate time.Time) ([
 			  pc.person_under_observation, pc.finished_person_under_observation,
 			  pc.person_under_supervision, pc.finished_person_under_supervision,
 			  pc.cumulative_positive, pc.cumulative_recovered, pc.cumulative_deceased,
-			  pc.cumulative_person_under_observation, pc.cumulative_finished_persoon_under_observation,
+			  pc.cumulative_person_under_observation, pc.cumulative_finished_person_under_observation,
 			  pc.cumulative_person_under_supervision, pc.cumulative_finished_person_under_supervision,
 			  pc.rt, pc.rt_upper, pc.rt_lower, nc.date, p.name
 			  FROM province_cases pc
@@ -97,7 +97,7 @@ func (r *provinceCaseRepository) GetLatestByProvinceID(provinceID string) (*mode
 			  pc.person_under_observation, pc.finished_person_under_observation,
 			  pc.person_under_supervision, pc.finished_person_under_supervision,
 			  pc.cumulative_positive, pc.cumulative_recovered, pc.cumulative_deceased,
-			  pc.cumulative_person_under_observation, pc.cumulative_finished_persoon_under_observation,
+			  pc.cumulative_person_under_observation, pc.cumulative_finished_person_under_observation,
 			  pc.cumulative_person_under_supervision, pc.cumulative_finished_person_under_supervision,
 			  pc.rt, pc.rt_upper, pc.rt_lower, nc.date, p.name
 			  FROM province_cases pc
