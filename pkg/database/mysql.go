@@ -39,7 +39,8 @@ func NewMySQLConnection(cfg *config.DatabaseConfig) (*DB, error) {
 }
 
 func NewMySQLConnectionWithConfig(cfg *config.DatabaseConfig, connCfg ConnectionConfig) (*DB, error) {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local&timeout=30s&readTimeout=30s&writeTimeout=30s",
+	// Enhanced DSN with better timeout and connection parameters for shared hosting
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local&timeout=10s&readTimeout=10s&writeTimeout=10s&maxAllowedPacket=0&tls=false&allowOldPasswords=1&clientFoundRows=false&columnsWithAlias=false&interpolateParams=true",
 		cfg.Username,
 		cfg.Password,
 		cfg.Host,
@@ -99,10 +100,10 @@ func NewMySQLConnectionWithConfig(cfg *config.DatabaseConfig, connCfg Connection
 
 func DefaultConnectionConfig() ConnectionConfig {
 	return ConnectionConfig{
-		MaxOpenConns:    20,  // Reduced from 25 to be more conservative
-		MaxIdleConns:    10,  // Lower idle connections to reduce connection reset issues
-		ConnMaxLifetime: 3 * time.Minute, // Reduced from 5 minutes to prevent long-lived connections
-		ConnMaxIdleTime: 1 * time.Minute, // New: Close idle connections after 1 minute
+		MaxOpenConns:    5,   // Very conservative for shared hosting
+		MaxIdleConns:    2,   // Minimal idle connections to prevent timeouts
+		ConnMaxLifetime: 30 * time.Second, // Very short-lived connections for shared hosting
+		ConnMaxIdleTime: 15 * time.Second, // Close idle connections very quickly
 		RetryAttempts:   3,
 		RetryDelay:      1 * time.Second,
 	}
