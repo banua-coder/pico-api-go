@@ -52,26 +52,36 @@ func TestProvinceCase_TransformToResponse(t *testing.T) {
 				Day:  100,
 				Date: testDate,
 				Daily: ProvinceDailyCases{
-					Positive:                         150,
-					Recovered:                        120,
-					Deceased:                         10,
-					Active:                           20, // 150 - 120 - 10
-					PersonUnderObservation:           25,
-					FinishedPersonUnderObservation:   20,
-					PersonUnderSupervision:           30,
-					FinishedPersonUnderSupervision:   25,
+					Positive:  150,
+					Recovered: 120,
+					Deceased:  10,
+					Active:    20, // 150 - 120 - 10
+					ODP: ObservationData{
+						Active:   5,  // 25 - 20
+						Finished: 20,
+						Total:    25,
+					},
+					PDP: SupervisionData{
+						Active:   5,  // 30 - 25
+						Finished: 25,
+						Total:    30,
+					},
 				},
 				Cumulative: ProvinceCumulativeCases{
-					Positive:                         5000,
-					Recovered:                        4500,
-					Deceased:                         300,
-					Active:                           200, // 5000 - 4500 - 300
-					PersonUnderObservation:           800,
-					ActivePersonUnderObservation:     50,  // 800 - 750
-					FinishedPersonUnderObservation:   750,
-					PersonUnderSupervision:           600,
-					ActivePersonUnderSupervision:     20,  // 600 - 580
-					FinishedPersonUnderSupervision:   580,
+					Positive:  5000,
+					Recovered: 4500,
+					Deceased:  300,
+					Active:    200, // 5000 - 4500 - 300
+					ODP: ObservationData{
+						Active:   50,  // 800 - 750
+						Finished: 750,
+						Total:    800,
+					},
+					PDP: SupervisionData{
+						Active:   20,  // 600 - 580
+						Finished: 580,
+						Total:    600,
+					},
 				},
 				Statistics: ProvinceCaseStatistics{
 					Percentages: CasePercentages{
@@ -124,26 +134,36 @@ func TestProvinceCase_TransformToResponse(t *testing.T) {
 				Day:  50,
 				Date: testDate,
 				Daily: ProvinceDailyCases{
-					Positive:                         100,
-					Recovered:                        80,
-					Deceased:                         5,
-					Active:                           15, // 100 - 80 - 5
-					PersonUnderObservation:           15,
-					FinishedPersonUnderObservation:   10,
-					PersonUnderSupervision:           20,
-					FinishedPersonUnderSupervision:   15,
+					Positive:  100,
+					Recovered: 80,
+					Deceased:  5,
+					Active:    15, // 100 - 80 - 5
+					ODP: ObservationData{
+						Active:   5,  // 15 - 10
+						Finished: 10,
+						Total:    15,
+					},
+					PDP: SupervisionData{
+						Active:   5,  // 20 - 15
+						Finished: 15,
+						Total:    20,
+					},
 				},
 				Cumulative: ProvinceCumulativeCases{
-					Positive:                         2000,
-					Recovered:                        1800,
-					Deceased:                         100,
-					Active:                           100, // 2000 - 1800 - 100
-					PersonUnderObservation:           400,
-					ActivePersonUnderObservation:     50,  // 400 - 350
-					FinishedPersonUnderObservation:   350,
-					PersonUnderSupervision:           300,
-					ActivePersonUnderSupervision:     10,  // 300 - 290
-					FinishedPersonUnderSupervision:   290,
+					Positive:  2000,
+					Recovered: 1800,
+					Deceased:  100,
+					Active:    100, // 2000 - 1800 - 100
+					ODP: ObservationData{
+						Active:   50,  // 400 - 350
+						Finished: 350,
+						Total:    400,
+					},
+					PDP: SupervisionData{
+						Active:   10,  // 300 - 290
+						Finished: 290,
+						Total:    300,
+					},
 				},
 				Statistics: ProvinceCaseStatistics{
 					Percentages: CasePercentages{
@@ -196,26 +216,36 @@ func TestProvinceCase_TransformToResponse(t *testing.T) {
 				Day:  1,
 				Date: testDate,
 				Daily: ProvinceDailyCases{
-					Positive:                         0,
-					Recovered:                        0,
-					Deceased:                         0,
-					Active:                           0,
-					PersonUnderObservation:           0,
-					FinishedPersonUnderObservation:   0,
-					PersonUnderSupervision:           0,
-					FinishedPersonUnderSupervision:   0,
+					Positive:  0,
+					Recovered: 0,
+					Deceased:  0,
+					Active:    0,
+					ODP: ObservationData{
+						Active:   0,
+						Finished: 0,
+						Total:    0,
+					},
+					PDP: SupervisionData{
+						Active:   0,
+						Finished: 0,
+						Total:    0,
+					},
 				},
 				Cumulative: ProvinceCumulativeCases{
-					Positive:                         0,
-					Recovered:                        0,
-					Deceased:                         0,
-					Active:                           0,
-					PersonUnderObservation:           0,
-					ActivePersonUnderObservation:     0,
-					FinishedPersonUnderObservation:   0,
-					PersonUnderSupervision:           0,
-					ActivePersonUnderSupervision:     0,
-					FinishedPersonUnderSupervision:   0,
+					Positive:  0,
+					Recovered: 0,
+					Deceased:  0,
+					Active:    0,
+					ODP: ObservationData{
+						Active:   0,
+						Finished: 0,
+						Total:    0,
+					},
+					PDP: SupervisionData{
+						Active:   0,
+						Finished: 0,
+						Total:    0,
+					},
 				},
 				Statistics: ProvinceCaseStatistics{
 					Percentages: CasePercentages{
@@ -287,26 +317,36 @@ func TestProvinceCaseWithDate_TransformToResponse(t *testing.T) {
 		Day:  200,
 		Date: testDate,
 		Daily: ProvinceDailyCases{
-			Positive:                         50,
-			Recovered:                        40,
-			Deceased:                         2,
-			Active:                           8, // 50 - 40 - 2
-			PersonUnderObservation:           10,
-			FinishedPersonUnderObservation:   8,
-			PersonUnderSupervision:           12,
-			FinishedPersonUnderSupervision:   10,
+			Positive:  50,
+			Recovered: 40,
+			Deceased:  2,
+			Active:    8, // 50 - 40 - 2
+			ODP: ObservationData{
+				Active:   2,  // 10 - 8
+				Finished: 8,
+				Total:    10,
+			},
+			PDP: SupervisionData{
+				Active:   2,  // 12 - 10
+				Finished: 10,
+				Total:    12,
+			},
 		},
 		Cumulative: ProvinceCumulativeCases{
-			Positive:                         3000,
-			Recovered:                        2700,
-			Deceased:                         200,
-			Active:                           100, // 3000 - 2700 - 200
-			PersonUnderObservation:           500,
-			ActivePersonUnderObservation:     50,  // 500 - 450
-			FinishedPersonUnderObservation:   450,
-			PersonUnderSupervision:           350,
-			ActivePersonUnderSupervision:     30,  // 350 - 320
-			FinishedPersonUnderSupervision:   320,
+			Positive:  3000,
+			Recovered: 2700,
+			Deceased:  200,
+			Active:    100, // 3000 - 2700 - 200
+			ODP: ObservationData{
+				Active:   50,  // 500 - 450
+				Finished: 450,
+				Total:    500,
+			},
+			PDP: SupervisionData{
+				Active:   30,  // 350 - 320
+				Finished: 320,
+				Total:    350,
+			},
 		},
 		Statistics: ProvinceCaseStatistics{
 			Percentages: CasePercentages{
