@@ -80,9 +80,9 @@ func TestProvinceCase_TransformToResponse(t *testing.T) {
 						Deceased:  6.0,  // (300 / 5000) * 100
 					},
 					ReproductionRate: &ReproductionRate{
-						Value:      1.5,
-						UpperBound: 1.8,
-						LowerBound: 1.2,
+						Value:      &[]float64{1.5}[0],
+						UpperBound: &[]float64{1.8}[0],
+						LowerBound: &[]float64{1.2}[0],
 					},
 				},
 				Province: &Province{
@@ -307,9 +307,9 @@ func TestProvinceCaseWithDate_TransformToResponse(t *testing.T) {
 				Deceased:  6.666666666666667, // (200 / 3000) * 100
 			},
 			ReproductionRate: &ReproductionRate{
-				Value:      1.2,
-				UpperBound: 1.5,
-				LowerBound: 0.9,
+				Value:      &[]float64{1.2}[0],
+				UpperBound: &[]float64{1.5}[0],
+				LowerBound: &[]float64{0.9}[0],
 			},
 		},
 		Province: &Province{
