@@ -1,0 +1,491 @@
+basePath: /api/v1
+definitions:
+  handler.Response:
+    properties:
+      data: {}
+      error:
+        type: string
+      message:
+        type: string
+      status:
+        type: string
+    type: object
+  models.CasePercentages:
+    properties:
+      active:
+        type: number
+      deceased:
+        type: number
+      recovered:
+        type: number
+    type: object
+  models.CumulativeCases:
+    properties:
+      active:
+        type: integer
+      deceased:
+        type: integer
+      positive:
+        type: integer
+      recovered:
+        type: integer
+    type: object
+  models.DailyCases:
+    properties:
+      active:
+        type: integer
+      deceased:
+        type: integer
+      positive:
+        type: integer
+      recovered:
+        type: integer
+    type: object
+  models.DailyObservationData:
+    properties:
+      active:
+        type: integer
+      finished:
+        type: integer
+    type: object
+  models.DailySupervisionData:
+    properties:
+      active:
+        type: integer
+      finished:
+        type: integer
+    type: object
+  models.NationalCaseResponse:
+    properties:
+      cumulative:
+        $ref: "#/definitions/models.CumulativeCases"
+      daily:
+        $ref: "#/definitions/models.DailyCases"
+      date:
+        type: string
+      day:
+        type: integer
+      statistics:
+        $ref: "#/definitions/models.NationalCaseStatistics"
+    type: object
+  models.NationalCaseStatistics:
+    properties:
+      percentages:
+        $ref: "#/definitions/models.CasePercentages"
+      reproduction_rate:
+        $ref: "#/definitions/models.ReproductionRate"
+    type: object
+  models.ObservationData:
+    properties:
+      active:
+        type: integer
+      finished:
+        type: integer
+      total:
+        type: integer
+    type: object
+  models.PaginatedResponse:
+    properties:
+      data: {}
+      pagination:
+        $ref: "#/definitions/models.PaginationMeta"
+    type: object
+  models.PaginationMeta:
+    properties:
+      has_next:
+        type: boolean
+      has_prev:
+        type: boolean
+      limit:
+        type: integer
+      offset:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  models.Province:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  models.ProvinceCaseResponse:
+    properties:
+      cumulative:
+        $ref: "#/definitions/models.ProvinceCumulativeCases"
+      daily:
+        $ref: "#/definitions/models.ProvinceDailyCases"
+      date:
+        type: string
+      day:
+        type: integer
+      province:
+        $ref: "#/definitions/models.Province"
+      statistics:
+        $ref: "#/definitions/models.ProvinceCaseStatistics"
+    type: object
+  models.ProvinceCaseStatistics:
+    properties:
+      percentages:
+        $ref: "#/definitions/models.CasePercentages"
+      reproduction_rate:
+        $ref: "#/definitions/models.ReproductionRate"
+    type: object
+  models.ProvinceCumulativeCases:
+    properties:
+      active:
+        type: integer
+      deceased:
+        type: integer
+      odp:
+        $ref: "#/definitions/models.ObservationData"
+      pdp:
+        $ref: "#/definitions/models.SupervisionData"
+      positive:
+        type: integer
+      recovered:
+        type: integer
+    type: object
+  models.ProvinceDailyCases:
+    properties:
+      active:
+        type: integer
+      deceased:
+        type: integer
+      odp:
+        $ref: "#/definitions/models.DailyObservationData"
+      pdp:
+        $ref: "#/definitions/models.DailySupervisionData"
+      positive:
+        type: integer
+      recovered:
+        type: integer
+    type: object
+  models.ProvinceWithLatestCase:
+    properties:
+      id:
+        type: string
+      latest_case:
+        $ref: "#/definitions/models.ProvinceCaseResponse"
+      name:
+        type: string
+    type: object
+  models.ReproductionRate:
+    properties:
+      lower_bound:
+        type: number
+      upper_bound:
+        type: number
+      value:
+        type: number
+    type: object
+  models.SupervisionData:
+    properties:
+      active:
+        type: integer
+      finished:
+        type: integer
+      total:
+        type: integer
+    type: object
+host: pico-api.banuacoder.com
+info:
+  contact:
+    email: support@banuacoder.com
+    name: API Support
+    url: https://github.com/banua-coder/pico-api-go
+  description:
+    A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central
+    Sulawesi), with additional national and provincial data for context. Features
+    enhanced ODP/PDP grouping and hybrid pagination.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: Sulawesi Tengah COVID-19 Data API
+  version: 2.1.0
+paths:
+  /:
+    get:
+      consumes:
+        - application/json
+      description: Get a list of all available API endpoints with descriptions
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+              - $ref: "#/definitions/handler.Response"
+              - properties:
+                  data:
+                    additionalProperties: true
+                    type: object
+                type: object
+      summary: API endpoint index
+      tags:
+        - health
+  /health:
+    get:
+      consumes:
+        - application/json
+      description: Check API health status and database connectivity
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: API is healthy
+          schema:
+            allOf:
+              - $ref: "#/definitions/handler.Response"
+              - properties:
+                  data:
+                    additionalProperties: true
+                    type: object
+                type: object
+        "503":
+          description: API is degraded (database issues)
+          schema:
+            allOf:
+              - $ref: "#/definitions/handler.Response"
+              - properties:
+                  data:
+                    additionalProperties: true
+                    type: object
+                type: object
+      summary: Health check
+      tags:
+        - health
+  /national:
+    get:
+      consumes:
+        - application/json
+      description:
+        Retrieve national COVID-19 cases data with optional date range
+        filtering
+      parameters:
+        - description: Start date (YYYY-MM-DD)
+          in: query
+          name: start_date
+          type: string
+        - description: End date (YYYY-MM-DD)
+          in: query
+          name: end_date
+          type: string
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+              - $ref: "#/definitions/handler.Response"
+              - properties:
+                  data:
+                    items:
+                      $ref: "#/definitions/models.NationalCaseResponse"
+                    type: array
+                type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: "#/definitions/handler.Response"
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/handler.Response"
+      summary: Get national COVID-19 cases
+      tags:
+        - national
+  /national/latest:
+    get:
+      consumes:
+        - application/json
+      description: Retrieve the most recent national COVID-19 case data
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+              - $ref: "#/definitions/handler.Response"
+              - properties:
+                  data:
+                    $ref: "#/definitions/models.NationalCaseResponse"
+                type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: "#/definitions/handler.Response"
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/handler.Response"
+      summary: Get latest national COVID-19 case
+      tags:
+        - national
+  /provinces:
+    get:
+      consumes:
+        - application/json
+      description:
+        Retrieve all provinces with their latest COVID-19 case data by
+        default. Use exclude_latest_case=true for basic province list only.
+      parameters:
+        - description: "Exclude latest case data (default: false)"
+          in: query
+          name: exclude_latest_case
+          type: boolean
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: Basic province list when exclude_latest_case=true
+          schema:
+            allOf:
+              - $ref: "#/definitions/handler.Response"
+              - properties:
+                  data:
+                    items:
+                      $ref: "#/definitions/models.Province"
+                    type: array
+                type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/handler.Response"
+      summary: Get provinces with COVID-19 data
+      tags:
+        - provinces
+  /provinces/{provinceId}/cases:
+    get:
+      consumes:
+        - application/json
+      description:
+        Retrieve COVID-19 cases for all provinces or a specific province
+        with hybrid pagination support
+      parameters:
+        - description: Province ID (e.g., '31' for Jakarta)
+          in: path
+          name: provinceId
+          type: string
+        - description: "Records per page (default: 50, max: 1000)"
+          in: query
+          name: limit
+          type: integer
+        - description: "Records to skip (default: 0)"
+          in: query
+          name: offset
+          type: integer
+        - description: Return all data without pagination
+          in: query
+          name: all
+          type: boolean
+        - description: Start date (YYYY-MM-DD)
+          in: query
+          name: start_date
+          type: string
+        - description: End date (YYYY-MM-DD)
+          in: query
+          name: end_date
+          type: string
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: All data response when all=true
+          schema:
+            allOf:
+              - $ref: "#/definitions/handler.Response"
+              - properties:
+                  data:
+                    items:
+                      $ref: "#/definitions/models.ProvinceCaseResponse"
+                    type: array
+                type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: "#/definitions/handler.Response"
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/handler.Response"
+      summary: Get province COVID-19 cases
+      tags:
+        - province-cases
+  /provinces/cases:
+    get:
+      consumes:
+        - application/json
+      description:
+        Retrieve COVID-19 cases for all provinces or a specific province
+        with hybrid pagination support
+      parameters:
+        - description: "Records per page (default: 50, max: 1000)"
+          in: query
+          name: limit
+          type: integer
+        - description: "Records to skip (default: 0)"
+          in: query
+          name: offset
+          type: integer
+        - description: Return all data without pagination
+          in: query
+          name: all
+          type: boolean
+        - description: Start date (YYYY-MM-DD)
+          in: query
+          name: start_date
+          type: string
+        - description: End date (YYYY-MM-DD)
+          in: query
+          name: end_date
+          type: string
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: All data response when all=true
+          schema:
+            allOf:
+              - $ref: "#/definitions/handler.Response"
+              - properties:
+                  data:
+                    items:
+                      $ref: "#/definitions/models.ProvinceCaseResponse"
+                    type: array
+                type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: "#/definitions/handler.Response"
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/handler.Response"
+      summary: Get province COVID-19 cases
+      tags:
+        - province-cases
+schemes:
+  - https
+  - http
+swagger: "2.0"
+tags:
+  - description: Health check operations
+    name: health
+  - description: National COVID-19 case operations (for context)
+    name: national
+  - description:
+      Province information and COVID-19 case operations (focus on Sulawesi
+      Tengah)
+    name: provinces
+  - description: Province-level COVID-19 case data with pagination support
+    name: province-cases

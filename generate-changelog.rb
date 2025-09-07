@@ -204,7 +204,7 @@ class ChangelogGenerator
     commit_format = '%H|%s|%b|%an|%ae|%ad'
     commits_output = `git log #{range} --pretty=format:"#{commit_format}" --date=iso`
     
-    commits_output.split("\n").map do |line|
+    commits = commits_output.split("\n").map do |line|
       parts = line.split('|', 6)
       next if parts.length < 6
 
@@ -217,6 +217,216 @@ class ChangelogGenerator
         date: parts[5]
       }
     end.compact
+    
+    # Enhance squash commits with PR information
+    enhance_squash_commits(commits)
+  end
+
+  ##
+  # Enhance squash commits with PR information
+  #
+  # @param commits [Array<Hash>] Array of commit information
+  # @return [Array<Hash>] Enhanced commits with PR details
+  def enhance_squash_commits(commits)
+    puts "🔍 Analyzing commits for squash-merge patterns..."
+    
+    commits.map do |commit|
+      # Check if this looks like a squash commit (usually contains PR number)
+      if looks_like_squash_commit?(commit)
+        enhanced_commit = parse_squash_commit(commit)
+        enhanced_commit || commit
+      else
+        commit
+      end
+    end
+  end
+
+  ##
+  # Check if a commit looks like a squash commit
+  #
+  # @param commit [Hash] Commit information
+  # @return [Boolean] true if likely a squash commit
+  def looks_like_squash_commit?(commit)
+    subject = commit[:subject]
+    body = commit[:body]
+    
+    # Common patterns for squash commits:
+    # - Contains PR number: "Feature: description (#123)"
+    # - Body contains "* " bullet points (squashed commit list)
+    # - Subject is very generic but body has details
+    subject.match?(/\(#\d+\)$/) || 
+    body.include?('* ') ||
+    (subject.split(' ').length < 4 && body.length > 100)
+  end
+
+  ##
+  # Parse squash commit to extract meaningful information
+  #
+  # @param commit [Hash] Original commit information
+  # @return [Hash, nil] Enhanced commit or nil if parsing failed
+  def parse_squash_commit(commit)
+    subject = commit[:subject]
+    body = commit[:body]
+    
+    # Extract PR number if present
+    pr_match = subject.match(/\(#(\d+)\)$/)
+    pr_number = pr_match ? pr_match[1] : nil
+    
+    # Try to get PR information from GitHub CLI if available
+    pr_info = pr_number ? get_pr_info(pr_number) : nil
+    
+    # Parse the body for individual changes
+    changes = parse_commit_body_for_changes(body)
+    
+    if changes.any?
+      # Use the first significant change as the main commit type
+      main_change = changes.first
+      enhanced_subject = main_change[:description] || subject.gsub(/\s*\(#\d+\)$/, '')
+      
+      commit.merge({
+        original_subject: subject,
+        subject: "#{main_change[:type]}: #{enhanced_subject}",
+        pr_number: pr_number,
+        pr_info: pr_info,
+        squash_changes: changes
+      })
+    else
+      # Fallback: try to infer type from subject or body
+      inferred_type = infer_commit_type_from_content(subject, body)
+      if inferred_type
+        clean_subject = subject.gsub(/\s*\(#\d+\)$/, '')
+        commit.merge({
+          original_subject: subject,
+          subject: "#{inferred_type}: #{clean_subject}",
+          pr_number: pr_number,
+          pr_info: pr_info
+        })
+      else
+        commit
+      end
+    end
+  end
+
+  ##
+  # Parse commit body for individual changes
+  #
+  # @param body [String] Commit body text
+  # @return [Array<Hash>] Array of parsed changes
+  def parse_commit_body_for_changes(body)
+    return [] if body.nil? || body.strip.empty?
+    
+    changes = []
+    
+    # Look for bullet points or line items
+    body.split("\n").each do |line|
+      line = line.strip
+      next if line.empty?
+      
+      # Match patterns like:
+      # * Add feature X
+      # - Fix bug Y
+      # • Update documentation
+      if line.match?(/^[\*\-•]\s+(.+)/)
+        description = line.gsub(/^[\*\-•]\s+/, '')
+        type = infer_type_from_description(description)
+        changes << {
+          type: type,
+          description: description,
+          line: line
+        }
+      end
+    end
+    
+    changes
+  end
+
+  ##
+  # Infer commit type from description
+  #
+  # @param description [String] Change description
+  # @return [String] Inferred commit type
+  def infer_type_from_description(description)
+    desc_lower = description.downcase
+    
+    case desc_lower
+    when /^add|^implement|^create|^introduce/
+      'feat'
+    when /^fix|^resolve|^correct|^repair/
+      'fix'
+    when /^update|^change|^modify|^improve/
+      'refactor'
+    when /^remove|^delete|^drop/
+      'refactor'
+    when /^test|^spec/
+      'test'
+    when /^doc|^readme|^comment/
+      'docs'
+    when /^refactor|^restructure|^reorganize/
+      'refactor'
+    when /^perf|^optim|^speed/
+      'perf'
+    when /^style|^format|^lint/
+      'style'
+    when /^chore|^maintenance|^clean/
+      'chore'
+    when /^build|^deps|^depend/
+      'build'
+    when /^ci|^deploy|^workflow/
+      'ci'
+    else
+      'feat' # Default to feature if uncertain
+    end
+  end
+
+  ##
+  # Infer commit type from subject and body content
+  #
+  # @param subject [String] Commit subject
+  # @param body [String] Commit body
+  # @return [String, nil] Inferred type or nil
+  def infer_commit_type_from_content(subject, body)
+    content = "#{subject} #{body}".downcase
+    
+    # Look for keywords that indicate the type of change
+    if content.match?(/add|implement|create|introduce|new/)
+      'feat'
+    elsif content.match?(/fix|bug|issue|resolve|correct/)
+      'fix'
+    elsif content.match?(/update|change|modify|improve|enhance/)
+      'refactor'
+    elsif content.match?(/doc|readme|comment/)
+      'docs'
+    elsif content.match?(/test|spec/)
+      'test'
+    elsif content.match?(/style|format|lint/)
+      'style'
+    elsif content.match?(/perf|optim|performance/)
+      'perf'
+    elsif content.match?(/chore|maintenance|clean/)
+      'chore'
+    else
+      nil
+    end
+  end
+
+  ##
+  # Get PR information from GitHub CLI
+  #
+  # @param pr_number [String] PR number
+  # @return [Hash, nil] PR information or nil if not available
+  def get_pr_info(pr_number)
+    return nil unless system('gh --version > /dev/null 2>&1')
+    
+    begin
+      pr_json = `gh pr view #{pr_number} --json title,body,labels 2>/dev/null`
+      return nil if pr_json.empty?
+      
+      require 'json'
+      JSON.parse(pr_json)
+    rescue => e
+      puts "⚠️  Could not fetch PR ##{pr_number} info: #{e.message}" if options[:debug]
+      nil
+    end
   end
 
   ##
@@ -428,13 +638,32 @@ class ChangelogGenerator
   def format_changelog_line(commit_info)
     description = commit_info[:description]
     scope = commit_info[:scope]
+    pr_number = commit_info[:pr_number]
     
-    # Format: "- description (scope if present)"
-    line = "- #{description.capitalize}"
+    # Use original commit description or enhanced description
+    text = description || commit_info.dig(:commit, :subject) || 'Unknown change'
+    
+    # Clean up text - remove conventional commit prefix if it exists
+    text = text.gsub(/^(feat|fix|docs|style|refactor|perf|test|chore|ci|build|hotfix):\s*/i, '')
+    
+    # Format: "- description (scope if present) (#PR if present)"
+    line = "- #{text.capitalize}"
     line += " (#{scope})" if scope && !scope.empty?
+    line += " (##{pr_number})" if pr_number
     
     # Add breaking change marker
-    line = "- **BREAKING**: #{description}" if commit_info[:breaking]
+    if commit_info[:breaking]
+      line = "- **BREAKING**: #{text.capitalize}"
+      line += " (##{pr_number})" if pr_number
+    end
+    
+    # If this is a squash commit with multiple changes, add them as sub-items
+    if commit_info[:squash_changes] && commit_info[:squash_changes].length > 1
+      sub_lines = commit_info[:squash_changes][1..-1].map do |change|
+        "  - #{change[:description].capitalize}"
+      end
+      line += "\n" + sub_lines.join("\n") if sub_lines.any?
+    end
     
     line
   end

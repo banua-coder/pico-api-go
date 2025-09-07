@@ -89,6 +89,27 @@ func (m *MockProvinceCaseRepository) GetLatestByProvinceID(provinceID string) (*
 	return result.(*models.ProvinceCaseWithDate), args.Error(1)
 }
 
+// Paginated methods
+func (m *MockProvinceCaseRepository) GetAllPaginated(limit, offset int) ([]models.ProvinceCaseWithDate, int, error) {
+	args := m.Called(limit, offset)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Int(1), args.Error(2)
+}
+
+func (m *MockProvinceCaseRepository) GetByProvinceIDPaginated(provinceID string, limit, offset int) ([]models.ProvinceCaseWithDate, int, error) {
+	args := m.Called(provinceID, limit, offset)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Int(1), args.Error(2)
+}
+
+func (m *MockProvinceCaseRepository) GetByProvinceIDAndDateRangePaginated(provinceID string, startDate, endDate time.Time, limit, offset int) ([]models.ProvinceCaseWithDate, int, error) {
+	args := m.Called(provinceID, startDate, endDate, limit, offset)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Int(1), args.Error(2)
+}
+
+func (m *MockProvinceCaseRepository) GetByDateRangePaginated(startDate, endDate time.Time, limit, offset int) ([]models.ProvinceCaseWithDate, int, error) {
+	args := m.Called(startDate, endDate, limit, offset)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Int(1), args.Error(2)
+}
+
 func setupMockService() (*MockNationalCaseRepository, *MockProvinceRepository, *MockProvinceCaseRepository, CovidService) {
 	mockNationalRepo := new(MockNationalCaseRepository)
 	mockProvinceRepo := new(MockProvinceRepository)

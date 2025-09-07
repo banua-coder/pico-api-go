@@ -13,10 +13,15 @@ type CovidService interface {
 	GetNationalCasesByDateRange(startDate, endDate string) ([]models.NationalCase, error)
 	GetLatestNationalCase() (*models.NationalCase, error)
 	GetProvinces() ([]models.Province, error)
+	GetProvincesWithLatestCase() ([]models.ProvinceWithLatestCase, error)
 	GetProvinceCases(provinceID string) ([]models.ProvinceCaseWithDate, error)
+	GetProvinceCasesPaginated(provinceID string, limit, offset int) ([]models.ProvinceCaseWithDate, int, error)
 	GetProvinceCasesByDateRange(provinceID, startDate, endDate string) ([]models.ProvinceCaseWithDate, error)
+	GetProvinceCasesByDateRangePaginated(provinceID, startDate, endDate string, limit, offset int) ([]models.ProvinceCaseWithDate, int, error)
 	GetAllProvinceCases() ([]models.ProvinceCaseWithDate, error)
+	GetAllProvinceCasesPaginated(limit, offset int) ([]models.ProvinceCaseWithDate, int, error)
 	GetAllProvinceCasesByDateRange(startDate, endDate string) ([]models.ProvinceCaseWithDate, error)
+	GetAllProvinceCasesByDateRangePaginated(startDate, endDate string, limit, offset int) ([]models.ProvinceCaseWithDate, int, error)
 }
 
 type covidService struct {
@@ -79,6 +84,36 @@ func (s *covidService) GetProvinces() ([]models.Province, error) {
 	return provinces, nil
 }
 
+func (s *covidService) GetProvincesWithLatestCase() ([]models.ProvinceWithLatestCase, error) {
+	provinces, err := s.provinceRepo.GetAll()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get provinces: %w", err)
+	}
+
+	result := make([]models.ProvinceWithLatestCase, len(provinces))
+	
+	for i, province := range provinces {
+		result[i] = models.ProvinceWithLatestCase{
+			Province: province,
+		}
+		
+		// Get latest case for this province
+		latestCase, err := s.provinceCaseRepo.GetLatestByProvinceID(province.ID)
+		if err != nil {
+			// If error or no data, continue without latest case
+			continue
+		}
+		
+		if latestCase != nil {
+			// Transform to response format
+			caseResponse := latestCase.TransformToResponse()
+			result[i].LatestCase = &caseResponse
+		}
+	}
+	
+	return result, nil
+}
+
 func (s *covidService) GetProvinceCases(provinceID string) ([]models.ProvinceCaseWithDate, error) {
 	cases, err := s.provinceCaseRepo.GetByProvinceID(provinceID)
 	if err != nil {
@@ -129,4 +164,56 @@ func (s *covidService) GetAllProvinceCasesByDateRange(startDate, endDate string)
 		return nil, fmt.Errorf("failed to get all province cases by date range: %w", err)
 	}
 	return cases, nil
+}
+
+func (s *covidService) GetProvinceCasesPaginated(provinceID string, limit, offset int) ([]models.ProvinceCaseWithDate, int, error) {
+	cases, total, err := s.provinceCaseRepo.GetByProvinceIDPaginated(provinceID, limit, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to get province cases paginated: %w", err)
+	}
+	return cases, total, nil
+}
+
+func (s *covidService) GetProvinceCasesByDateRangePaginated(provinceID, startDate, endDate string, limit, offset int) ([]models.ProvinceCaseWithDate, int, error) {
+	start, err := time.Parse("2006-01-02", startDate)
+	if err != nil {
+		return nil, 0, fmt.Errorf("invalid start date format: %w", err)
+	}
+
+	end, err := time.Parse("2006-01-02", endDate)
+	if err != nil {
+		return nil, 0, fmt.Errorf("invalid end date format: %w", err)
+	}
+
+	cases, total, err := s.provinceCaseRepo.GetByProvinceIDAndDateRangePaginated(provinceID, start, end, limit, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to get province cases by date range paginated: %w", err)
+	}
+	return cases, total, nil
+}
+
+func (s *covidService) GetAllProvinceCasesPaginated(limit, offset int) ([]models.ProvinceCaseWithDate, int, error) {
+	cases, total, err := s.provinceCaseRepo.GetAllPaginated(limit, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to get all province cases paginated: %w", err)
+	}
+	return cases, total, nil
+}
+
+func (s *covidService) GetAllProvinceCasesByDateRangePaginated(startDate, endDate string, limit, offset int) ([]models.ProvinceCaseWithDate, int, error) {
+	start, err := time.Parse("2006-01-02", startDate)
+	if err != nil {
+		return nil, 0, fmt.Errorf("invalid start date format: %w", err)
+	}
+
+	end, err := time.Parse("2006-01-02", endDate)
+	if err != nil {
+		return nil, 0, fmt.Errorf("invalid end date format: %w", err)
+	}
+
+	cases, total, err := s.provinceCaseRepo.GetByDateRangePaginated(start, end, limit, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to get all province cases by date range paginated: %w", err)
+	}
+	return cases, total, nil
 }
