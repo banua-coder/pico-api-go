@@ -5,19 +5,22 @@ A Go backend service that provides REST API endpoints for COVID-19 data in Indon
 ## Features
 
 - 🦠 National COVID-19 cases data with daily and cumulative statistics
-- 🗺️ Province-level COVID-19 data including ODP/PDP tracking
+- 🗺️ Province-level COVID-19 data with enhanced ODP/PDP grouping
 - 📊 R-rate (reproductive rate) data when available
 - 🔍 Date range filtering for all endpoints
+- 📄 **Hybrid pagination system** - efficient for apps, complete for charts
+- 🎯 **Smart query parameters** - flexible data retrieval options
 - 🚀 Fast and efficient MySQL database integration
 - 🔧 Clean architecture with repository and service layers
 - 🛡️ CORS support for web frontend integration
 - 📝 Structured logging and error handling
 - 💾 Environment-based configuration
+- 🚀 **Automatic deployment** with GitHub Actions
 
 ## API Endpoints
 
 ### Health Check
-- `GET /api/v1/health` - Service health status
+- `GET /api/v1/health` - Service health status and database connectivity
 
 ### National Data
 - `GET /api/v1/national` - Get all national cases
@@ -26,10 +29,125 @@ A Go backend service that provides REST API endpoints for COVID-19 data in Indon
 
 ### Province Data
 - `GET /api/v1/provinces` - Get all provinces
-- `GET /api/v1/provinces/cases` - Get all province cases
-- `GET /api/v1/provinces/cases?start_date=2020-03-01&end_date=2020-12-31` - Get province cases by date range
-- `GET /api/v1/provinces/{provinceId}/cases` - Get cases for specific province
-- `GET /api/v1/provinces/{provinceId}/cases?start_date=2020-03-01&end_date=2020-12-31` - Get province cases by date range
+- `GET /api/v1/provinces?include_latest_case=true` - Get provinces with latest case data
+- `GET /api/v1/provinces/cases` - Get all province cases (paginated by default)
+- `GET /api/v1/provinces/cases?all=true` - Get all province cases (complete dataset)
+- `GET /api/v1/provinces/cases?limit=100&offset=50` - Get province cases with custom pagination
+- `GET /api/v1/provinces/{provinceId}/cases` - Get cases for specific province (paginated)
+- `GET /api/v1/provinces/{provinceId}/cases?all=true` - Get all cases for specific province
+
+### 🆕 Enhanced Query Parameters
+
+**Pagination (All province endpoints):**
+- `limit` (int): Records per page (default: 50, max: 1000)
+- `offset` (int): Records to skip (default: 0)
+- `all` (boolean): Return complete dataset without pagination
+
+**Date Filtering:**
+- `start_date` (YYYY-MM-DD): Filter from date
+- `end_date` (YYYY-MM-DD): Filter to date
+
+**Province Enhancement:**
+- `include_latest_case` (boolean): Include latest case data for each province
+
+### 📄 Response Types
+
+**Paginated Response:**
+```json
+{
+  "status": "success",
+  "data": {
+    "data": [...],
+    "pagination": {
+      "limit": 50,
+      "offset": 0,
+      "total": 1000,
+      "page": 1,
+      "has_next": true,
+      "has_prev": false
+    }
+  }
+}
+```
+
+**Complete Data Response:**
+```json
+{
+  "status": "success", 
+  "data": [...]
+}
+```
+
+## 🆕 Enhanced Data Structure
+
+### Grouped ODP/PDP Data
+
+Province case data now includes structured ODP (Person Under Observation) and PDP (Patient Under Supervision) data:
+
+```json
+{
+  "daily": {
+    "positive": 150,
+    "odp": {
+      "active": 5,
+      "finished": 20
+    },
+    "pdp": {
+      "active": 8, 
+      "finished": 25
+    }
+  },
+  "cumulative": {
+    "positive": 5000,
+    "odp": {
+      "active": 50,
+      "finished": 750,
+      "total": 800
+    },
+    "pdp": {
+      "active": 20,
+      "finished": 580, 
+      "total": 600
+    }
+  }
+}
+```
+
+## Usage Examples
+
+### For Web Applications (Efficient Loading)
+```javascript
+// Load first page (default: 50 records)
+const response = await fetch('/api/v1/provinces/cases');
+const { data, pagination } = response.data;
+
+// Load next page
+if (pagination.has_next) {
+    const nextPage = await fetch(`/api/v1/provinces/cases?offset=${pagination.offset + pagination.limit}`);
+}
+```
+
+### For Charts & Analytics (Complete Dataset)
+```javascript
+// Get complete dataset for time series charts
+const response = await fetch('/api/v1/provinces/cases?all=true&start_date=2024-01-01');
+const allData = response.data;
+
+// Perfect for Chart.js, D3.js, etc.
+const chartData = allData.map(item => ({
+    x: item.date,
+    y: item.cumulative.positive
+}));
+```
+
+### For Province-Specific Analysis
+```javascript
+// Get all Jakarta data
+const response = await fetch('/api/v1/provinces/31/cases?all=true');
+
+// Get provinces with their latest statistics
+const provincesResponse = await fetch('/api/v1/provinces?include_latest_case=true');
+```
 
 ## Setup and Installation
 
