@@ -137,7 +137,7 @@ func (h *CovidHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	health := map[string]interface{}{
 		"status":    "healthy",
 		"service":   "COVID-19 API",
-		"version":   "2.0.0",
+		"version":   "2.0.1",
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
 	}
 
