@@ -1,7 +1,7 @@
 // Package main provides the entry point for the Sulawesi Tengah COVID-19 Data API
 //
 //	@title			Sulawesi Tengah COVID-19 Data API
-//	@version		2.0.2
+//	@version		2.1.0
 //	@description	A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central Sulawesi), with additional national and provincial data for context. Features enhanced ODP/PDP grouping and hybrid pagination.
 //	@termsOfService	http://swagger.io/terms/
 //
@@ -35,13 +35,13 @@ import (
 	"log"
 	"net/http"
 
+	_ "github.com/banua-coder/pico-api-go/docs" // Import generated docs
 	"github.com/banua-coder/pico-api-go/internal/config"
 	"github.com/banua-coder/pico-api-go/internal/handler"
 	"github.com/banua-coder/pico-api-go/internal/middleware"
 	"github.com/banua-coder/pico-api-go/internal/repository"
 	"github.com/banua-coder/pico-api-go/internal/service"
 	"github.com/banua-coder/pico-api-go/pkg/database"
-	_ "github.com/banua-coder/pico-api-go/docs" // Import generated docs
 )
 
 func main() {

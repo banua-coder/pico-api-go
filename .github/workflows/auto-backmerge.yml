@@ -1,0 +1,139 @@
+name: Auto Back-merge to Develop
+
+on:
+  pull_request:
+    branches: [main]
+    types: [closed]
+
+jobs:
+  back-merge:
+    if: github.event.pull_request.merged == true && (startsWith(github.head_ref, 'release/') || startsWith(github.head_ref, 'hotfix/'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Extract version from branch name
+        id: version
+        run: |
+          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          
+          if [[ $BRANCH_NAME == release/* ]]; then
+            VERSION=$(echo $BRANCH_NAME | sed 's/release\///')
+            TYPE="release"
+          elif [[ $BRANCH_NAME == hotfix/* ]]; then
+            VERSION=$(echo $BRANCH_NAME | sed 's/hotfix\///')
+            TYPE="hotfix"
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "type=$TYPE" >> $GITHUB_OUTPUT
+
+      - name: Create back-merge branch
+        id: backmerge
+        run: |
+          BACKMERGE_BRANCH="chore/back-merge-${{ steps.version.outputs.version }}-to-develop"
+          echo "backmerge_branch=$BACKMERGE_BRANCH" >> $GITHUB_OUTPUT
+          
+          # Create and checkout new branch from develop
+          git fetch origin develop:develop
+          git checkout -b "$BACKMERGE_BRANCH" develop
+          
+          # Merge main into the back-merge branch
+          git merge --no-ff main -m "chore: back-merge ${{ steps.version.outputs.version }} from main to develop
+
+          Automated back-merge of ${{ steps.version.outputs.type }} ${{ steps.version.outputs.version }} from main branch.
+          
+          Original PR: ${{ github.event.pull_request.html_url }}
+          Merged commit: ${{ github.event.pull_request.merge_commit_sha }}"
+          
+          # Push the back-merge branch
+          git push origin "$BACKMERGE_BRANCH"
+
+      - name: Create back-merge PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --base develop \
+            --head "${{ steps.backmerge.outputs.backmerge_branch }}" \
+            --title "chore: back-merge ${{ steps.version.outputs.version }} from main to develop" \
+            --body "$(cat <<'EOF'
+          ## Summary
+          Automated back-merge of ${{ steps.version.outputs.type }} ${{ steps.version.outputs.version }} from main to develop branch.
+          
+          ## Details
+          - **Original PR**: ${{ github.event.pull_request.html_url }}
+          - **Merged Branch**: `${{ steps.version.outputs.branch_name }}`
+          - **Version**: ${{ steps.version.outputs.version }}
+          - **Type**: ${{ steps.version.outputs.type }}
+          - **Merge Commit**: ${{ github.event.pull_request.merge_commit_sha }}
+          
+          ## What this PR does
+          - Syncs develop branch with main after ${{ steps.version.outputs.type }} merge
+          - Ensures develop has all changes from the ${{ steps.version.outputs.version }} ${{ steps.version.outputs.type }}
+          - Maintains Git Flow branching model integrity
+          
+          ## Auto-generated
+          This PR was automatically created by GitHub Actions.
+          
+          **Review and merge when ready** - this should typically be a straightforward merge unless there are conflicts that need manual resolution.
+          EOF
+          )" \
+            --label "chore" \
+            --label "auto-generated"
+
+      - name: Comment on original PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} --body "🔄 **Auto Back-merge Created**
+
+          A back-merge PR has been automatically created to sync the develop branch:
+          - **Back-merge PR**: [chore: back-merge ${{ steps.version.outputs.version }} from main to develop]($(gh pr list --base develop --head ${{ steps.backmerge.outputs.backmerge_branch }} --json url --jq '.[0].url'))
+          - **Branch**: \`${{ steps.backmerge.outputs.backmerge_branch }}\`
+          
+          Please review and merge the back-merge PR to complete the ${{ steps.version.outputs.type }} process."
+
+  handle-failure:
+    if: failure() && github.event.pull_request.merged == true && (startsWith(github.head_ref, 'release/') || startsWith(github.head_ref, 'hotfix/'))
+    needs: back-merge
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    
+    steps:
+      - name: Comment on PR about failure
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} --body "⚠️ **Auto Back-merge Failed**
+          
+          The automatic back-merge to develop failed. This may be due to merge conflicts or other issues.
+          
+          **Manual action required:**
+          1. Manually create a back-merge from main to develop
+          2. Resolve any conflicts if present
+          3. Complete the back-merge to maintain Git Flow integrity
+          
+          **Commands to run manually:**
+          \`\`\`bash
+          git checkout develop
+          git pull origin develop
+          git merge main
+          git push origin develop
+          \`\`\`"
