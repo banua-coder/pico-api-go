@@ -28,8 +28,8 @@ A Go backend service that provides REST API endpoints for COVID-19 data in Indon
 - `GET /api/v1/national/latest` - Get latest national case data
 
 ### Province Data
-- `GET /api/v1/provinces` - Get all provinces
-- `GET /api/v1/provinces?include_latest_case=true` - Get provinces with latest case data
+- `GET /api/v1/provinces` - Get all provinces with latest case data (default)
+- `GET /api/v1/provinces?exclude_latest_case=true` - Get basic province list without case data
 - `GET /api/v1/provinces/cases` - Get all province cases (paginated by default)
 - `GET /api/v1/provinces/cases?all=true` - Get all province cases (complete dataset)
 - `GET /api/v1/provinces/cases?limit=100&offset=50` - Get province cases with custom pagination
@@ -48,7 +48,7 @@ A Go backend service that provides REST API endpoints for COVID-19 data in Indon
 - `end_date` (YYYY-MM-DD): Filter to date
 
 **Province Enhancement:**
-- `include_latest_case` (boolean): Include latest case data for each province
+- `exclude_latest_case` (boolean): Return basic province list without case data (default includes latest case data)
 
 ### 📄 Response Types
 
@@ -145,8 +145,8 @@ const chartData = allData.map(item => ({
 // Get all Jakarta data
 const response = await fetch('/api/v1/provinces/31/cases?all=true');
 
-// Get provinces with their latest statistics
-const provincesResponse = await fetch('/api/v1/provinces?include_latest_case=true');
+// Get provinces with their latest statistics (default behavior)
+const provincesResponse = await fetch('/api/v1/provinces');
 ```
 
 ## Setup and Installation

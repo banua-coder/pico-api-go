@@ -167,18 +167,18 @@ Get the most recent national case data.
 
 **GET** `/provinces`
 
-Get list of all provinces.
+Get list of all provinces with their latest COVID-19 case data (default behavior).
 
 **Query Parameters:**
-- `include_latest_case` (boolean, optional): Include latest case data for each province
+- `exclude_latest_case` (boolean, optional): Return basic province list without case data
 
 **Examples:**
 ```bash
-# Basic province list
+# Provinces with latest case data (default)
 GET /provinces
 
-# Provinces with latest case data
-GET /provinces?include_latest_case=true
+# Basic province list without case data
+GET /provinces?exclude_latest_case=true
 ```
 
 ### 5. Province Cases

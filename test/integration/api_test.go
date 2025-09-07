@@ -95,6 +95,27 @@ func (m *MockProvinceCaseRepo) GetLatestByProvinceID(provinceID string) (*models
 	return result.(*models.ProvinceCaseWithDate), args.Error(1)
 }
 
+// Paginated methods
+func (m *MockProvinceCaseRepo) GetAllPaginated(limit, offset int) ([]models.ProvinceCaseWithDate, int, error) {
+	args := m.Called(limit, offset)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Int(1), args.Error(2)
+}
+
+func (m *MockProvinceCaseRepo) GetByProvinceIDPaginated(provinceID string, limit, offset int) ([]models.ProvinceCaseWithDate, int, error) {
+	args := m.Called(provinceID, limit, offset)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Int(1), args.Error(2)
+}
+
+func (m *MockProvinceCaseRepo) GetByProvinceIDAndDateRangePaginated(provinceID string, startDate, endDate time.Time, limit, offset int) ([]models.ProvinceCaseWithDate, int, error) {
+	args := m.Called(provinceID, startDate, endDate, limit, offset)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Int(1), args.Error(2)
+}
+
+func (m *MockProvinceCaseRepo) GetByDateRangePaginated(startDate, endDate time.Time, limit, offset int) ([]models.ProvinceCaseWithDate, int, error) {
+	args := m.Called(startDate, endDate, limit, offset)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Int(1), args.Error(2)
+}
+
 func setupTestServer() (*httptest.Server, *MockNationalCaseRepo, *MockProvinceRepo, *MockProvinceCaseRepo) {
 	mockNationalRepo := new(MockNationalCaseRepo)
 	mockProvinceRepo := new(MockProvinceRepo)
@@ -236,7 +257,7 @@ func TestAPI_GetLatestNationalCase(t *testing.T) {
 }
 
 func TestAPI_GetProvinces(t *testing.T) {
-	server, _, mockProvinceRepo, _ := setupTestServer()
+	server, _, mockProvinceRepo, mockProvinceCaseRepo := setupTestServer()
 	defer server.Close()
 
 	expectedProvinces := []models.Province{
@@ -244,7 +265,23 @@ func TestAPI_GetProvinces(t *testing.T) {
 		{ID: "31", Name: "DKI Jakarta"},
 	}
 
+	// Mock the calls needed for GetProvincesWithLatestCase (default behavior)
 	mockProvinceRepo.On("GetAll").Return(expectedProvinces, nil)
+	
+	// Mock the latest case data for each province
+	testTime := time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)
+	mockProvinceCaseRepo.On("GetLatestByProvinceID", "11").Return(&models.ProvinceCaseWithDate{
+		ProvinceCase: models.ProvinceCase{
+			ID: 1, ProvinceID: "11", Positive: 10, Day: 100,
+		},
+		Date: testTime,
+	}, nil)
+	mockProvinceCaseRepo.On("GetLatestByProvinceID", "31").Return(&models.ProvinceCaseWithDate{
+		ProvinceCase: models.ProvinceCase{
+			ID: 2, ProvinceID: "31", Positive: 25, Day: 100,
+		},
+		Date: testTime,
+	}, nil)
 
 	resp, err := http.Get(server.URL + "/api/v1/provinces")
 	assert.NoError(t, err)
@@ -262,6 +299,7 @@ func TestAPI_GetProvinces(t *testing.T) {
 	assert.Equal(t, "success", response.Status)
 
 	mockProvinceRepo.AssertExpectations(t)
+	mockProvinceCaseRepo.AssertExpectations(t)
 }
 
 func TestAPI_GetProvinceCases(t *testing.T) {
@@ -279,7 +317,7 @@ func TestAPI_GetProvinceCases(t *testing.T) {
 		},
 	}
 
-	mockProvinceCaseRepo.On("GetAll").Return(expectedCases, nil)
+	mockProvinceCaseRepo.On("GetAllPaginated", 50, 0).Return(expectedCases, len(expectedCases), nil)
 
 	resp, err := http.Get(server.URL + "/api/v1/provinces/cases")
 	assert.NoError(t, err)
