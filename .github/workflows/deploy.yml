@@ -43,11 +43,25 @@ jobs:
       uses: webfactory/ssh-agent@v0.8.0
       with:
         ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+        log-public-key: false
 
+    - name: Debug SSH configuration
+      run: |
+        echo "SSH Agent PID: $SSH_AGENT_PID"
+        echo "SSH Auth Sock: $SSH_AUTH_SOCK"
+        ssh-add -l || echo "No keys loaded in agent"
+    
     - name: Add server to known hosts
       run: |
         mkdir -p ~/.ssh
+        echo "Adding ${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PORT }} to known hosts..."
         ssh-keyscan -H -p ${{ secrets.DEPLOY_PORT }} ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+        echo "Known hosts file created"
+
+    - name: Test SSH connection
+      run: |
+        echo "Testing SSH connection to ${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PORT }}..."
+        ssh -p ${{ secrets.DEPLOY_PORT }} -o ConnectTimeout=10 -o BatchMode=yes ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} 'echo "SSH connection successful"'
 
     - name: Deploy to production server
       run: |
