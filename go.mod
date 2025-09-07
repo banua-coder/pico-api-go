@@ -1,6 +1,6 @@
 module github.com/banua-coder/pico-api-go
 
-go 1.25.0
+go 1.23
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
