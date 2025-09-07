@@ -2,18 +2,23 @@ package handler
 
 import (
 	"net/http"
+	"time"
 
+	"github.com/banua-coder/pico-api-go/internal/models"
 	"github.com/banua-coder/pico-api-go/internal/service"
+	"github.com/banua-coder/pico-api-go/pkg/database"
 	"github.com/gorilla/mux"
 )
 
 type CovidHandler struct {
 	covidService service.CovidService
+	db           *database.DB
 }
 
-func NewCovidHandler(covidService service.CovidService) *CovidHandler {
+func NewCovidHandler(covidService service.CovidService, db *database.DB) *CovidHandler {
 	return &CovidHandler{
 		covidService: covidService,
+		db:           db,
 	}
 }
 
@@ -27,7 +32,9 @@ func (h *CovidHandler) GetNationalCases(w http.ResponseWriter, r *http.Request) 
 			writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		writeSuccessResponse(w, cases)
+		// Transform to new response structure
+		responseData := models.TransformSliceToResponse(cases)
+		writeSuccessResponse(w, responseData)
 		return
 	}
 
@@ -37,7 +44,9 @@ func (h *CovidHandler) GetNationalCases(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	writeSuccessResponse(w, cases)
+	// Transform to new response structure
+	responseData := models.TransformSliceToResponse(cases)
+	writeSuccessResponse(w, responseData)
 }
 
 func (h *CovidHandler) GetLatestNationalCase(w http.ResponseWriter, r *http.Request) {
@@ -52,7 +61,9 @@ func (h *CovidHandler) GetLatestNationalCase(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	writeSuccessResponse(w, nationalCase)
+	// Transform to new response structure
+	responseData := nationalCase.TransformToResponse()
+	writeSuccessResponse(w, responseData)
 }
 
 func (h *CovidHandler) GetProvinces(w http.ResponseWriter, r *http.Request) {
@@ -79,7 +90,9 @@ func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) 
 				writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
 			}
-			writeSuccessResponse(w, cases)
+			// Transform to new response structure
+			responseData := models.TransformProvinceCaseSliceToResponse(cases)
+			writeSuccessResponse(w, responseData)
 			return
 		}
 
@@ -88,7 +101,9 @@ func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) 
 			writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		writeSuccessResponse(w, cases)
+		// Transform to new response structure
+		responseData := models.TransformProvinceCaseSliceToResponse(cases)
+		writeSuccessResponse(w, responseData)
 		return
 	}
 
@@ -101,7 +116,9 @@ func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) 
 			writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		writeSuccessResponse(w, cases)
+		// Transform to new response structure
+		responseData := models.TransformProvinceCaseSliceToResponse(cases)
+		writeSuccessResponse(w, responseData)
 		return
 	}
 
@@ -111,13 +128,55 @@ func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	writeSuccessResponse(w, cases)
+	// Transform to new response structure
+	responseData := models.TransformProvinceCaseSliceToResponse(cases)
+	writeSuccessResponse(w, responseData)
 }
 
 func (h *CovidHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
-	writeSuccessResponse(w, map[string]string{
-		"status":  "healthy",
-		"service": "COVID-19 API",
-		"version": "1.0.0",
+	health := map[string]interface{}{
+		"status":    "healthy",
+		"service":   "COVID-19 API",
+		"version":   "2.0.0",
+		"timestamp": time.Now().UTC().Format(time.RFC3339),
+	}
+
+	// Database health check
+	dbHealth := map[string]interface{}{
+		"status": "healthy",
+	}
+
+	if h.db != nil {
+		if err := h.db.HealthCheck(); err != nil {
+			dbHealth["status"] = "unhealthy"
+			dbHealth["error"] = err.Error()
+			health["status"] = "degraded"
+		} else {
+			stats := h.db.GetConnectionStats()
+			dbHealth["connections"] = map[string]int{
+				"open":       stats.OpenConnections,
+				"idle":       stats.Idle,
+				"in_use":     stats.InUse,
+				"max_open":   stats.MaxOpenConnections,
+				"wait_count": int(stats.WaitCount),
+			}
+		}
+	} else {
+		dbHealth["status"] = "unavailable"
+		dbHealth["error"] = "database connection not initialized"
+		health["status"] = "degraded"
+	}
+
+	health["database"] = dbHealth
+
+	// Set appropriate HTTP status code based on health status
+	statusCode := http.StatusOK
+	if health["status"] == "degraded" || health["status"] == "unhealthy" {
+		statusCode = http.StatusServiceUnavailable
+	}
+
+	writeJSONResponse(w, statusCode, Response{
+		Status: "success",
+		Data:   health,
 	})
 }

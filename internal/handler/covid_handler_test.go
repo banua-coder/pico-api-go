@@ -64,7 +64,7 @@ func (m *MockCovidService) GetAllProvinceCasesByDateRange(startDate, endDate str
 
 func TestCovidHandler_GetNationalCases(t *testing.T) {
 	mockService := new(MockCovidService)
-	handler := NewCovidHandler(mockService)
+	handler := NewCovidHandler(mockService, nil)
 
 	expectedCases := []models.NationalCase{
 		{ID: 1, Positive: 100, Recovered: 80, Deceased: 5},
@@ -91,7 +91,7 @@ func TestCovidHandler_GetNationalCases(t *testing.T) {
 
 func TestCovidHandler_GetNationalCases_WithDateRange(t *testing.T) {
 	mockService := new(MockCovidService)
-	handler := NewCovidHandler(mockService)
+	handler := NewCovidHandler(mockService, nil)
 
 	expectedCases := []models.NationalCase{
 		{ID: 1, Positive: 100, Date: time.Date(2020, 3, 15, 0, 0, 0, 0, time.UTC)},
@@ -117,7 +117,7 @@ func TestCovidHandler_GetNationalCases_WithDateRange(t *testing.T) {
 
 func TestCovidHandler_GetNationalCases_ServiceError(t *testing.T) {
 	mockService := new(MockCovidService)
-	handler := NewCovidHandler(mockService)
+	handler := NewCovidHandler(mockService, nil)
 
 	mockService.On("GetNationalCases").Return([]models.NationalCase{}, errors.New("database error"))
 
@@ -140,7 +140,7 @@ func TestCovidHandler_GetNationalCases_ServiceError(t *testing.T) {
 
 func TestCovidHandler_GetLatestNationalCase(t *testing.T) {
 	mockService := new(MockCovidService)
-	handler := NewCovidHandler(mockService)
+	handler := NewCovidHandler(mockService, nil)
 
 	expectedCase := &models.NationalCase{ID: 1, Positive: 100}
 	mockService.On("GetLatestNationalCase").Return(expectedCase, nil)
@@ -163,7 +163,7 @@ func TestCovidHandler_GetLatestNationalCase(t *testing.T) {
 
 func TestCovidHandler_GetLatestNationalCase_NotFound(t *testing.T) {
 	mockService := new(MockCovidService)
-	handler := NewCovidHandler(mockService)
+	handler := NewCovidHandler(mockService, nil)
 
 	mockService.On("GetLatestNationalCase").Return((*models.NationalCase)(nil), nil)
 
@@ -186,7 +186,7 @@ func TestCovidHandler_GetLatestNationalCase_NotFound(t *testing.T) {
 
 func TestCovidHandler_GetProvinces(t *testing.T) {
 	mockService := new(MockCovidService)
-	handler := NewCovidHandler(mockService)
+	handler := NewCovidHandler(mockService, nil)
 
 	expectedProvinces := []models.Province{
 		{ID: "11", Name: "Aceh"},
@@ -213,7 +213,7 @@ func TestCovidHandler_GetProvinces(t *testing.T) {
 
 func TestCovidHandler_GetProvinceCases_AllProvinces(t *testing.T) {
 	mockService := new(MockCovidService)
-	handler := NewCovidHandler(mockService)
+	handler := NewCovidHandler(mockService, nil)
 
 	expectedCases := []models.ProvinceCaseWithDate{
 		{ProvinceCase: models.ProvinceCase{ID: 1, ProvinceID: "11", Positive: 50}},
@@ -239,7 +239,7 @@ func TestCovidHandler_GetProvinceCases_AllProvinces(t *testing.T) {
 
 func TestCovidHandler_GetProvinceCases_SpecificProvince(t *testing.T) {
 	mockService := new(MockCovidService)
-	handler := NewCovidHandler(mockService)
+	handler := NewCovidHandler(mockService, nil)
 
 	expectedCases := []models.ProvinceCaseWithDate{
 		{ProvinceCase: models.ProvinceCase{ID: 1, ProvinceID: "11", Positive: 50}},
@@ -267,7 +267,7 @@ func TestCovidHandler_GetProvinceCases_SpecificProvince(t *testing.T) {
 
 func TestCovidHandler_HealthCheck(t *testing.T) {
 	mockService := new(MockCovidService)
-	handler := NewCovidHandler(mockService)
+	handler := NewCovidHandler(mockService, nil)
 
 	req, err := http.NewRequest("GET", "/api/v1/health", nil)
 	assert.NoError(t, err)
@@ -275,7 +275,7 @@ func TestCovidHandler_HealthCheck(t *testing.T) {
 	rr := httptest.NewRecorder()
 	handler.HealthCheck(rr, req)
 
-	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Equal(t, http.StatusServiceUnavailable, rr.Code)
 
 	var response Response
 	err = json.Unmarshal(rr.Body.Bytes(), &response)
@@ -284,7 +284,12 @@ func TestCovidHandler_HealthCheck(t *testing.T) {
 
 	data, ok := response.Data.(map[string]interface{})
 	assert.True(t, ok)
-	assert.Equal(t, "healthy", data["status"])
+	assert.Equal(t, "degraded", data["status"])
 	assert.Equal(t, "COVID-19 API", data["service"])
-	assert.Equal(t, "1.0.0", data["version"])
+	assert.Equal(t, "2.0.0", data["version"])
+	assert.Contains(t, data, "database")
+	
+	dbData, ok := data["database"].(map[string]interface{})
+	assert.True(t, ok)
+	assert.Equal(t, "unavailable", dbData["status"])
 }
