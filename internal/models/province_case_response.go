@@ -14,12 +14,12 @@ type ProvinceCaseResponse struct {
 
 // ProvinceDailyCases represents new cases for a single day in a province
 type ProvinceDailyCases struct {
-	Positive  int64              `json:"positive"`
-	Recovered int64              `json:"recovered"`
-	Deceased  int64              `json:"deceased"`
-	Active    int64              `json:"active"`
-	ODP       ObservationData    `json:"odp"`
-	PDP       SupervisionData    `json:"pdp"`
+	Positive  int64                  `json:"positive"`
+	Recovered int64                  `json:"recovered"`
+	Deceased  int64                  `json:"deceased"`
+	Active    int64                  `json:"active"`
+	ODP       DailyObservationData   `json:"odp"`
+	PDP       DailySupervisionData   `json:"pdp"`
 }
 
 // ProvinceCumulativeCases represents total cases accumulated over time in a province
@@ -32,14 +32,26 @@ type ProvinceCumulativeCases struct {
 	PDP       SupervisionData    `json:"pdp"`
 }
 
-// ObservationData represents Person Under Observation (ODP) data
+// DailyObservationData represents daily Person Under Observation (ODP) data
+type DailyObservationData struct {
+	Active   int64 `json:"active"`
+	Finished int64 `json:"finished"`
+}
+
+// DailySupervisionData represents daily Patient Under Supervision (PDP) data
+type DailySupervisionData struct {
+	Active   int64 `json:"active"`
+	Finished int64 `json:"finished"`
+}
+
+// ObservationData represents cumulative Person Under Observation (ODP) data
 type ObservationData struct {
 	Active   int64 `json:"active"`
 	Finished int64 `json:"finished"`
 	Total    int64 `json:"total"`
 }
 
-// SupervisionData represents Patient Under Supervision (PDP) data
+// SupervisionData represents cumulative Patient Under Supervision (PDP) data
 type SupervisionData struct {
 	Active   int64 `json:"active"`
 	Finished int64 `json:"finished"`
@@ -71,15 +83,13 @@ func (pc *ProvinceCase) TransformToResponse(date time.Time) ProvinceCaseResponse
 			Recovered: pc.Recovered,
 			Deceased:  pc.Deceased,
 			Active:    dailyActive,
-			ODP: ObservationData{
+			ODP: DailyObservationData{
 				Active:   pc.PersonUnderObservation - pc.FinishedPersonUnderObservation,
 				Finished: pc.FinishedPersonUnderObservation,
-				Total:    pc.PersonUnderObservation,
 			},
-			PDP: SupervisionData{
+			PDP: DailySupervisionData{
 				Active:   pc.PersonUnderSupervision - pc.FinishedPersonUnderSupervision,
 				Finished: pc.FinishedPersonUnderSupervision,
-				Total:    pc.PersonUnderSupervision,
 			},
 		},
 		Cumulative: ProvinceCumulativeCases{

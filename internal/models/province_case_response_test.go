@@ -56,15 +56,13 @@ func TestProvinceCase_TransformToResponse(t *testing.T) {
 					Recovered: 120,
 					Deceased:  10,
 					Active:    20, // 150 - 120 - 10
-					ODP: ObservationData{
+					ODP: DailyObservationData{
 						Active:   5,  // 25 - 20
 						Finished: 20,
-						Total:    25,
 					},
-					PDP: SupervisionData{
+					PDP: DailySupervisionData{
 						Active:   5,  // 30 - 25
 						Finished: 25,
-						Total:    30,
 					},
 				},
 				Cumulative: ProvinceCumulativeCases{
@@ -138,15 +136,13 @@ func TestProvinceCase_TransformToResponse(t *testing.T) {
 					Recovered: 80,
 					Deceased:  5,
 					Active:    15, // 100 - 80 - 5
-					ODP: ObservationData{
+					ODP: DailyObservationData{
 						Active:   5,  // 15 - 10
 						Finished: 10,
-						Total:    15,
 					},
-					PDP: SupervisionData{
+					PDP: DailySupervisionData{
 						Active:   5,  // 20 - 15
 						Finished: 15,
-						Total:    20,
 					},
 				},
 				Cumulative: ProvinceCumulativeCases{
@@ -220,15 +216,13 @@ func TestProvinceCase_TransformToResponse(t *testing.T) {
 					Recovered: 0,
 					Deceased:  0,
 					Active:    0,
-					ODP: ObservationData{
+					ODP: DailyObservationData{
 						Active:   0,
 						Finished: 0,
-						Total:    0,
 					},
-					PDP: SupervisionData{
+					PDP: DailySupervisionData{
 						Active:   0,
 						Finished: 0,
-						Total:    0,
 					},
 				},
 				Cumulative: ProvinceCumulativeCases{
@@ -321,15 +315,13 @@ func TestProvinceCaseWithDate_TransformToResponse(t *testing.T) {
 			Recovered: 40,
 			Deceased:  2,
 			Active:    8, // 50 - 40 - 2
-			ODP: ObservationData{
+			ODP: DailyObservationData{
 				Active:   2,  // 10 - 8
 				Finished: 8,
-				Total:    10,
 			},
-			PDP: SupervisionData{
+			PDP: DailySupervisionData{
 				Active:   2,  // 12 - 10
 				Finished: 10,
-				Total:    12,
 			},
 		},
 		Cumulative: ProvinceCumulativeCases{
