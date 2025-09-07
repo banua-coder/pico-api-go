@@ -209,6 +209,27 @@ info:
   title: Sulawesi Tengah COVID-19 Data API
   version: 2.0.2
 paths:
+  /:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all available API endpoints with descriptions
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+      summary: API endpoint index
+      tags:
+      - health
   /health:
     get:
       consumes:

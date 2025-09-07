@@ -16,6 +16,11 @@ func SetupRoutes(covidService service.CovidService, db *database.DB) *mux.Router
 
 	api := router.PathPrefix("/api/v1").Subrouter()
 
+	// API index endpoint
+	api.HandleFunc("", covidHandler.GetAPIIndex).Methods("GET", "OPTIONS")
+	api.HandleFunc("/", covidHandler.GetAPIIndex).Methods("GET", "OPTIONS")
+
+	// Main endpoints
 	api.HandleFunc("/health", covidHandler.HealthCheck).Methods("GET", "OPTIONS")
 	api.HandleFunc("/national", covidHandler.GetNationalCases).Methods("GET", "OPTIONS")
 	api.HandleFunc("/national/latest", covidHandler.GetLatestNationalCase).Methods("GET", "OPTIONS")

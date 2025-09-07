@@ -328,3 +328,82 @@ func (h *CovidHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 		Data:   health,
 	})
 }
+
+// GetAPIIndex godoc
+//
+//	@Summary		API endpoint index
+//	@Description	Get a list of all available API endpoints with descriptions
+//	@Tags			health
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	Response{data=map[string]interface{}}
+//	@Router			/ [get]
+func (h *CovidHandler) GetAPIIndex(w http.ResponseWriter, r *http.Request) {
+	endpoints := map[string]interface{}{
+		"api": map[string]interface{}{
+			"title":       "Sulawesi Tengah COVID-19 Data API",
+			"version":     "2.0.2",
+			"description": "A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central Sulawesi)",
+		},
+		"documentation": map[string]interface{}{
+			"swagger_ui": "/swagger/index.html",
+			"openapi": map[string]string{
+				"yaml": "/docs/swagger.yaml",
+				"json": "/docs/swagger.json",
+			},
+		},
+		"endpoints": map[string]interface{}{
+			"health": map[string]interface{}{
+				"url":         "/api/v1/health",
+				"method":      "GET",
+				"description": "Check API health status and database connectivity",
+			},
+			"national": map[string]interface{}{
+				"list": map[string]string{
+					"url":         "/api/v1/national",
+					"method":      "GET", 
+					"description": "Get national COVID-19 cases (with optional date range)",
+				},
+				"latest": map[string]string{
+					"url":         "/api/v1/national/latest",
+					"method":      "GET",
+					"description": "Get latest national COVID-19 case data",
+				},
+			},
+			"provinces": map[string]interface{}{
+				"list": map[string]string{
+					"url":         "/api/v1/provinces",
+					"method":      "GET",
+					"description": "Get provinces with latest case data (default)",
+				},
+				"cases": map[string]interface{}{
+					"all": map[string]string{
+						"url":         "/api/v1/provinces/cases",
+						"method":      "GET",
+						"description": "Get province cases (paginated by default, ?all=true for complete data)",
+					},
+					"specific": map[string]string{
+						"url":         "/api/v1/provinces/{provinceId}/cases",
+						"method":      "GET",
+						"description": "Get cases for specific province (e.g., /api/v1/provinces/72/cases for Sulawesi Tengah)",
+					},
+				},
+			},
+		},
+		"features": []string{
+			"Hybrid pagination system (paginated by default, ?all=true for complete data)",
+			"Date range filtering (?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD)",
+			"Enhanced ODP/PDP data grouping",
+			"Provinces with latest case data by default",
+			"Sulawesi Tengah focused with national context data",
+		},
+		"examples": map[string]interface{}{
+			"sulawesi_tengah_cases": "/api/v1/provinces/72/cases",
+			"paginated_data":        "/api/v1/provinces/cases?limit=100&offset=50",
+			"date_range":            "/api/v1/national?start_date=2024-01-01&end_date=2024-12-31",
+			"complete_dataset":      "/api/v1/provinces/cases?all=true",
+		},
+	}
+
+	writeSuccessResponse(w, endpoints)
+}

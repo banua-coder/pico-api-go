@@ -525,6 +525,46 @@ func TestCovidHandler_GetProvinces_ExcludeLatestCase(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
+func TestCovidHandler_GetAPIIndex(t *testing.T) {
+	mockService := new(MockCovidService)
+	handler := NewCovidHandler(mockService, nil)
+
+	req, err := http.NewRequest("GET", "/api/v1", nil)
+	assert.NoError(t, err)
+
+	rr := httptest.NewRecorder()
+	handler.GetAPIIndex(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	var response Response
+	err = json.Unmarshal(rr.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "success", response.Status)
+
+	// Verify structure contains expected keys
+	data, ok := response.Data.(map[string]interface{})
+	assert.True(t, ok)
+	assert.Contains(t, data, "api")
+	assert.Contains(t, data, "documentation")
+	assert.Contains(t, data, "endpoints")
+	assert.Contains(t, data, "features")
+	assert.Contains(t, data, "examples")
+
+	// Verify API info
+	apiInfo, ok := data["api"].(map[string]interface{})
+	assert.True(t, ok)
+	assert.Equal(t, "Sulawesi Tengah COVID-19 Data API", apiInfo["title"])
+	assert.Equal(t, "2.0.2", apiInfo["version"])
+
+	// Verify endpoints structure
+	endpoints, ok := data["endpoints"].(map[string]interface{})
+	assert.True(t, ok)
+	assert.Contains(t, endpoints, "health")
+	assert.Contains(t, endpoints, "national")
+	assert.Contains(t, endpoints, "provinces")
+}
+
 func TestCovidHandler_HealthCheck(t *testing.T) {
 	mockService := new(MockCovidService)
 	handler := NewCovidHandler(mockService, nil)
