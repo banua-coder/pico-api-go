@@ -28,7 +28,11 @@ func (r *provinceRepository) GetAll() ([]models.Province, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to query provinces: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			fmt.Printf("Error closing rows: %v\n", err)
+		}
+	}()
 
 	var provinces []models.Province
 	for rows.Next() {
