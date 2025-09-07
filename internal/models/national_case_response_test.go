@@ -69,14 +69,14 @@ func TestNationalCase_TransformToResponse(t *testing.T) {
 	if response.Statistics.ReproductionRate == nil {
 		t.Error("Expected ReproductionRate to be present")
 	} else {
-		if response.Statistics.ReproductionRate.Value != rtValue {
-			t.Errorf("Expected Rt.Value %f, got %f", rtValue, response.Statistics.ReproductionRate.Value)
+		if *response.Statistics.ReproductionRate.Value != rtValue {
+			t.Errorf("Expected Rt.Value %f, got %f", rtValue, *response.Statistics.ReproductionRate.Value)
 		}
-		if response.Statistics.ReproductionRate.UpperBound != rtUpper {
-			t.Errorf("Expected Rt.UpperBound %f, got %f", rtUpper, response.Statistics.ReproductionRate.UpperBound)
+		if *response.Statistics.ReproductionRate.UpperBound != rtUpper {
+			t.Errorf("Expected Rt.UpperBound %f, got %f", rtUpper, *response.Statistics.ReproductionRate.UpperBound)
 		}
-		if response.Statistics.ReproductionRate.LowerBound != rtLower {
-			t.Errorf("Expected Rt.LowerBound %f, got %f", rtLower, response.Statistics.ReproductionRate.LowerBound)
+		if *response.Statistics.ReproductionRate.LowerBound != rtLower {
+			t.Errorf("Expected Rt.LowerBound %f, got %f", rtLower, *response.Statistics.ReproductionRate.LowerBound)
 		}
 	}
 
@@ -103,8 +103,18 @@ func TestNationalCase_TransformToResponse_NoReproductionRate(t *testing.T) {
 
 	response := nc.TransformToResponse()
 
-	if response.Statistics.ReproductionRate != nil {
-		t.Error("Expected ReproductionRate to be nil when not provided")
+	if response.Statistics.ReproductionRate == nil {
+		t.Error("Expected ReproductionRate to always be present")
+	} else {
+		if response.Statistics.ReproductionRate.Value != nil {
+			t.Error("Expected Rt.Value to be nil when not provided")
+		}
+		if response.Statistics.ReproductionRate.UpperBound != nil {
+			t.Error("Expected Rt.UpperBound to be nil when not provided")
+		}
+		if response.Statistics.ReproductionRate.LowerBound != nil {
+			t.Error("Expected Rt.LowerBound to be nil when not provided")
+		}
 	}
 }
 
