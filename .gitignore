@@ -49,3 +49,18 @@ pico-api-go
 
 # MD
 TABLE_STRUCTURE.md
+
+# Deployment files (keep locally but not in git)
+deploy.sh
+deploy/
+DEPLOYMENT.md
+.htaccess
+api-down.html
+watchdog.sh
+setup_cron.sh
+troubleshoot.md
+api-endpoints.md
+pico-api-go-linux
+.env.production
+.env.alternative
+port-80-fix.md
