@@ -90,7 +90,9 @@ func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) 
 				writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
 			}
-			writeSuccessResponse(w, cases)
+			// Transform to new response structure
+			responseData := models.TransformProvinceCaseSliceToResponse(cases)
+			writeSuccessResponse(w, responseData)
 			return
 		}
 
@@ -99,7 +101,9 @@ func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) 
 			writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		writeSuccessResponse(w, cases)
+		// Transform to new response structure
+		responseData := models.TransformProvinceCaseSliceToResponse(cases)
+		writeSuccessResponse(w, responseData)
 		return
 	}
 
@@ -112,7 +116,9 @@ func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) 
 			writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		writeSuccessResponse(w, cases)
+		// Transform to new response structure
+		responseData := models.TransformProvinceCaseSliceToResponse(cases)
+		writeSuccessResponse(w, responseData)
 		return
 	}
 
@@ -122,7 +128,9 @@ func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	writeSuccessResponse(w, cases)
+	// Transform to new response structure
+	responseData := models.TransformProvinceCaseSliceToResponse(cases)
+	writeSuccessResponse(w, responseData)
 }
 
 func (h *CovidHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
