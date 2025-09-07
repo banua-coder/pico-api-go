@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 
+	"github.com/banua-coder/pico-api-go/internal/models"
 	"github.com/banua-coder/pico-api-go/internal/service"
 	"github.com/gorilla/mux"
 )
@@ -27,7 +28,9 @@ func (h *CovidHandler) GetNationalCases(w http.ResponseWriter, r *http.Request) 
 			writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		writeSuccessResponse(w, cases)
+		// Transform to new response structure
+		responseData := models.TransformSliceToResponse(cases)
+		writeSuccessResponse(w, responseData)
 		return
 	}
 
@@ -37,7 +40,9 @@ func (h *CovidHandler) GetNationalCases(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	writeSuccessResponse(w, cases)
+	// Transform to new response structure
+	responseData := models.TransformSliceToResponse(cases)
+	writeSuccessResponse(w, responseData)
 }
 
 func (h *CovidHandler) GetLatestNationalCase(w http.ResponseWriter, r *http.Request) {
@@ -52,7 +57,9 @@ func (h *CovidHandler) GetLatestNationalCase(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	writeSuccessResponse(w, nationalCase)
+	// Transform to new response structure
+	responseData := nationalCase.TransformToResponse()
+	writeSuccessResponse(w, responseData)
 }
 
 func (h *CovidHandler) GetProvinces(w http.ResponseWriter, r *http.Request) {
