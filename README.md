@@ -268,21 +268,33 @@ git flow feature finish feature-name
 ### Project Structure
 ```
 ├── cmd/                    # Application entry points
-│   └── main.go
+│   └── main.go            # Main application entry point
+├── docs/                   # Auto-generated API documentation  
+│   ├── docs.go            # Generated Go documentation
+│   ├── swagger.json       # OpenAPI specification (JSON)
+│   ├── swagger.yaml       # OpenAPI specification (YAML)
+│   └── README.md          # Documentation guide
 ├── internal/              # Private application code
 │   ├── config/           # Configuration management
 │   ├── handler/          # HTTP handlers and routes
 │   ├── middleware/       # HTTP middleware
-│   ├── models/          # Data models
+│   ├── models/          # Data models and response structures
 │   ├── repository/      # Data access layer
 │   └── service/         # Business logic layer
 ├── pkg/                  # Public packages
-│   └── database/        # Database connection
+│   ├── database/        # Database connection utilities
+│   └── utils/           # Query parameter parsing utilities
+├── test/                 # Test files
+│   └── integration/     # Integration tests
 ├── .env.example         # Environment configuration template
-├── .gitignore
-├── go.mod
-├── go.sum
-└── README.md
+├── .github/             # GitHub Actions workflows
+├── CHANGELOG.md         # Version history and changes
+├── CLAUDE.md           # AI assistant configuration
+├── LICENSE             # MIT License
+├── Makefile            # Build and test commands
+├── go.mod              # Go module definition
+├── go.sum              # Go module checksums
+└── README.md           # This file
 ```
 
 ## Contributing
