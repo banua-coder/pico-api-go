@@ -17,12 +17,12 @@ type ProvinceCase struct {
 	CumulativeRecovered                              int64     `json:"cumulative_recovered" db:"cumulative_recovered"`
 	CumulativeDeceased                               int64     `json:"cumulative_deceased" db:"cumulative_deceased"`
 	CumulativePersonUnderObservation                 int64     `json:"cumulative_person_under_observation" db:"cumulative_person_under_observation"`
-	CumulativeFinishedPersonUnderObservation         int64     `json:"cumulative_finished_person_under_observation" db:"cumulative_finished_persoon_under_observation"`
+	CumulativeFinishedPersonUnderObservation         int64     `json:"cumulative_finished_person_under_observation" db:"cumulative_finished_person_under_observation"`
 	CumulativePersonUnderSupervision                 int64     `json:"cumulative_person_under_supervision" db:"cumulative_person_under_supervision"`
 	CumulativeFinishedPersonUnderSupervision         int64     `json:"cumulative_finished_person_under_supervision" db:"cumulative_finished_person_under_supervision"`
-	Rt                                               *float64  `json:"rt,omitempty" db:"rt"`
-	RtUpper                                          *float64  `json:"rt_upper,omitempty" db:"rt_upper"`
-	RtLower                                          *float64  `json:"rt_lower,omitempty" db:"rt_lower"`
+	Rt                                               *float64  `json:"rt" db:"rt"`
+	RtUpper                                          *float64  `json:"rt_upper" db:"rt_upper"`
+	RtLower                                          *float64  `json:"rt_lower" db:"rt_lower"`
 	Province                                         *Province `json:"province,omitempty"`
 }
 

@@ -26,7 +26,7 @@ func TestProvinceCaseRepository_GetAll(t *testing.T) {
 		"person_under_observation", "finished_person_under_observation",
 		"person_under_supervision", "finished_person_under_supervision",
 		"cumulative_positive", "cumulative_recovered", "cumulative_deceased",
-		"cumulative_person_under_observation", "cumulative_finished_persoon_under_observation",
+		"cumulative_person_under_observation", "cumulative_finished_person_under_observation",
 		"cumulative_person_under_supervision", "cumulative_finished_person_under_supervision",
 		"rt", "rt_upper", "rt_lower", "date", "name",
 	}).AddRow(1, 1, "11", 50, 40, 2, 10, 8, 5, 3, 500, 400, 20, 100, 80, 50, 30, rt, nil, nil, now, "Aceh")
@@ -66,7 +66,7 @@ func TestProvinceCaseRepository_GetByProvinceID(t *testing.T) {
 		"person_under_observation", "finished_person_under_observation",
 		"person_under_supervision", "finished_person_under_supervision",
 		"cumulative_positive", "cumulative_recovered", "cumulative_deceased",
-		"cumulative_person_under_observation", "cumulative_finished_persoon_under_observation",
+		"cumulative_person_under_observation", "cumulative_finished_person_under_observation",
 		"cumulative_person_under_supervision", "cumulative_finished_person_under_supervision",
 		"rt", "rt_upper", "rt_lower", "date", "name",
 	}).AddRow(1, 1, provinceID, 50, 40, 2, 10, 8, 5, 3, 500, 400, 20, 100, 80, 50, 30, nil, nil, nil, now, "Aceh")
@@ -105,7 +105,7 @@ func TestProvinceCaseRepository_GetByProvinceIDAndDateRange(t *testing.T) {
 		"person_under_observation", "finished_person_under_observation",
 		"person_under_supervision", "finished_person_under_supervision",
 		"cumulative_positive", "cumulative_recovered", "cumulative_deceased",
-		"cumulative_person_under_observation", "cumulative_finished_persoon_under_observation",
+		"cumulative_person_under_observation", "cumulative_finished_person_under_observation",
 		"cumulative_person_under_supervision", "cumulative_finished_person_under_supervision",
 		"rt", "rt_upper", "rt_lower", "date", "name",
 	}).AddRow(1, 1, provinceID, 50, 40, 2, 10, 8, 5, 3, 500, 400, 20, 100, 80, 50, 30, nil, nil, nil, now, "Aceh")
@@ -142,7 +142,7 @@ func TestProvinceCaseRepository_GetLatestByProvinceID(t *testing.T) {
 		"person_under_observation", "finished_person_under_observation",
 		"person_under_supervision", "finished_person_under_supervision",
 		"cumulative_positive", "cumulative_recovered", "cumulative_deceased",
-		"cumulative_person_under_observation", "cumulative_finished_persoon_under_observation",
+		"cumulative_person_under_observation", "cumulative_finished_person_under_observation",
 		"cumulative_person_under_supervision", "cumulative_finished_person_under_supervision",
 		"rt", "rt_upper", "rt_lower", "date", "name",
 	}).AddRow(1, 1, provinceID, 50, 40, 2, 10, 8, 5, 3, 500, 400, 20, 100, 80, 50, 30, rt, nil, nil, now, "Aceh")
@@ -178,7 +178,7 @@ func TestProvinceCaseRepository_GetLatestByProvinceID_NotFound(t *testing.T) {
 		"person_under_observation", "finished_person_under_observation",
 		"person_under_supervision", "finished_person_under_supervision",
 		"cumulative_positive", "cumulative_recovered", "cumulative_deceased",
-		"cumulative_person_under_observation", "cumulative_finished_persoon_under_observation",
+		"cumulative_person_under_observation", "cumulative_finished_person_under_observation",
 		"cumulative_person_under_supervision", "cumulative_finished_person_under_supervision",
 		"rt", "rt_upper", "rt_lower", "date", "name",
 	})
