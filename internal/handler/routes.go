@@ -2,13 +2,14 @@ package handler
 
 import (
 	"github.com/banua-coder/pico-api-go/internal/service"
+	"github.com/banua-coder/pico-api-go/pkg/database"
 	"github.com/gorilla/mux"
 )
 
-func SetupRoutes(covidService service.CovidService) *mux.Router {
+func SetupRoutes(covidService service.CovidService, db *database.DB) *mux.Router {
 	router := mux.NewRouter()
 
-	covidHandler := NewCovidHandler(covidService)
+	covidHandler := NewCovidHandler(covidService, db)
 
 	api := router.PathPrefix("/api/v1").Subrouter()
 

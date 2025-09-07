@@ -30,7 +30,7 @@ func main() {
 
 	covidService := service.NewCovidService(nationalCaseRepo, provinceRepo, provinceCaseRepo)
 
-	router := handler.SetupRoutes(covidService)
+	router := handler.SetupRoutes(covidService, db)
 
 	router.Use(middleware.Recovery)
 	router.Use(middleware.Logging)

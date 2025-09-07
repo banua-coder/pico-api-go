@@ -101,7 +101,7 @@ func setupTestServer() (*httptest.Server, *MockNationalCaseRepo, *MockProvinceRe
 	mockProvinceCaseRepo := new(MockProvinceCaseRepo)
 
 	covidService := service.NewCovidService(mockNationalRepo, mockProvinceRepo, mockProvinceCaseRepo)
-	router := handler.SetupRoutes(covidService)
+	router := handler.SetupRoutes(covidService, nil)
 
 	router.Use(middleware.Recovery)
 	router.Use(middleware.CORS)
@@ -118,7 +118,7 @@ func TestAPI_HealthCheck(t *testing.T) {
 	assert.NoError(t, err)
 	defer resp.Body.Close()
 
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.Equal(t, http.StatusServiceUnavailable, resp.StatusCode)
 	assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
 
 	var response handler.Response
@@ -128,7 +128,7 @@ func TestAPI_HealthCheck(t *testing.T) {
 
 	data, ok := response.Data.(map[string]interface{})
 	assert.True(t, ok)
-	assert.Equal(t, "healthy", data["status"])
+	assert.Equal(t, "degraded", data["status"])
 	assert.Equal(t, "COVID-19 API", data["service"])
 }
 
