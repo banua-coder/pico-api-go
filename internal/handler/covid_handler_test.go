@@ -389,7 +389,7 @@ func TestCovidHandler_GetProvinceCases_CustomPagination(t *testing.T) {
 	// Verify custom pagination metadata
 	paginatedData, ok := response.Data.(map[string]interface{})
 	assert.True(t, ok)
-	
+
 	pagination, ok := paginatedData["pagination"].(map[string]interface{})
 	assert.True(t, ok)
 	assert.Equal(t, float64(100), pagination["limit"])
@@ -555,7 +555,7 @@ func TestCovidHandler_GetAPIIndex(t *testing.T) {
 	apiInfo, ok := data["api"].(map[string]interface{})
 	assert.True(t, ok)
 	assert.Equal(t, "Sulawesi Tengah COVID-19 Data API", apiInfo["title"])
-	assert.Equal(t, "2.0.2", apiInfo["version"])
+	assert.Equal(t, "2.1.0", apiInfo["version"])
 
 	// Verify endpoints structure
 	endpoints, ok := data["endpoints"].(map[string]interface{})
@@ -586,9 +586,9 @@ func TestCovidHandler_HealthCheck(t *testing.T) {
 	assert.True(t, ok)
 	assert.Equal(t, "degraded", data["status"])
 	assert.Equal(t, "COVID-19 API", data["service"])
-	assert.Equal(t, "2.0.2", data["version"])
+	assert.Equal(t, "2.1.0", data["version"])
 	assert.Contains(t, data, "database")
-	
+
 	dbData, ok := data["database"].(map[string]interface{})
 	assert.True(t, ok)
 	assert.Equal(t, "unavailable", dbData["status"])

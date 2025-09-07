@@ -106,7 +106,7 @@ func (h *CovidHandler) GetLatestNationalCase(w http.ResponseWriter, r *http.Requ
 func (h *CovidHandler) GetProvinces(w http.ResponseWriter, r *http.Request) {
 	// Check if exclude_latest_case query parameter is set to get basic province list only
 	excludeLatestCase := r.URL.Query().Get("exclude_latest_case") == "true"
-	
+
 	if excludeLatestCase {
 		provinces, err := h.covidService.GetProvinces()
 		if err != nil {
@@ -116,7 +116,7 @@ func (h *CovidHandler) GetProvinces(w http.ResponseWriter, r *http.Request) {
 		writeSuccessResponse(w, provinces)
 		return
 	}
-	
+
 	// Default behavior: include latest case data for COVID-19 context
 	provincesWithCases, err := h.covidService.GetProvincesWithLatestCase()
 	if err != nil {
@@ -148,14 +148,14 @@ func (h *CovidHandler) GetProvinces(w http.ResponseWriter, r *http.Request) {
 func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	provinceID := vars["provinceId"]
-	
+
 	// Parse query parameters
 	limit := utils.ParseIntQueryParam(r, "limit", 50)
 	offset := utils.ParseIntQueryParam(r, "offset", 0)
 	all := utils.ParseBoolQueryParam(r, "all")
 	startDate := r.URL.Query().Get("start_date")
 	endDate := r.URL.Query().Get("end_date")
-	
+
 	// Validate pagination params
 	limit, offset = utils.ValidatePaginationParams(limit, offset)
 
@@ -173,7 +173,7 @@ func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) 
 				writeSuccessResponse(w, responseData)
 				return
 			}
-			
+
 			cases, err := h.covidService.GetAllProvinceCases()
 			if err != nil {
 				writeErrorResponse(w, http.StatusInternalServerError, err.Error())
@@ -183,7 +183,7 @@ func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) 
 			writeSuccessResponse(w, responseData)
 			return
 		}
-		
+
 		// Return paginated data
 		if startDate != "" && endDate != "" {
 			cases, total, err := h.covidService.GetAllProvinceCasesByDateRangePaginated(startDate, endDate, limit, offset)
@@ -200,7 +200,7 @@ func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) 
 			writeSuccessResponse(w, paginatedResponse)
 			return
 		}
-		
+
 		cases, total, err := h.covidService.GetAllProvinceCasesPaginated(limit, offset)
 		if err != nil {
 			writeErrorResponse(w, http.StatusInternalServerError, err.Error())
@@ -229,7 +229,7 @@ func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) 
 			writeSuccessResponse(w, responseData)
 			return
 		}
-		
+
 		cases, err := h.covidService.GetProvinceCases(provinceID)
 		if err != nil {
 			writeErrorResponse(w, http.StatusInternalServerError, err.Error())
@@ -239,7 +239,7 @@ func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) 
 		writeSuccessResponse(w, responseData)
 		return
 	}
-	
+
 	// Return paginated data
 	if startDate != "" && endDate != "" {
 		cases, total, err := h.covidService.GetProvinceCasesByDateRangePaginated(provinceID, startDate, endDate, limit, offset)
@@ -256,7 +256,7 @@ func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) 
 		writeSuccessResponse(w, paginatedResponse)
 		return
 	}
-	
+
 	cases, total, err := h.covidService.GetProvinceCasesPaginated(provinceID, limit, offset)
 	if err != nil {
 		writeErrorResponse(w, http.StatusInternalServerError, err.Error())
@@ -285,7 +285,7 @@ func (h *CovidHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	health := map[string]interface{}{
 		"status":    "healthy",
 		"service":   "COVID-19 API",
-		"version":   "2.0.2",
+		"version":   "2.1.0",
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
 	}
 
@@ -342,7 +342,7 @@ func (h *CovidHandler) GetAPIIndex(w http.ResponseWriter, r *http.Request) {
 	endpoints := map[string]interface{}{
 		"api": map[string]interface{}{
 			"title":       "Sulawesi Tengah COVID-19 Data API",
-			"version":     "2.0.2",
+			"version":     "2.1.0",
 			"description": "A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central Sulawesi)",
 		},
 		"documentation": map[string]interface{}{
@@ -361,7 +361,7 @@ func (h *CovidHandler) GetAPIIndex(w http.ResponseWriter, r *http.Request) {
 			"national": map[string]interface{}{
 				"list": map[string]string{
 					"url":         "/api/v1/national",
-					"method":      "GET", 
+					"method":      "GET",
 					"description": "Get national COVID-19 cases (with optional date range)",
 				},
 				"latest": map[string]string{
