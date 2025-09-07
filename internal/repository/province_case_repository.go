@@ -123,7 +123,11 @@ func (r *provinceCaseRepository) queryProvinceCases(query string, args ...interf
 	if err != nil {
 		return nil, fmt.Errorf("failed to query province cases: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			fmt.Printf("Error closing rows: %v\n", err)
+		}
+	}()
 
 	var cases []models.ProvinceCaseWithDate
 	for rows.Next() {

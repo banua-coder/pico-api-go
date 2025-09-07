@@ -20,7 +20,9 @@ func Recovery(next http.Handler) http.Handler {
 					"status": "error",
 					"error":  "Internal server error",
 				}
-				json.NewEncoder(w).Encode(response)
+				if encErr := json.NewEncoder(w).Encode(response); encErr != nil {
+					log.Printf("Error encoding panic recovery response: %v", encErr)
+				}
 			}
 		}()
 

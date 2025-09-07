@@ -20,7 +20,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			log.Printf("Error closing database connection: %v", err)
+		}
+	}()
 
 	log.Println("Database connected successfully")
 
@@ -30,7 +34,7 @@ func main() {
 
 	covidService := service.NewCovidService(nationalCaseRepo, provinceRepo, provinceCaseRepo)
 
-	router := handler.SetupRoutes(covidService)
+	router := handler.SetupRoutes(covidService, db)
 
 	router.Use(middleware.Recovery)
 	router.Use(middleware.Logging)
