@@ -136,4 +136,43 @@ jobs:
           git pull origin develop
           git merge main
           git push origin develop
+          # Clean up the release/hotfix branch
+          git push origin --delete ${{ github.event.pull_request.head.ref }}
           \`\`\`"
+
+  cleanup-branch:
+    if: github.event.pull_request.merged == true && (startsWith(github.head_ref, 'release/') || startsWith(github.head_ref, 'hotfix/'))
+    runs-on: ubuntu-latest
+    needs: back-merge
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+      - name: Delete merged release/hotfix branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          
+          echo "🧹 Cleaning up merged branch: $BRANCH_NAME"
+          
+          # Delete the remote branch
+          git push origin --delete "$BRANCH_NAME" || echo "⚠️  Branch $BRANCH_NAME may have already been deleted"
+          
+          echo "✅ Branch cleanup completed"
+
+      - name: Comment on original PR about cleanup
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} --body "🧹 **Branch Cleanup Complete**
+          
+          The merged \`${{ github.event.pull_request.head.ref }}\` branch has been automatically deleted to keep the repository clean.
+          
+          **Completed workflow:**
+          1. ✅ Release/hotfix merged to main
+          2. ✅ Back-merge PR created to develop
+          3. ✅ Branch \`${{ github.event.pull_request.head.ref }}\` deleted
+          
+          The Git Flow process is now complete! 🎉"
