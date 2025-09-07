@@ -16,9 +16,9 @@ type NationalCase struct {
 	CumulativePositive     int64      `json:"cumulative_positive" db:"cumulative_positive"`
 	CumulativeRecovered    int64      `json:"cumulative_recovered" db:"cumulative_recovered"`
 	CumulativeDeceased     int64      `json:"cumulative_deceased" db:"cumulative_deceased"`
-	Rt                     *float64   `json:"rt,omitempty" db:"rt"`
-	RtUpper                *float64   `json:"rt_upper,omitempty" db:"rt_upper"`
-	RtLower                *float64   `json:"rt_lower,omitempty" db:"rt_lower"`
+	Rt                     *float64   `json:"rt" db:"rt"`
+	RtUpper                *float64   `json:"rt_upper" db:"rt_upper"`
+	RtLower                *float64   `json:"rt_lower" db:"rt_lower"`
 }
 
 type NullFloat64 struct {

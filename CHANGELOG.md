@@ -1,4 +1,3 @@
-
 # Changelog
 
 All notable changes to this project will be documented in this file.
@@ -6,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [v2.0.1] - 2025-09-07
+
+### Hotfixes
+
+- Ensure reproduction rate always appears in json response even when null - fix rt values to always be included in api responses for consistency - update reproductionrate struct to use pointer types for proper null handling - modify transformation logic to always include rt structure - update tests to handle new pointer-based rt values - bump version to 2.0.1 for hotfix release this ensures api consumers always receive the reproduction_rate object structure, with null values when data is not available.
+
+### Fixed
+
+- Correct database column typo and ensure rt fields always present in json response - fix database column name typo from 'cumulative_finished_persoon_under_observation' to 'cumulative_finished_person_under_observation' - remove 'omitempty' from rt fields (rt, rt_upper, rt_lower) to ensure they always appear in json responses even when null - update all sql queries and tests to use correct column name - critical production hotfix for database errors and missing rt data
+- Correct [Unreleased] section format in CHANGELOG.md
+
+### Added
+
+- Add hotfix branch support to changelog generator
+
+### Maintenance
+
+- Bump version to 2.0.1 for hotfix release (version)
 
 ## [v2.0.0] - 2025-09-07
 

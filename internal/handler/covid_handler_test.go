@@ -286,7 +286,7 @@ func TestCovidHandler_HealthCheck(t *testing.T) {
 	assert.True(t, ok)
 	assert.Equal(t, "degraded", data["status"])
 	assert.Equal(t, "COVID-19 API", data["service"])
-	assert.Equal(t, "2.0.0", data["version"])
+	assert.Equal(t, "2.0.1", data["version"])
 	assert.Contains(t, data, "database")
 	
 	dbData, ok := data["database"].(map[string]interface{})
