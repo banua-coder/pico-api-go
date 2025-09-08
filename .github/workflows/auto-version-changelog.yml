@@ -1,0 +1,297 @@
+name: Auto Version Bump and Changelog
+
+on:
+  create:
+  push:
+    branches:
+      - 'release/**'
+      - 'hotfix/**'
+
+jobs:
+  auto-version-changelog:
+    if: github.event_name == 'create' && github.event.ref_type == 'branch' && (startsWith(github.event.ref, 'release/') || startsWith(github.event.ref, 'hotfix/'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+      - name: Checkout the new branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.ref }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Extract version from branch name
+        id: version
+        run: |
+          BRANCH_NAME="${{ github.event.ref }}"
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          
+          if [[ $BRANCH_NAME == release/* ]]; then
+            VERSION=$(echo $BRANCH_NAME | sed 's/release\///')
+            TYPE="release"
+            BASE_BRANCH="develop"
+          elif [[ $BRANCH_NAME == hotfix/* ]]; then
+            VERSION=$(echo $BRANCH_NAME | sed 's/hotfix\///')
+            TYPE="hotfix"
+            BASE_BRANCH="main"
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "type=$TYPE" >> $GITHUB_OUTPUT
+          echo "base_branch=$BASE_BRANCH" >> $GITHUB_OUTPUT
+          echo "clean_version=$(echo $VERSION | sed 's/^v//')" >> $GITHUB_OUTPUT
+
+      - name: Check if changes are needed
+        id: check_changes
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          CLEAN_VERSION="${{ steps.version.outputs.clean_version }}"
+          
+          # Check if CHANGELOG.md needs updating
+          CHANGELOG_NEEDS_UPDATE="false"
+          if ! grep -q "## \[$VERSION\]" CHANGELOG.md 2>/dev/null; then
+            CHANGELOG_NEEDS_UPDATE="true"
+          fi
+          
+          # Check if version needs updating in files
+          VERSION_NEEDS_UPDATE="false"
+          
+          # Check main.go version annotation
+          if ! grep -q "@version.*$CLEAN_VERSION" cmd/main.go 2>/dev/null; then
+            VERSION_NEEDS_UPDATE="true"
+          fi
+          
+          # Check handler version
+          if ! grep -q "\"version\":.*\"$CLEAN_VERSION\"" internal/handler/covid_handler.go 2>/dev/null; then
+            VERSION_NEEDS_UPDATE="true"
+          fi
+          
+          # Check swagger docs version
+          if ! grep -q "Version:.*\"$CLEAN_VERSION\"" docs/docs.go 2>/dev/null; then
+            VERSION_NEEDS_UPDATE="true"
+          fi
+          
+          echo "changelog_needs_update=$CHANGELOG_NEEDS_UPDATE" >> $GITHUB_OUTPUT
+          echo "version_needs_update=$VERSION_NEEDS_UPDATE" >> $GITHUB_OUTPUT
+          
+          if [[ "$CHANGELOG_NEEDS_UPDATE" == "true" || "$VERSION_NEEDS_UPDATE" == "true" ]]; then
+            echo "changes_needed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changes_needed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate changelog
+        if: steps.check_changes.outputs.changelog_needs_update == 'true'
+        run: |
+          echo "🚀 Generating changelog for ${{ steps.version.outputs.version }}..."
+          
+          # Make the script executable
+          chmod +x generate-changelog.rb
+          
+          # Run changelog generation
+          ruby generate-changelog.rb --force || {
+            echo "❌ Changelog generation failed, but continuing with version bump"
+            echo "This might be expected for initial releases or if no commits since last tag"
+          }
+
+      - name: Update version in files
+        if: steps.check_changes.outputs.version_needs_update == 'true'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          CLEAN_VERSION="${{ steps.version.outputs.clean_version }}"
+          
+          echo "📝 Updating version to $CLEAN_VERSION in source files..."
+          
+          # Update main.go version annotation
+          if [ -f "cmd/main.go" ]; then
+            sed -i.bak "s/@version.*/@version\t\t$CLEAN_VERSION/" cmd/main.go && rm cmd/main.go.bak
+            echo "✅ Updated cmd/main.go"
+          fi
+          
+          # Update handler version
+          if [ -f "internal/handler/covid_handler.go" ]; then
+            sed -i.bak "s/\"version\":\s*\"[^\"]*\"/\"version\": \"$CLEAN_VERSION\"/" internal/handler/covid_handler.go && rm internal/handler/covid_handler.go.bak
+            echo "✅ Updated internal/handler/covid_handler.go"
+          fi
+
+      - name: Install swag tool
+        if: steps.check_changes.outputs.version_needs_update == 'true'
+        run: |
+          echo "📦 Installing swag tool..."
+          go install github.com/swaggo/swag/cmd/swag@latest
+          echo "✅ swag tool installed"
+
+      - name: Regenerate documentation
+        if: steps.check_changes.outputs.version_needs_update == 'true'
+        run: |
+          echo "📚 Regenerating API documentation..."
+          
+          # Generate standard Swagger docs
+          swag init -g cmd/main.go -o ./docs
+          echo "✅ Standard documentation regenerated (JSON/YAML)"
+          
+          # Generate HTML documentation
+          echo "📄 Generating HTML documentation..."
+          swag init -g cmd/main.go -o ./docs --outputTypes go,json,yaml,html
+          echo "✅ HTML documentation generated"
+          
+          # List generated files
+          echo "📋 Generated documentation files:"
+          ls -la docs/
+
+      - name: Create PR branch and commit changes
+        if: steps.check_changes.outputs.changes_needed == 'true'
+        id: pr_branch
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TYPE="${{ steps.version.outputs.type }}"
+          BRANCH_NAME="${{ steps.version.outputs.branch_name }}"
+          
+          # Create a new branch for the PR
+          PR_BRANCH="chore/auto-version-changelog-$VERSION"
+          git checkout -b "$PR_BRANCH"
+          echo "pr_branch=$PR_BRANCH" >> $GITHUB_OUTPUT
+          
+          # Add all changes
+          git add .
+          
+          # Check if there are changes to commit
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            
+            # Commit changes
+            git commit -m "chore($TYPE): auto-bump version and generate changelog for $VERSION
+
+            - Update version to ${{ steps.version.outputs.clean_version }} in source files
+            - Generate changelog entries for $VERSION
+            - Regenerate API documentation with new version
+            
+            This commit was automatically generated when the $BRANCH_NAME branch was created.
+            
+            Type: $TYPE
+            Version: $VERSION
+            Base: ${{ steps.version.outputs.base_branch }}"
+            
+            # Push the branch
+            git push origin "$PR_BRANCH"
+          fi
+
+      - name: Create Pull Request
+        if: steps.check_changes.outputs.changes_needed == 'true' && steps.pr_branch.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TYPE="${{ steps.version.outputs.type }}"
+          BRANCH_NAME="${{ steps.version.outputs.branch_name }}"
+          PR_BRANCH="${{ steps.pr_branch.outputs.pr_branch }}"
+          BASE_BRANCH="${{ steps.version.outputs.base_branch }}"
+          
+          # Create PR with comprehensive description
+          gh pr create \
+            --base "$BRANCH_NAME" \
+            --head "$PR_BRANCH" \
+            --title "chore($TYPE): auto-bump version and generate changelog for $VERSION" \
+            --body "$(cat <<'EOF'
+          ## Summary
+          Automated version bump and changelog generation for ${{ steps.version.outputs.type }} $VERSION.
+          
+          This PR was automatically created when the \`$BRANCH_NAME\` branch was created.
+          
+          ## Changes Made
+          
+          ### 📝 Version Updates
+          - Updated version to \`${{ steps.version.outputs.clean_version }}\` in source files:
+            - \`cmd/main.go\` - Swagger annotation
+            - \`internal/handler/covid_handler.go\` - Health endpoint
+            - Auto-regenerated API documentation
+          
+          ### 📋 Changelog Generation
+          - Generated changelog entries using \`generate-changelog.rb\`
+          - Categorized commits since last release
+          - Added proper semantic versioning information
+          
+          ### 📚 Documentation
+          - Regenerated OpenAPI/Swagger documentation
+          - Updated version references across documentation files
+          
+          ## Details
+          - **Type**: ${{ steps.version.outputs.type }}
+          - **Version**: $VERSION
+          - **Base Branch**: $BASE_BRANCH → $BRANCH_NAME
+          - **Generated From**: Commits since last tag
+          
+          ## What's Next
+          1. 🔍 **Review** the generated changelog and version updates
+          2. ✅ **Merge** this PR to complete the ${{ steps.version.outputs.type }} preparation
+          3. 🚀 **Proceed** with your normal ${{ steps.version.outputs.type }} process
+          
+          ## Auto-generated
+          This PR was automatically created by GitHub Actions when the ${{ steps.version.outputs.type }} branch was created.
+          
+          **Safe to merge** - contains only version bumps and changelog updates.
+          EOF
+          )" \
+            --label "chore" \
+            --label "auto-generated" \
+            --label "$TYPE"
+
+      - name: Summary
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TYPE="${{ steps.version.outputs.type }}"
+          BRANCH_NAME="${{ steps.version.outputs.branch_name }}"
+          
+          if [[ "${{ steps.check_changes.outputs.changes_needed }}" == "true" ]]; then
+            if [[ "${{ steps.pr_branch.outputs.has_changes }}" == "true" ]]; then
+              echo "## ✅ Auto Version & Changelog Complete" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "**Branch Created**: \`$BRANCH_NAME\`" >> $GITHUB_STEP_SUMMARY
+              echo "**Type**: $TYPE" >> $GITHUB_STEP_SUMMARY
+              echo "**Version**: $VERSION" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "### Actions Completed" >> $GITHUB_STEP_SUMMARY
+              echo "- ✅ Generated changelog entries" >> $GITHUB_STEP_SUMMARY
+              echo "- ✅ Updated version in source files" >> $GITHUB_STEP_SUMMARY
+              echo "- ✅ Regenerated API documentation" >> $GITHUB_STEP_SUMMARY
+              echo "- ✅ Created PR with changes" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+              echo "1. Review and merge the auto-generated PR" >> $GITHUB_STEP_SUMMARY
+              echo "2. Continue with your $TYPE process" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "## ℹ️ No Changes Needed" >> $GITHUB_STEP_SUMMARY
+              echo "Version and changelog are already up to date for $VERSION" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "## ℹ️ All Up To Date" >> $GITHUB_STEP_SUMMARY
+            echo "No version or changelog updates needed for $VERSION" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # Handle the case where workflow is triggered by push to existing release/hotfix branch
+  handle-existing-branch:
+    if: github.event_name == 'push' && (startsWith(github.ref_name, 'release/') || startsWith(github.ref_name, 'hotfix/'))
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Info about existing branch
+        run: |
+          echo "## ℹ️ Existing ${{ github.ref_name }} Branch" >> $GITHUB_STEP_SUMMARY
+          echo "This workflow only runs when release/hotfix branches are first created." >> $GITHUB_STEP_SUMMARY
+          echo "For existing branches, version and changelog should already be managed." >> $GITHUB_STEP_SUMMARY
