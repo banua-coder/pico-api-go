@@ -278,6 +278,13 @@ jobs:
             echo "✅ Updated internal/handler/covid_handler.go"
           fi
 
+          # Update test files
+          if [ -f "internal/handler/covid_handler_test.go" ]; then
+            sed -i.bak "s/assert.Equal(t, \"[^\"]*\", apiInfo\[\"version\"\])/assert.Equal(t, \"$CLEAN_VERSION\", apiInfo[\"version\"])/" internal/handler/covid_handler_test.go && rm -f internal/handler/covid_handler_test.go.bak
+            sed -i.bak "s/assert.Equal(t, \"[^\"]*\", data\[\"version\"\])/assert.Equal(t, \"$CLEAN_VERSION\", data[\"version\"])/" internal/handler/covid_handler_test.go && rm -f internal/handler/covid_handler_test.go.bak
+            echo "✅ Updated internal/handler/covid_handler_test.go"
+          fi
+
       - name: Install and regenerate documentation
         run: |
           echo "📚 Regenerating API documentation..."
@@ -551,6 +558,13 @@ jobs:
           if [ -f "internal/handler/covid_handler.go" ]; then
             sed -i.bak "s/\"version\":\s*\"[^\"]*\"/\"version\": \"$CLEAN_VERSION\"/" internal/handler/covid_handler.go && rm -f internal/handler/covid_handler.go.bak
             echo "✅ Updated internal/handler/covid_handler.go to $CLEAN_VERSION"
+          fi
+
+          # Update test files
+          if [ -f "internal/handler/covid_handler_test.go" ]; then
+            sed -i.bak "s/assert.Equal(t, \"[^\"]*\", apiInfo\[\"version\"\])/assert.Equal(t, \"$CLEAN_VERSION\", apiInfo[\"version\"])/" internal/handler/covid_handler_test.go && rm -f internal/handler/covid_handler_test.go.bak
+            sed -i.bak "s/assert.Equal(t, \"[^\"]*\", data\[\"version\"\])/assert.Equal(t, \"$CLEAN_VERSION\", data[\"version\"])/" internal/handler/covid_handler_test.go && rm -f internal/handler/covid_handler_test.go.bak
+            echo "✅ Updated internal/handler/covid_handler_test.go to $CLEAN_VERSION"
           fi
 
           # Install swag and regenerate docs
