@@ -13,6 +13,36 @@ func TestProvinceCase_TransformToResponse(t *testing.T) {
 	rtUpper := 1.8
 	rtLower := 1.2
 
+	// Helper variables for nullable int64 fields (test case 1)
+	personUnderObservation1 := int64(25)
+	finishedPersonUnderObservation1 := int64(20)
+	personUnderSupervision1 := int64(30)
+	finishedPersonUnderSupervision1 := int64(25)
+	cumulativePersonUnderObservation1 := int64(800)
+	cumulativeFinishedPersonUnderObservation1 := int64(750)
+	cumulativePersonUnderSupervision1 := int64(600)
+	cumulativeFinishedPersonUnderSupervision1 := int64(580)
+
+	// Helper variables for nullable int64 fields (test case 2)
+	personUnderObservation2 := int64(15)
+	finishedPersonUnderObservation2 := int64(10)
+	personUnderSupervision2 := int64(20)
+	finishedPersonUnderSupervision2 := int64(15)
+	cumulativePersonUnderObservation2 := int64(400)
+	cumulativeFinishedPersonUnderObservation2 := int64(350)
+	cumulativePersonUnderSupervision2 := int64(300)
+	cumulativeFinishedPersonUnderSupervision2 := int64(290)
+
+	// Helper variables for nullable int64 fields (test case 3 - zeros)
+	personUnderObservation3 := int64(0)
+	finishedPersonUnderObservation3 := int64(0)
+	personUnderSupervision3 := int64(0)
+	finishedPersonUnderSupervision3 := int64(0)
+	cumulativePersonUnderObservation3 := int64(0)
+	cumulativeFinishedPersonUnderObservation3 := int64(0)
+	cumulativePersonUnderSupervision3 := int64(0)
+	cumulativeFinishedPersonUnderSupervision3 := int64(0)
+
 	tests := []struct {
 		name           string
 		provinceCase   ProvinceCase
@@ -28,17 +58,17 @@ func TestProvinceCase_TransformToResponse(t *testing.T) {
 				Positive:                                 150,
 				Recovered:                                120,
 				Deceased:                                 10,
-				PersonUnderObservation:                   25,
-				FinishedPersonUnderObservation:           20,
-				PersonUnderSupervision:                   30,
-				FinishedPersonUnderSupervision:           25,
+				PersonUnderObservation:                   &personUnderObservation1,
+				FinishedPersonUnderObservation:           &finishedPersonUnderObservation1,
+				PersonUnderSupervision:                   &personUnderSupervision1,
+				FinishedPersonUnderSupervision:           &finishedPersonUnderSupervision1,
 				CumulativePositive:                       5000,
 				CumulativeRecovered:                      4500,
 				CumulativeDeceased:                       300,
-				CumulativePersonUnderObservation:         800,
-				CumulativeFinishedPersonUnderObservation: 750,
-				CumulativePersonUnderSupervision:         600,
-				CumulativeFinishedPersonUnderSupervision: 580,
+				CumulativePersonUnderObservation:         &cumulativePersonUnderObservation1,
+				CumulativeFinishedPersonUnderObservation: &cumulativeFinishedPersonUnderObservation1,
+				CumulativePersonUnderSupervision:         &cumulativePersonUnderSupervision1,
+				CumulativeFinishedPersonUnderSupervision: &cumulativeFinishedPersonUnderSupervision1,
 				Rt:                                       &rt,
 				RtUpper:                                  &rtUpper,
 				RtLower:                                  &rtLower,
@@ -108,17 +138,17 @@ func TestProvinceCase_TransformToResponse(t *testing.T) {
 				Positive:                                 100,
 				Recovered:                                80,
 				Deceased:                                 5,
-				PersonUnderObservation:                   15,
-				FinishedPersonUnderObservation:           10,
-				PersonUnderSupervision:                   20,
-				FinishedPersonUnderSupervision:           15,
+				PersonUnderObservation:                   &personUnderObservation2,
+				FinishedPersonUnderObservation:           &finishedPersonUnderObservation2,
+				PersonUnderSupervision:                   &personUnderSupervision2,
+				FinishedPersonUnderSupervision:           &finishedPersonUnderSupervision2,
 				CumulativePositive:                       2000,
 				CumulativeRecovered:                      1800,
 				CumulativeDeceased:                       100,
-				CumulativePersonUnderObservation:         400,
-				CumulativeFinishedPersonUnderObservation: 350,
-				CumulativePersonUnderSupervision:         300,
-				CumulativeFinishedPersonUnderSupervision: 290,
+				CumulativePersonUnderObservation:         &cumulativePersonUnderObservation2,
+				CumulativeFinishedPersonUnderObservation: &cumulativeFinishedPersonUnderObservation2,
+				CumulativePersonUnderSupervision:         &cumulativePersonUnderSupervision2,
+				CumulativeFinishedPersonUnderSupervision: &cumulativeFinishedPersonUnderSupervision2,
 				Rt:                                       nil,
 				RtUpper:                                  nil,
 				RtLower:                                  nil,
@@ -188,17 +218,17 @@ func TestProvinceCase_TransformToResponse(t *testing.T) {
 				Positive:                                 0,
 				Recovered:                                0,
 				Deceased:                                 0,
-				PersonUnderObservation:                   0,
-				FinishedPersonUnderObservation:           0,
-				PersonUnderSupervision:                   0,
-				FinishedPersonUnderSupervision:           0,
+				PersonUnderObservation:                   &personUnderObservation3,
+				FinishedPersonUnderObservation:           &finishedPersonUnderObservation3,
+				PersonUnderSupervision:                   &personUnderSupervision3,
+				FinishedPersonUnderSupervision:           &finishedPersonUnderSupervision3,
 				CumulativePositive:                       0,
 				CumulativeRecovered:                      0,
 				CumulativeDeceased:                       0,
-				CumulativePersonUnderObservation:         0,
-				CumulativeFinishedPersonUnderObservation: 0,
-				CumulativePersonUnderSupervision:         0,
-				CumulativeFinishedPersonUnderSupervision: 0,
+				CumulativePersonUnderObservation:         &cumulativePersonUnderObservation3,
+				CumulativeFinishedPersonUnderObservation: &cumulativeFinishedPersonUnderObservation3,
+				CumulativePersonUnderSupervision:         &cumulativePersonUnderSupervision3,
+				CumulativeFinishedPersonUnderSupervision: &cumulativeFinishedPersonUnderSupervision3,
 				Rt:                                       nil,
 				RtUpper:                                  nil,
 				RtLower:                                  nil,
@@ -283,17 +313,17 @@ func TestProvinceCaseWithDate_TransformToResponse(t *testing.T) {
 			Positive:                                 50,
 			Recovered:                                40,
 			Deceased:                                 2,
-			PersonUnderObservation:                   10,
-			FinishedPersonUnderObservation:           8,
-			PersonUnderSupervision:                   12,
-			FinishedPersonUnderSupervision:           10,
+			PersonUnderObservation:                   &[]int64{10}[0],
+			FinishedPersonUnderObservation:           &[]int64{8}[0],
+			PersonUnderSupervision:                   &[]int64{12}[0],
+			FinishedPersonUnderSupervision:           &[]int64{10}[0],
 			CumulativePositive:                       3000,
 			CumulativeRecovered:                      2700,
 			CumulativeDeceased:                       200,
-			CumulativePersonUnderObservation:         500,
-			CumulativeFinishedPersonUnderObservation: 450,
-			CumulativePersonUnderSupervision:         350,
-			CumulativeFinishedPersonUnderSupervision: 320,
+			CumulativePersonUnderObservation:         &[]int64{500}[0],
+			CumulativeFinishedPersonUnderObservation: &[]int64{450}[0],
+			CumulativePersonUnderSupervision:         &[]int64{350}[0],
+			CumulativeFinishedPersonUnderSupervision: &[]int64{320}[0],
 			Rt:                                       &rt,
 			RtUpper:                                  &rtUpper,
 			RtLower:                                  &rtLower,
@@ -377,17 +407,17 @@ func TestTransformProvinceCaseSliceToResponse(t *testing.T) {
 				Positive:                                 100,
 				Recovered:                                80,
 				Deceased:                                 5,
-				PersonUnderObservation:                   20,
-				FinishedPersonUnderObservation:           15,
-				PersonUnderSupervision:                   25,
-				FinishedPersonUnderSupervision:           20,
+				PersonUnderObservation:                   &[]int64{20}[0],
+				FinishedPersonUnderObservation:           &[]int64{15}[0],
+				PersonUnderSupervision:                   &[]int64{25}[0],
+				FinishedPersonUnderSupervision:           &[]int64{20}[0],
 				CumulativePositive:                       1000,
 				CumulativeRecovered:                      800,
 				CumulativeDeceased:                       50,
-				CumulativePersonUnderObservation:         200,
-				CumulativeFinishedPersonUnderObservation: 180,
-				CumulativePersonUnderSupervision:         250,
-				CumulativeFinishedPersonUnderSupervision: 230,
+				CumulativePersonUnderObservation:         &[]int64{200}[0],
+				CumulativeFinishedPersonUnderObservation: &[]int64{180}[0],
+				CumulativePersonUnderSupervision:         &[]int64{250}[0],
+				CumulativeFinishedPersonUnderSupervision: &[]int64{230}[0],
 				Rt:                                       &rt,
 				RtUpper:                                  &rtUpper,
 				RtLower:                                  &rtLower,
@@ -406,17 +436,17 @@ func TestTransformProvinceCaseSliceToResponse(t *testing.T) {
 				Positive:                                 50,
 				Recovered:                                45,
 				Deceased:                                 2,
-				PersonUnderObservation:                   10,
-				FinishedPersonUnderObservation:           8,
-				PersonUnderSupervision:                   12,
-				FinishedPersonUnderSupervision:           10,
+				PersonUnderObservation:                   &[]int64{10}[0],
+				FinishedPersonUnderObservation:           &[]int64{8}[0],
+				PersonUnderSupervision:                   &[]int64{12}[0],
+				FinishedPersonUnderSupervision:           &[]int64{10}[0],
 				CumulativePositive:                       1050,
 				CumulativeRecovered:                      845,
 				CumulativeDeceased:                       52,
-				CumulativePersonUnderObservation:         210,
-				CumulativeFinishedPersonUnderObservation: 188,
-				CumulativePersonUnderSupervision:         262,
-				CumulativeFinishedPersonUnderSupervision: 240,
+				CumulativePersonUnderObservation:         &[]int64{210}[0],
+				CumulativeFinishedPersonUnderObservation: &[]int64{188}[0],
+				CumulativePersonUnderSupervision:         &[]int64{262}[0],
+				CumulativeFinishedPersonUnderSupervision: &[]int64{240}[0],
 				Rt:                                       &rt,
 				RtUpper:                                  &rtUpper,
 				RtLower:                                  &rtLower,
@@ -468,17 +498,17 @@ func TestProvinceCaseResponse_JSONStructure(t *testing.T) {
 		Positive:                                 150,
 		Recovered:                                120,
 		Deceased:                                 10,
-		PersonUnderObservation:                   25,
-		FinishedPersonUnderObservation:           20,
-		PersonUnderSupervision:                   30,
-		FinishedPersonUnderSupervision:           25,
+		PersonUnderObservation:                   &[]int64{25}[0],
+		FinishedPersonUnderObservation:           &[]int64{20}[0],
+		PersonUnderSupervision:                   &[]int64{30}[0],
+		FinishedPersonUnderSupervision:           &[]int64{25}[0],
 		CumulativePositive:                       5000,
 		CumulativeRecovered:                      4500,
 		CumulativeDeceased:                       300,
-		CumulativePersonUnderObservation:         800,
-		CumulativeFinishedPersonUnderObservation: 750,
-		CumulativePersonUnderSupervision:         600,
-		CumulativeFinishedPersonUnderSupervision: 580,
+		CumulativePersonUnderObservation:         &[]int64{800}[0],
+		CumulativeFinishedPersonUnderObservation: &[]int64{750}[0],
+		CumulativePersonUnderSupervision:         &[]int64{600}[0],
+		CumulativeFinishedPersonUnderSupervision: &[]int64{580}[0],
 		Rt:                                       &rt,
 		RtUpper:                                  &rt,
 		RtLower:                                  &rt,

@@ -140,6 +140,16 @@ func (m *MockCovidService) GetAllProvinceCasesByDateRangePaginatedSorted(startDa
 	return args.Get(0).([]models.ProvinceCaseWithDate), args.Int(1), args.Error(2)
 }
 
+func (m *MockCovidService) GetNationalCasesPaginatedSorted(limit, offset int, sortParams utils.SortParams) ([]models.NationalCase, int, error) {
+	args := m.Called(limit, offset, sortParams)
+	return args.Get(0).([]models.NationalCase), args.Int(1), args.Error(2)
+}
+
+func (m *MockCovidService) GetNationalCasesByDateRangePaginatedSorted(startDate, endDate string, limit, offset int, sortParams utils.SortParams) ([]models.NationalCase, int, error) {
+	args := m.Called(startDate, endDate, limit, offset, sortParams)
+	return args.Get(0).([]models.NationalCase), args.Int(1), args.Error(2)
+}
+
 func TestCovidHandler_GetNationalCases(t *testing.T) {
 	mockService := new(MockCovidService)
 	handler := NewCovidHandler(mockService, nil)
@@ -150,7 +160,7 @@ func TestCovidHandler_GetNationalCases(t *testing.T) {
 
 	mockService.On("GetNationalCasesSorted", utils.SortParams{Field: "date", Order: "asc"}).Return(expectedCases, nil)
 
-	req, err := http.NewRequest("GET", "/api/v1/national", nil)
+	req, err := http.NewRequest("GET", "/api/v1/national?all=true", nil)
 	assert.NoError(t, err)
 
 	rr := httptest.NewRecorder()
@@ -177,7 +187,7 @@ func TestCovidHandler_GetNationalCases_WithDateRange(t *testing.T) {
 
 	mockService.On("GetNationalCasesByDateRangeSorted", "2020-03-01", "2020-03-31", utils.SortParams{Field: "date", Order: "asc"}).Return(expectedCases, nil)
 
-	req, err := http.NewRequest("GET", "/api/v1/national?start_date=2020-03-01&end_date=2020-03-31", nil)
+	req, err := http.NewRequest("GET", "/api/v1/national?start_date=2020-03-01&end_date=2020-03-31&all=true", nil)
 	assert.NoError(t, err)
 
 	rr := httptest.NewRecorder()
@@ -199,7 +209,7 @@ func TestCovidHandler_GetNationalCases_ServiceError(t *testing.T) {
 
 	mockService.On("GetNationalCasesSorted", utils.SortParams{Field: "date", Order: "asc"}).Return([]models.NationalCase{}, errors.New("database error"))
 
-	req, err := http.NewRequest("GET", "/api/v1/national", nil)
+	req, err := http.NewRequest("GET", "/api/v1/national?all=true", nil)
 	assert.NoError(t, err)
 
 	rr := httptest.NewRecorder()
@@ -212,6 +222,73 @@ func TestCovidHandler_GetNationalCases_ServiceError(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "error", response.Status)
 	assert.Contains(t, response.Error, "database error")
+
+	mockService.AssertExpectations(t)
+}
+
+func TestCovidHandler_GetNationalCases_Paginated(t *testing.T) {
+	mockService := new(MockCovidService)
+	handler := NewCovidHandler(mockService, nil)
+
+	expectedCases := []models.NationalCase{
+		{ID: 1, Positive: 100, Recovered: 80, Deceased: 5},
+		{ID: 2, Positive: 110, Recovered: 85, Deceased: 6},
+	}
+
+	mockService.On("GetNationalCasesPaginatedSorted", 10, 0, utils.SortParams{Field: "date", Order: "asc"}).Return(expectedCases, 2, nil)
+
+	req, err := http.NewRequest("GET", "/api/v1/national?limit=10", nil)
+	assert.NoError(t, err)
+
+	rr := httptest.NewRecorder()
+	handler.GetNationalCases(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	var response Response
+	err = json.Unmarshal(rr.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "success", response.Status)
+	assert.NotNil(t, response.Data)
+
+	// Check that it's a paginated response
+	paginatedData, ok := response.Data.(map[string]interface{})
+	assert.True(t, ok)
+	assert.Contains(t, paginatedData, "data")
+	assert.Contains(t, paginatedData, "pagination")
+
+	mockService.AssertExpectations(t)
+}
+
+func TestCovidHandler_GetNationalCases_WithDateRangePaginated(t *testing.T) {
+	mockService := new(MockCovidService)
+	handler := NewCovidHandler(mockService, nil)
+
+	expectedCases := []models.NationalCase{
+		{ID: 1, Positive: 100, Date: time.Date(2020, 3, 15, 0, 0, 0, 0, time.UTC)},
+	}
+
+	mockService.On("GetNationalCasesByDateRangePaginatedSorted", "2020-03-01", "2020-03-31", 20, 10, utils.SortParams{Field: "date", Order: "asc"}).Return(expectedCases, 1, nil)
+
+	req, err := http.NewRequest("GET", "/api/v1/national?start_date=2020-03-01&end_date=2020-03-31&limit=20&offset=10", nil)
+	assert.NoError(t, err)
+
+	rr := httptest.NewRecorder()
+	handler.GetNationalCases(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	var response Response
+	err = json.Unmarshal(rr.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "success", response.Status)
+	assert.NotNil(t, response.Data)
+
+	// Check that it's a paginated response
+	paginatedData, ok := response.Data.(map[string]interface{})
+	assert.True(t, ok)
+	assert.Contains(t, paginatedData, "data")
+	assert.Contains(t, paginatedData, "pagination")
 
 	mockService.AssertExpectations(t)
 }
