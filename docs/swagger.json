@@ -17,7 +17,7 @@
             "name": "MIT",
             "url": "https://opensource.org/licenses/MIT"
         },
-        "version": "2.3.0"
+        "version": "2.2.0"
     },
     "host": "pico-api.banuacoder.com",
     "basePath": "/api/v1",
