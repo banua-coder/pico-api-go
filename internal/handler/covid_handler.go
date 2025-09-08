@@ -26,12 +26,13 @@ func NewCovidHandler(covidService service.CovidService, db *database.DB) *CovidH
 // GetNationalCases godoc
 //
 //	@Summary		Get national COVID-19 cases
-//	@Description	Retrieve national COVID-19 cases data with optional date range filtering
+//	@Description	Retrieve national COVID-19 cases data with optional date range filtering and sorting
 //	@Tags			national
 //	@Accept			json
 //	@Produce		json
 //	@Param			start_date	query		string	false	"Start date (YYYY-MM-DD)"
 //	@Param			end_date	query		string	false	"End date (YYYY-MM-DD)"
+//	@Param			sort		query		string	false	"Sort by field:order (e.g., date:desc, positive:asc). Default: date:asc"
 //	@Success		200			{object}	Response{data=[]models.NationalCaseResponse}
 //	@Failure		400			{object}	Response
 //	@Failure		500			{object}	Response
@@ -39,9 +40,12 @@ func NewCovidHandler(covidService service.CovidService, db *database.DB) *CovidH
 func (h *CovidHandler) GetNationalCases(w http.ResponseWriter, r *http.Request) {
 	startDate := r.URL.Query().Get("start_date")
 	endDate := r.URL.Query().Get("end_date")
+	
+	// Parse sort parameters (default: date ascending)
+	sortParams := utils.ParseSortParam(r, "date")
 
 	if startDate != "" && endDate != "" {
-		cases, err := h.covidService.GetNationalCasesByDateRange(startDate, endDate)
+		cases, err := h.covidService.GetNationalCasesByDateRangeSorted(startDate, endDate, sortParams)
 		if err != nil {
 			writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -52,7 +56,7 @@ func (h *CovidHandler) GetNationalCases(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	cases, err := h.covidService.GetNationalCases()
+	cases, err := h.covidService.GetNationalCasesSorted(sortParams)
 	if err != nil {
 		writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return

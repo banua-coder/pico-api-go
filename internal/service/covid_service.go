@@ -6,11 +6,14 @@ import (
 
 	"github.com/banua-coder/pico-api-go/internal/models"
 	"github.com/banua-coder/pico-api-go/internal/repository"
+	"github.com/banua-coder/pico-api-go/pkg/utils"
 )
 
 type CovidService interface {
 	GetNationalCases() ([]models.NationalCase, error)
+	GetNationalCasesSorted(sortParams utils.SortParams) ([]models.NationalCase, error)
 	GetNationalCasesByDateRange(startDate, endDate string) ([]models.NationalCase, error)
+	GetNationalCasesByDateRangeSorted(startDate, endDate string, sortParams utils.SortParams) ([]models.NationalCase, error)
 	GetLatestNationalCase() (*models.NationalCase, error)
 	GetProvinces() ([]models.Province, error)
 	GetProvincesWithLatestCase() ([]models.ProvinceWithLatestCase, error)
@@ -50,6 +53,14 @@ func (s *covidService) GetNationalCases() ([]models.NationalCase, error) {
 	return cases, nil
 }
 
+func (s *covidService) GetNationalCasesSorted(sortParams utils.SortParams) ([]models.NationalCase, error) {
+	cases, err := s.nationalCaseRepo.GetAllSorted(sortParams)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get sorted national cases: %w", err)
+	}
+	return cases, nil
+}
+
 func (s *covidService) GetNationalCasesByDateRange(startDate, endDate string) ([]models.NationalCase, error) {
 	start, err := time.Parse("2006-01-02", startDate)
 	if err != nil {
@@ -64,6 +75,24 @@ func (s *covidService) GetNationalCasesByDateRange(startDate, endDate string) ([
 	cases, err := s.nationalCaseRepo.GetByDateRange(start, end)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get national cases by date range: %w", err)
+	}
+	return cases, nil
+}
+
+func (s *covidService) GetNationalCasesByDateRangeSorted(startDate, endDate string, sortParams utils.SortParams) ([]models.NationalCase, error) {
+	start, err := time.Parse("2006-01-02", startDate)
+	if err != nil {
+		return nil, fmt.Errorf("invalid start date format: %w", err)
+	}
+
+	end, err := time.Parse("2006-01-02", endDate)
+	if err != nil {
+		return nil, fmt.Errorf("invalid end date format: %w", err)
+	}
+
+	cases, err := s.nationalCaseRepo.GetByDateRangeSorted(start, end, sortParams)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get sorted national cases by date range: %w", err)
 	}
 	return cases, nil
 }

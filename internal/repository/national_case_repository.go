@@ -7,11 +7,14 @@ import (
 
 	"github.com/banua-coder/pico-api-go/internal/models"
 	"github.com/banua-coder/pico-api-go/pkg/database"
+	"github.com/banua-coder/pico-api-go/pkg/utils"
 )
 
 type NationalCaseRepository interface {
 	GetAll() ([]models.NationalCase, error)
+	GetAllSorted(sortParams utils.SortParams) ([]models.NationalCase, error)
 	GetByDateRange(startDate, endDate time.Time) ([]models.NationalCase, error)
+	GetByDateRangeSorted(startDate, endDate time.Time, sortParams utils.SortParams) ([]models.NationalCase, error)
 	GetLatest() (*models.NationalCase, error)
 	GetByDay(day int64) (*models.NationalCase, error)
 }
@@ -25,10 +28,15 @@ func NewNationalCaseRepository(db *database.DB) NationalCaseRepository {
 }
 
 func (r *nationalCaseRepository) GetAll() ([]models.NationalCase, error) {
+	// Default sorting by date ascending
+	return r.GetAllSorted(utils.SortParams{Field: "date", Order: "asc"})
+}
+
+func (r *nationalCaseRepository) GetAllSorted(sortParams utils.SortParams) ([]models.NationalCase, error) {
 	query := `SELECT id, day, date, positive, recovered, deceased, 
 			  cumulative_positive, cumulative_recovered, cumulative_deceased,
 			  rt, rt_upper, rt_lower 
-			  FROM national_cases ORDER BY date DESC`
+			  FROM national_cases ORDER BY ` + sortParams.GetSQLOrderClause()
 
 	rows, err := r.db.Query(query)
 	if err != nil {
@@ -60,12 +68,17 @@ func (r *nationalCaseRepository) GetAll() ([]models.NationalCase, error) {
 }
 
 func (r *nationalCaseRepository) GetByDateRange(startDate, endDate time.Time) ([]models.NationalCase, error) {
+	// Default sorting by date ascending
+	return r.GetByDateRangeSorted(startDate, endDate, utils.SortParams{Field: "date", Order: "asc"})
+}
+
+func (r *nationalCaseRepository) GetByDateRangeSorted(startDate, endDate time.Time, sortParams utils.SortParams) ([]models.NationalCase, error) {
 	query := `SELECT id, day, date, positive, recovered, deceased, 
 			  cumulative_positive, cumulative_recovered, cumulative_deceased,
 			  rt, rt_upper, rt_lower 
 			  FROM national_cases 
 			  WHERE date BETWEEN ? AND ? 
-			  ORDER BY date DESC`
+			  ORDER BY ` + sortParams.GetSQLOrderClause()
 
 	rows, err := r.db.Query(query, startDate, endDate)
 	if err != nil {
