@@ -2,7 +2,7 @@
 //
 //	@title			Sulawesi Tengah COVID-19 Data API
 //	@version		2.1.0
-//	@description	A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central Sulawesi), with additional national and provincial data for context. Features enhanced ODP/PDP grouping and hybrid pagination.
+//	@description	A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central Sulawesi), with additional national and provincial data for context. Features enhanced ODP/PDP grouping, hybrid pagination, and rate limiting protection. Rate limiting: 100 requests per minute per IP address by default, with appropriate HTTP headers for client guidance.
 //	@termsOfService	http://swagger.io/terms/
 //
 //	@contact.name	API Support
@@ -69,6 +69,7 @@ func main() {
 
 	router.Use(middleware.Recovery)
 	router.Use(middleware.Logging)
+	router.Use(middleware.RateLimit(cfg.RateLimit))
 	router.Use(middleware.CORS)
 
 	address := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
