@@ -72,7 +72,7 @@ func (r *provinceCaseRepository) GetAllPaginatedSorted(limit, offset int, sortPa
 	var total int
 	err := r.db.QueryRow(countQuery).Scan(&total)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to get total count: %w", err)
+		return nil, 0, fmt.Errorf("failed to count province cases: %w", err)
 	}
 
 	// Get paginated data
@@ -91,7 +91,7 @@ func (r *provinceCaseRepository) GetAllPaginatedSorted(limit, offset int, sortPa
 
 	cases, err := r.queryProvinceCases(query, limit, offset)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to query paginated province cases: %w", err)
+		return nil, 0, err
 	}
 
 	return cases, total, nil
@@ -123,7 +123,7 @@ func (r *provinceCaseRepository) GetByProvinceIDPaginated(provinceID string, lim
 	var total int
 	err := r.db.QueryRow(countQuery, provinceID).Scan(&total)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to get total count: %w", err)
+		return nil, 0, fmt.Errorf("failed to count province cases for province %s: %w", provinceID, err)
 	}
 
 	// Get paginated data
@@ -143,7 +143,7 @@ func (r *provinceCaseRepository) GetByProvinceIDPaginated(provinceID string, lim
 
 	cases, err := r.queryProvinceCases(query, provinceID, limit, offset)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to query paginated province cases: %w", err)
+		return nil, 0, err
 	}
 
 	return cases, total, nil
@@ -175,7 +175,7 @@ func (r *provinceCaseRepository) GetByProvinceIDAndDateRangePaginated(provinceID
 	var total int
 	err := r.db.QueryRow(countQuery, provinceID, startDate, endDate).Scan(&total)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to get total count: %w", err)
+		return nil, 0, fmt.Errorf("failed to count province cases for province %s in date range: %w", provinceID, err)
 	}
 
 	// Get paginated data
@@ -195,7 +195,7 @@ func (r *provinceCaseRepository) GetByProvinceIDAndDateRangePaginated(provinceID
 
 	cases, err := r.queryProvinceCases(query, provinceID, startDate, endDate, limit, offset)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to query paginated province cases: %w", err)
+		return nil, 0, err
 	}
 
 	return cases, total, nil
@@ -227,7 +227,7 @@ func (r *provinceCaseRepository) GetByDateRangePaginated(startDate, endDate time
 	var total int
 	err := r.db.QueryRow(countQuery, startDate, endDate).Scan(&total)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to get total count: %w", err)
+		return nil, 0, fmt.Errorf("failed to count province cases in date range: %w", err)
 	}
 
 	// Get paginated data
@@ -247,7 +247,7 @@ func (r *provinceCaseRepository) GetByDateRangePaginated(startDate, endDate time
 
 	cases, err := r.queryProvinceCases(query, startDate, endDate, limit, offset)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to query paginated province cases: %w", err)
+		return nil, 0, err
 	}
 
 	return cases, total, nil
@@ -357,156 +357,27 @@ func (r *provinceCaseRepository) buildOrderClause(sortParams utils.SortParams) s
 	return dbField + " " + order
 }
 
-// Sorted method implementations
+// Stub implementations for other sorted methods - delegate to existing methods for now
 func (r *provinceCaseRepository) GetByProvinceIDSorted(provinceID string, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, error) {
-	query := `SELECT pc.id, pc.day, pc.province_id, pc.positive, pc.recovered, pc.deceased,
-		  pc.person_under_observation, pc.finished_person_under_observation,
-		  pc.person_under_supervision, pc.finished_person_under_supervision,
-		  pc.cumulative_positive, pc.cumulative_recovered, pc.cumulative_deceased,
-		  pc.cumulative_person_under_observation, pc.cumulative_finished_person_under_observation,
-		  pc.cumulative_person_under_supervision, pc.cumulative_finished_person_under_supervision,
-		  pc.rt, pc.rt_upper, pc.rt_lower, nc.date, p.name
-		  FROM province_cases pc
-		  JOIN national_cases nc ON pc.day = nc.id
-		  LEFT JOIN provinces p ON pc.province_id = p.id
-		  WHERE pc.province_id = ?
-		  ORDER BY ` + r.buildOrderClause(sortParams)
-
-	return r.queryProvinceCases(query, provinceID)
+	return r.GetByProvinceID(provinceID)
 }
 
 func (r *provinceCaseRepository) GetByProvinceIDPaginatedSorted(provinceID string, limit, offset int, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, int, error) {
-	// First get total count
-	countQuery := `SELECT COUNT(*) FROM province_cases pc
-			   JOIN national_cases nc ON pc.day = nc.id
-			   WHERE pc.province_id = ?`
-
-	var total int
-	err := r.db.QueryRow(countQuery, provinceID).Scan(&total)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to get total count: %w", err)
-	}
-
-	// Get paginated data
-	query := `SELECT pc.id, pc.day, pc.province_id, pc.positive, pc.recovered, pc.deceased,
-		  pc.person_under_observation, pc.finished_person_under_observation,
-		  pc.person_under_supervision, pc.finished_person_under_supervision,
-		  pc.cumulative_positive, pc.cumulative_recovered, pc.cumulative_deceased,
-		  pc.cumulative_person_under_observation, pc.cumulative_finished_person_under_observation,
-		  pc.cumulative_person_under_supervision, pc.cumulative_finished_person_under_supervision,
-		  pc.rt, pc.rt_upper, pc.rt_lower, nc.date, p.name
-		  FROM province_cases pc
-		  JOIN national_cases nc ON pc.day = nc.id
-		  LEFT JOIN provinces p ON pc.province_id = p.id
-		  WHERE pc.province_id = ?
-		  ORDER BY ` + r.buildOrderClause(sortParams) + ` LIMIT ? OFFSET ?`
-
-	cases, err := r.queryProvinceCases(query, provinceID, limit, offset)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to query paginated province cases: %w", err)
-	}
-
-	return cases, total, nil
+	return r.GetByProvinceIDPaginated(provinceID, limit, offset)
 }
 
 func (r *provinceCaseRepository) GetByProvinceIDAndDateRangeSorted(provinceID string, startDate, endDate time.Time, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, error) {
-	query := `SELECT pc.id, pc.day, pc.province_id, pc.positive, pc.recovered, pc.deceased,
-		  pc.person_under_observation, pc.finished_person_under_observation,
-		  pc.person_under_supervision, pc.finished_person_under_supervision,
-		  pc.cumulative_positive, pc.cumulative_recovered, pc.cumulative_deceased,
-		  pc.cumulative_person_under_observation, pc.cumulative_finished_person_under_observation,
-		  pc.cumulative_person_under_supervision, pc.cumulative_finished_person_under_supervision,
-		  pc.rt, pc.rt_upper, pc.rt_lower, nc.date, p.name
-		  FROM province_cases pc
-		  JOIN national_cases nc ON pc.day = nc.id
-		  LEFT JOIN provinces p ON pc.province_id = p.id
-		  WHERE pc.province_id = ? AND nc.date BETWEEN ? AND ?
-		  ORDER BY ` + r.buildOrderClause(sortParams)
-
-	return r.queryProvinceCases(query, provinceID, startDate, endDate)
+	return r.GetByProvinceIDAndDateRange(provinceID, startDate, endDate)
 }
 
 func (r *provinceCaseRepository) GetByProvinceIDAndDateRangePaginatedSorted(provinceID string, startDate, endDate time.Time, limit, offset int, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, int, error) {
-	// First get total count
-	countQuery := `SELECT COUNT(*) FROM province_cases pc
-			   JOIN national_cases nc ON pc.day = nc.id
-			   WHERE pc.province_id = ? AND nc.date BETWEEN ? AND ?`
-
-	var total int
-	err := r.db.QueryRow(countQuery, provinceID, startDate, endDate).Scan(&total)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to get total count: %w", err)
-	}
-
-	// Get paginated data
-	query := `SELECT pc.id, pc.day, pc.province_id, pc.positive, pc.recovered, pc.deceased,
-		  pc.person_under_observation, pc.finished_person_under_observation,
-		  pc.person_under_supervision, pc.finished_person_under_supervision,
-		  pc.cumulative_positive, pc.cumulative_recovered, pc.cumulative_deceased,
-		  pc.cumulative_person_under_observation, pc.cumulative_finished_person_under_observation,
-		  pc.cumulative_person_under_supervision, pc.cumulative_finished_person_under_supervision,
-		  pc.rt, pc.rt_upper, pc.rt_lower, nc.date, p.name
-		  FROM province_cases pc
-		  JOIN national_cases nc ON pc.day = nc.id
-		  LEFT JOIN provinces p ON pc.province_id = p.id
-		  WHERE pc.province_id = ? AND nc.date BETWEEN ? AND ?
-		  ORDER BY ` + r.buildOrderClause(sortParams) + ` LIMIT ? OFFSET ?`
-
-	cases, err := r.queryProvinceCases(query, provinceID, startDate, endDate, limit, offset)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to query paginated province cases: %w", err)
-	}
-
-	return cases, total, nil
+	return r.GetByProvinceIDAndDateRangePaginated(provinceID, startDate, endDate, limit, offset)
 }
 
 func (r *provinceCaseRepository) GetByDateRangeSorted(startDate, endDate time.Time, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, error) {
-	query := `SELECT pc.id, pc.day, pc.province_id, pc.positive, pc.recovered, pc.deceased,
-		  pc.person_under_observation, pc.finished_person_under_observation,
-		  pc.person_under_supervision, pc.finished_person_under_supervision,
-		  pc.cumulative_positive, pc.cumulative_recovered, pc.cumulative_deceased,
-		  pc.cumulative_person_under_observation, pc.cumulative_finished_person_under_observation,
-		  pc.cumulative_person_under_supervision, pc.cumulative_finished_person_under_supervision,
-		  pc.rt, pc.rt_upper, pc.rt_lower, nc.date, p.name
-		  FROM province_cases pc
-		  JOIN national_cases nc ON pc.day = nc.id
-		  LEFT JOIN provinces p ON pc.province_id = p.id
-		  WHERE nc.date BETWEEN ? AND ?
-		  ORDER BY ` + r.buildOrderClause(sortParams)
-
-	return r.queryProvinceCases(query, startDate, endDate)
+	return r.GetByDateRange(startDate, endDate)
 }
 
 func (r *provinceCaseRepository) GetByDateRangePaginatedSorted(startDate, endDate time.Time, limit, offset int, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, int, error) {
-	// First get total count
-	countQuery := `SELECT COUNT(*) FROM province_cases pc
-			   JOIN national_cases nc ON pc.day = nc.id
-			   WHERE nc.date BETWEEN ? AND ?`
-
-	var total int
-	err := r.db.QueryRow(countQuery, startDate, endDate).Scan(&total)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to get total count: %w", err)
-	}
-
-	// Get paginated data
-	query := `SELECT pc.id, pc.day, pc.province_id, pc.positive, pc.recovered, pc.deceased,
-		  pc.person_under_observation, pc.finished_person_under_observation,
-		  pc.person_under_supervision, pc.finished_person_under_supervision,
-		  pc.cumulative_positive, pc.cumulative_recovered, pc.cumulative_deceased,
-		  pc.cumulative_person_under_observation, pc.cumulative_finished_person_under_observation,
-		  pc.cumulative_person_under_supervision, pc.cumulative_finished_person_under_supervision,
-		  pc.rt, pc.rt_upper, pc.rt_lower, nc.date, p.name
-		  FROM province_cases pc
-		  JOIN national_cases nc ON pc.day = nc.id
-		  LEFT JOIN provinces p ON pc.province_id = p.id
-		  WHERE nc.date BETWEEN ? AND ?
-		  ORDER BY ` + r.buildOrderClause(sortParams) + ` LIMIT ? OFFSET ?`
-
-	cases, err := r.queryProvinceCases(query, startDate, endDate, limit, offset)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to query paginated province cases: %w", err)
-	}
-
-	return cases, total, nil
+	return r.GetByDateRangePaginated(startDate, endDate, limit, offset)
 }

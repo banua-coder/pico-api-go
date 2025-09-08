@@ -26,19 +26,14 @@ func NewCovidHandler(covidService service.CovidService, db *database.DB) *CovidH
 // GetNationalCases godoc
 //
 //	@Summary		Get national COVID-19 cases
-//	@Description	Retrieve national COVID-19 cases data with optional date range filtering, sorting, and pagination
+//	@Description	Retrieve national COVID-19 cases data with optional date range filtering and sorting
 //	@Tags			national
 //	@Accept			json
 //	@Produce		json
-//	@Param			limit		query		integer	false	"Records per page (default: 50, max: 1000)"
-//	@Param			offset		query		integer	false	"Records to skip (default: 0)"
-//	@Param			page		query		integer	false	"Page number (1-based, alternative to offset)"
-//	@Param			all			query		boolean	false	"Return all data without pagination"
 //	@Param			start_date	query		string	false	"Start date (YYYY-MM-DD)"
 //	@Param			end_date	query		string	false	"End date (YYYY-MM-DD)"
 //	@Param			sort		query		string	false	"Sort by field:order (e.g., date:desc, positive:asc). Default: date:asc"
-//	@Success		200			{object}	Response{data=models.PaginatedResponse{data=[]models.NationalCaseResponse}}	"Paginated response"
-//	@Success		200			{object}	Response{data=[]models.NationalCaseResponse}							"All data response when all=true"
+//	@Success		200			{object}	Response{data=[]models.NationalCaseResponse}
 //	@Failure		400			{object}	Response
 //	@Failure		429			{object}	Response	"Rate limit exceeded"
 //	@Failure		500			{object}	Response
@@ -50,66 +45,31 @@ func NewCovidHandler(covidService service.CovidService, db *database.DB) *CovidH
 func (h *CovidHandler) GetNationalCases(w http.ResponseWriter, r *http.Request) {
 	startDate := r.URL.Query().Get("start_date")
 	endDate := r.URL.Query().Get("end_date")
-	all := utils.ParseBoolQueryParam(r, "all")
 
 	// Parse sort parameters (default: date ascending)
 	sortParams := utils.ParseSortParam(r, "date")
 
-	// Handle pagination parameters
-	limit, offset := utils.ParsePaginationParams(r)
-
-	// Return all data without pagination if "all" is true
-	if all {
-		if startDate != "" && endDate != "" {
-			cases, err := h.covidService.GetNationalCasesByDateRangeSorted(startDate, endDate, sortParams)
-			if err != nil {
-				writeErrorResponse(w, http.StatusInternalServerError, err.Error())
-				return
-			}
-			responseData := models.TransformSliceToResponse(cases)
-			writeSuccessResponse(w, responseData)
-			return
-		}
-
-		cases, err := h.covidService.GetNationalCasesSorted(sortParams)
+	if startDate != "" && endDate != "" {
+		cases, err := h.covidService.GetNationalCasesByDateRangeSorted(startDate, endDate, sortParams)
 		if err != nil {
 			writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
+		// Transform to new response structure
 		responseData := models.TransformSliceToResponse(cases)
 		writeSuccessResponse(w, responseData)
 		return
 	}
 
-	// Return paginated data
-	if startDate != "" && endDate != "" {
-		cases, total, err := h.covidService.GetNationalCasesByDateRangePaginatedSorted(startDate, endDate, limit, offset, sortParams)
-		if err != nil {
-			writeErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-		responseData := models.TransformSliceToResponse(cases)
-		pagination := models.CalculatePaginationMeta(limit, offset, total)
-		paginatedResponse := models.PaginatedResponse{
-			Data:       responseData,
-			Pagination: pagination,
-		}
-		writeSuccessResponse(w, paginatedResponse)
-		return
-	}
-
-	cases, total, err := h.covidService.GetNationalCasesPaginatedSorted(limit, offset, sortParams)
+	cases, err := h.covidService.GetNationalCasesSorted(sortParams)
 	if err != nil {
 		writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+
+	// Transform to new response structure
 	responseData := models.TransformSliceToResponse(cases)
-	pagination := models.CalculatePaginationMeta(limit, offset, total)
-	paginatedResponse := models.PaginatedResponse{
-		Data:       responseData,
-		Pagination: pagination,
-	}
-	writeSuccessResponse(w, paginatedResponse)
+	writeSuccessResponse(w, responseData)
 }
 
 // GetLatestNationalCase godoc
@@ -185,7 +145,6 @@ func (h *CovidHandler) GetProvinces(w http.ResponseWriter, r *http.Request) {
 //	@Param			provinceId	path		string	false	"Province ID (e.g., '31' for Jakarta)"
 //	@Param			limit		query		integer	false	"Records per page (default: 50, max: 1000)"
 //	@Param			offset		query		integer	false	"Records to skip (default: 0)"
-//	@Param			page		query		integer	false	"Page number (1-based, alternative to offset)"
 //	@Param			all			query		boolean	false	"Return all data without pagination"
 //	@Param			start_date	query		string	false	"Start date (YYYY-MM-DD)"
 //	@Param			end_date	query		string	false	"End date (YYYY-MM-DD)"
@@ -201,13 +160,17 @@ func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) 
 	provinceID := vars["provinceId"]
 
 	// Parse query parameters
-	limit, offset := utils.ParsePaginationParams(r)
+	limit := utils.ParseIntQueryParam(r, "limit", 50)
+	offset := utils.ParseIntQueryParam(r, "offset", 0)
 	all := utils.ParseBoolQueryParam(r, "all")
 	startDate := r.URL.Query().Get("start_date")
 	endDate := r.URL.Query().Get("end_date")
 
 	// Parse sort parameters (default: date ascending)
 	sortParams := utils.ParseSortParam(r, "date")
+
+	// Validate pagination params
+	limit, offset = utils.ValidatePaginationParams(limit, offset)
 
 	if provinceID == "" {
 		// Handle all provinces cases
@@ -335,7 +298,7 @@ func (h *CovidHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	health := map[string]interface{}{
 		"status":    "healthy",
 		"service":   "COVID-19 API",
-		"version": "2.3.0",
+		"version": "2.2.0",
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
 	}
 
@@ -392,7 +355,7 @@ func (h *CovidHandler) GetAPIIndex(w http.ResponseWriter, r *http.Request) {
 	endpoints := map[string]interface{}{
 		"api": map[string]interface{}{
 			"title":       "Sulawesi Tengah COVID-19 Data API",
-			"version": "2.3.0",
+			"version": "2.2.0",
 			"description": "A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central Sulawesi)",
 		},
 		"documentation": map[string]interface{}{
