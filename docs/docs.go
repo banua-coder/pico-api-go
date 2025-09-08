@@ -117,7 +117,7 @@ const docTemplate = `{
         },
         "/national": {
             "get": {
-                "description": "Retrieve national COVID-19 cases data with optional date range filtering",
+                "description": "Retrieve national COVID-19 cases data with optional date range filtering and sorting",
                 "consumes": [
                     "application/json"
                 ],
@@ -139,6 +139,12 @@ const docTemplate = `{
                         "type": "string",
                         "description": "End date (YYYY-MM-DD)",
                         "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort by field:order (e.g., date:desc, positive:asc). Default: date:asc",
+                        "name": "sort",
                         "in": "query"
                     }
                 ],
@@ -162,12 +168,38 @@ const docTemplate = `{
                                     }
                                 }
                             ]
+                        },
+                        "headers": {
+                            "X-RateLimit-Limit": {
+                                "type": "string",
+                                "description": "Request limit per window"
+                            },
+                            "X-RateLimit-Remaining": {
+                                "type": "string",
+                                "description": "Requests remaining in current window"
+                            }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/handler.Response"
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "type": "string",
+                                "description": "Seconds to wait before retrying"
+                            },
+                            "X-RateLimit-Reset": {
+                                "type": "string",
+                                "description": "Unix timestamp when rate limit resets"
+                            }
                         }
                     },
                     "500": {
@@ -321,6 +353,12 @@ const docTemplate = `{
                         "description": "End date (YYYY-MM-DD)",
                         "name": "end_date",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort by field:order (e.g., date:desc, positive:asc). Default: date:asc",
+                        "name": "sort",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -408,6 +446,12 @@ const docTemplate = `{
                         "type": "string",
                         "description": "End date (YYYY-MM-DD)",
                         "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort by field:order (e.g., date:desc, positive:asc). Default: date:asc",
+                        "name": "sort",
                         "in": "query"
                     }
                 ],
@@ -776,7 +820,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/api/v1",
 	Schemes:          []string{"https", "http"},
 	Title:            "Sulawesi Tengah COVID-19 Data API",
-	Description:      "A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central Sulawesi), with additional national and provincial data for context. Features enhanced ODP/PDP grouping and hybrid pagination.",
+	Description:      "A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central Sulawesi), with additional national and provincial data for context. Features enhanced ODP/PDP grouping, hybrid pagination, and rate limiting protection. Rate limiting: 100 requests per minute per IP address by default, with appropriate HTTP headers for client guidance.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
