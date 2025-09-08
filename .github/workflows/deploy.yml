@@ -366,10 +366,15 @@ jobs:
           PRERELEASE=""
         fi
         
-        # Create the release
+        # Save release notes to a temporary file to avoid shell expansion issues
+        cat > /tmp/release_notes.md << 'EOF'
+        ${{ steps.release_notes.outputs.RELEASE_NOTES }}
+        EOF
+        
+        # Create the release using the file
         gh release create "$VERSION" \
           --title "🚀 $VERSION" \
-          --notes "${{ steps.release_notes.outputs.RELEASE_NOTES }}" \
+          --notes-file /tmp/release_notes.md \
           $PRERELEASE \
           --target main
 
