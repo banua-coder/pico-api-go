@@ -6,7 +6,6 @@ import (
 	"github.com/banua-coder/pico-api-go/internal/service"
 	"github.com/banua-coder/pico-api-go/pkg/database"
 	"github.com/gorilla/mux"
-	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func SetupRoutes(covidService service.CovidService, db *database.DB) *mux.Router {
@@ -28,10 +27,13 @@ func SetupRoutes(covidService service.CovidService, db *database.DB) *mux.Router
 	api.HandleFunc("/provinces/cases", covidHandler.GetProvinceCases).Methods("GET", "OPTIONS")
 	api.HandleFunc("/provinces/{provinceId}/cases", covidHandler.GetProvinceCases).Methods("GET", "OPTIONS")
 
-	// Swagger documentation
-	router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler).Methods("GET")
+	// API specification endpoint
+	api.HandleFunc("/swagger.json", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		http.ServeFile(w, r, "./docs/swagger.json")
+	}).Methods("GET", "OPTIONS")
 
-	// Redirect /docs to swagger documentation for convenience  
+	// Redirect /docs to static swagger UI
 	router.HandleFunc("/docs", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/swagger/index.html", http.StatusFound)
 	}).Methods("GET")
