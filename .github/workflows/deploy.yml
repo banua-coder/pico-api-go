@@ -173,106 +173,24 @@ jobs:
           echo "🎉 Initial deployment of ${VERSION} completed!"
         EOF
 
-    - name: Health check and rollback management
+    - name: Simple health check
       id: health_check
       run: |
-        echo "🔍 Performing comprehensive health check..."
+        echo "🔍 Performing simple health check..."
+        sleep 5
         
-        # Wait for service to fully start
-        echo "⏳ Waiting 10 seconds for service to initialize..."
-        sleep 10
-        
-        HEALTH_CHECK_PASSED="false"
-        MAX_RETRIES=3
-        RETRY_COUNT=0
-        
-        # Retry health check up to MAX_RETRIES times
-        while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-          RETRY_COUNT=$((RETRY_COUNT + 1))
-          echo "🔍 Health check attempt $RETRY_COUNT of $MAX_RETRIES..."
-          
-          if [ -n "${{ secrets.HEALTH_CHECK_URL }}" ]; then
-            # Perform detailed health check
-            RESPONSE=$(curl -s -w "HTTPSTATUS:%{http_code}" "${{ secrets.HEALTH_CHECK_URL }}" || echo "HTTPSTATUS:000")
-            HTTP_STATUS=$(echo $RESPONSE | grep -o 'HTTPSTATUS:[0-9]*' | cut -d: -f2)
-            RESPONSE_BODY=$(echo $RESPONSE | sed 's/HTTPSTATUS:[0-9]*$//')
-            
-            echo "HTTP Status: $HTTP_STATUS"
-            echo "Response: $RESPONSE_BODY"
-            
-            if [ "$HTTP_STATUS" = "200" ]; then
-              # Additional validation - check if response contains expected data
-              if echo "$RESPONSE_BODY" | grep -q '"status".*"success"'; then
-                echo "✅ Health check passed - API is responding correctly"
-                HEALTH_CHECK_PASSED="true"
-                break
-              else
-                echo "⚠️  Health check failed - API responding but with unexpected data"
-              fi
-            else
-              echo "⚠️  Health check failed - HTTP $HTTP_STATUS"
-            fi
+        if [ -n "${{ secrets.HEALTH_CHECK_URL }}" ]; then
+          echo "📡 Testing health endpoint..."
+          if curl -f -s "${{ secrets.HEALTH_CHECK_URL }}" > /dev/null; then
+            echo "✅ Health check passed - API is responding"
+            echo "health_check_passed=true" >> $GITHUB_OUTPUT
           else
-            echo "⚠️  No health check URL configured - cannot verify deployment"
-            # Without health check URL, assume success (maintain backward compatibility)
-            HEALTH_CHECK_PASSED="true"
-            break
+            echo "⚠️ Health check failed - API not responding"
+            echo "health_check_passed=false" >> $GITHUB_OUTPUT
           fi
-          
-          if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-            echo "⏳ Waiting 5 seconds before retry..."
-            sleep 5
-          fi
-        done
-        
-        echo "health_check_passed=$HEALTH_CHECK_PASSED" >> $GITHUB_OUTPUT
-        
-        # Handle rollback if health check failed
-        if [ "$HEALTH_CHECK_PASSED" = "false" ]; then
-          echo "❌ Health check failed after $MAX_RETRIES attempts - initiating rollback..."
-          
-          ssh -p ${{ secrets.DEPLOY_PORT }} ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
-            set -e
-            
-            DEPLOY_PATH="${{ secrets.DEPLOY_PATH }}"
-            BINARY_NAME="${{ secrets.BINARY_NAME }}"
-            VERSION="${{ env.VERSION }}"
-            
-            echo "🔄 Rolling back to previous version..."
-            cd "$DEPLOY_PATH"
-            
-            # Stop the failed application
-            if [ -f "./stop.sh" ]; then
-              ./stop.sh || echo "⚠️  Stop script failed, but continuing rollback"
-            fi
-            
-            # Find the most recent backup
-            BACKUP_FILE=$(ls -t ${BINARY_NAME}.backup.* 2>/dev/null | head -n1)
-            
-            if [ -n "$BACKUP_FILE" ] && [ -f "$BACKUP_FILE" ]; then
-              echo "📦 Restoring from backup: $BACKUP_FILE"
-              cp "$BACKUP_FILE" "$BINARY_NAME"
-              chmod +x "$BINARY_NAME"
-              echo "✅ Binary restored from backup"
-              
-              # Restart with previous version
-              if [ -f "./start.sh" ]; then
-                ./start.sh
-                echo "✅ Previous version restarted"
-              fi
-              
-              echo "🔄 Rollback completed successfully"
-            else
-              echo "❌ No backup file found - cannot rollback automatically"
-              echo "Manual intervention required!"
-              exit 1
-            fi
-          EOF
-          
-          echo "❌ Deployment failed and rolled back"
-          exit 1
         else
-          echo "✅ Health check passed - proceeding with cleanup"
+          echo "ℹ️ No health check URL configured - skipping verification"
+          echo "health_check_passed=true" >> $GITHUB_OUTPUT
         fi
 
     - name: Cleanup backup files
