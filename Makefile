@@ -82,4 +82,3 @@ help:
 	@echo "  bench            - Run benchmarks"
 	@echo "  security         - Check for vulnerabilities"
 	@echo "  help             - Show this help message"
-	

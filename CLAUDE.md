@@ -125,3 +125,4 @@ When adding new features, follow the established patterns:
 4. Build HTTP handlers with HTTP testing
 5. Add integration tests for complete API workflows
 6. Use `make test` to run the full test suite before committing
+- always use go expert for this project
