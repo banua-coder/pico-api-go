@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/banua-coder/pico-api-go/internal/models"
+	"github.com/banua-coder/pico-api-go/pkg/utils"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -85,6 +86,57 @@ func (m *MockCovidService) GetAllProvinceCasesPaginated(limit, offset int) ([]mo
 
 func (m *MockCovidService) GetAllProvinceCasesByDateRangePaginated(startDate, endDate string, limit, offset int) ([]models.ProvinceCaseWithDate, int, error) {
 	args := m.Called(startDate, endDate, limit, offset)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Int(1), args.Error(2)
+}
+
+// Sorted methods
+func (m *MockCovidService) GetNationalCasesSorted(sortParams utils.SortParams) ([]models.NationalCase, error) {
+	args := m.Called(sortParams)
+	return args.Get(0).([]models.NationalCase), args.Error(1)
+}
+
+func (m *MockCovidService) GetNationalCasesByDateRangeSorted(startDate, endDate string, sortParams utils.SortParams) ([]models.NationalCase, error) {
+	args := m.Called(startDate, endDate, sortParams)
+	return args.Get(0).([]models.NationalCase), args.Error(1)
+}
+
+func (m *MockCovidService) GetProvinceCasesSorted(provinceID string, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, error) {
+	args := m.Called(provinceID, sortParams)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Error(1)
+}
+
+func (m *MockCovidService) GetProvinceCasesPaginatedSorted(provinceID string, limit, offset int, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, int, error) {
+	args := m.Called(provinceID, limit, offset, sortParams)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Int(1), args.Error(2)
+}
+
+func (m *MockCovidService) GetProvinceCasesByDateRangeSorted(provinceID, startDate, endDate string, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, error) {
+	args := m.Called(provinceID, startDate, endDate, sortParams)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Error(1)
+}
+
+func (m *MockCovidService) GetProvinceCasesByDateRangePaginatedSorted(provinceID, startDate, endDate string, limit, offset int, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, int, error) {
+	args := m.Called(provinceID, startDate, endDate, limit, offset, sortParams)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Int(1), args.Error(2)
+}
+
+func (m *MockCovidService) GetAllProvinceCasesSorted(sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, error) {
+	args := m.Called(sortParams)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Error(1)
+}
+
+func (m *MockCovidService) GetAllProvinceCasesPaginatedSorted(limit, offset int, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, int, error) {
+	args := m.Called(limit, offset, sortParams)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Int(1), args.Error(2)
+}
+
+func (m *MockCovidService) GetAllProvinceCasesByDateRangeSorted(startDate, endDate string, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, error) {
+	args := m.Called(startDate, endDate, sortParams)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Error(1)
+}
+
+func (m *MockCovidService) GetAllProvinceCasesByDateRangePaginatedSorted(startDate, endDate string, limit, offset int, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, int, error) {
+	args := m.Called(startDate, endDate, limit, offset, sortParams)
 	return args.Get(0).([]models.ProvinceCaseWithDate), args.Int(1), args.Error(2)
 }
 
