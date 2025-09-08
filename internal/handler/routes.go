@@ -31,8 +31,8 @@ func SetupRoutes(covidService service.CovidService, db *database.DB) *mux.Router
 	// Swagger documentation
 	router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler).Methods("GET")
 
-	// Redirect root to swagger docs for convenience
-	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	// Redirect /docs to swagger documentation for convenience  
+	router.HandleFunc("/docs", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/swagger/index.html", http.StatusFound)
 	}).Methods("GET")
 
