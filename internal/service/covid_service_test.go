@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/banua-coder/pico-api-go/internal/models"
+	"github.com/banua-coder/pico-api-go/pkg/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -36,6 +37,16 @@ func (m *MockNationalCaseRepository) GetByDay(day int64) (*models.NationalCase, 
 		return nil, args.Error(1)
 	}
 	return result.(*models.NationalCase), args.Error(1)
+}
+
+func (m *MockNationalCaseRepository) GetAllSorted(sortParams utils.SortParams) ([]models.NationalCase, error) {
+	args := m.Called(sortParams)
+	return args.Get(0).([]models.NationalCase), args.Error(1)
+}
+
+func (m *MockNationalCaseRepository) GetByDateRangeSorted(startDate, endDate time.Time, sortParams utils.SortParams) ([]models.NationalCase, error) {
+	args := m.Called(startDate, endDate, sortParams)
+	return args.Get(0).([]models.NationalCase), args.Error(1)
 }
 
 type MockProvinceRepository struct {
@@ -107,6 +118,48 @@ func (m *MockProvinceCaseRepository) GetByProvinceIDAndDateRangePaginated(provin
 
 func (m *MockProvinceCaseRepository) GetByDateRangePaginated(startDate, endDate time.Time, limit, offset int) ([]models.ProvinceCaseWithDate, int, error) {
 	args := m.Called(startDate, endDate, limit, offset)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Int(1), args.Error(2)
+}
+
+// Sorted methods
+func (m *MockProvinceCaseRepository) GetAllSorted(sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, error) {
+	args := m.Called(sortParams)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Error(1)
+}
+
+func (m *MockProvinceCaseRepository) GetByProvinceIDSorted(provinceID string, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, error) {
+	args := m.Called(provinceID, sortParams)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Error(1)
+}
+
+func (m *MockProvinceCaseRepository) GetByProvinceIDAndDateRangeSorted(provinceID string, startDate, endDate time.Time, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, error) {
+	args := m.Called(provinceID, startDate, endDate, sortParams)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Error(1)
+}
+
+func (m *MockProvinceCaseRepository) GetByDateRangeSorted(startDate, endDate time.Time, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, error) {
+	args := m.Called(startDate, endDate, sortParams)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Error(1)
+}
+
+// Paginated sorted methods
+func (m *MockProvinceCaseRepository) GetAllPaginatedSorted(limit, offset int, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, int, error) {
+	args := m.Called(limit, offset, sortParams)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Int(1), args.Error(2)
+}
+
+func (m *MockProvinceCaseRepository) GetByProvinceIDPaginatedSorted(provinceID string, limit, offset int, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, int, error) {
+	args := m.Called(provinceID, limit, offset, sortParams)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Int(1), args.Error(2)
+}
+
+func (m *MockProvinceCaseRepository) GetByProvinceIDAndDateRangePaginatedSorted(provinceID string, startDate, endDate time.Time, limit, offset int, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, int, error) {
+	args := m.Called(provinceID, startDate, endDate, limit, offset, sortParams)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Int(1), args.Error(2)
+}
+
+func (m *MockProvinceCaseRepository) GetByDateRangePaginatedSorted(startDate, endDate time.Time, limit, offset int, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, int, error) {
+	args := m.Called(startDate, endDate, limit, offset, sortParams)
 	return args.Get(0).([]models.ProvinceCaseWithDate), args.Int(1), args.Error(2)
 }
 

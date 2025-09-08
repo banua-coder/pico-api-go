@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/banua-coder/pico-api-go/internal/models"
+	"github.com/banua-coder/pico-api-go/pkg/utils"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -88,6 +89,57 @@ func (m *MockCovidService) GetAllProvinceCasesByDateRangePaginated(startDate, en
 	return args.Get(0).([]models.ProvinceCaseWithDate), args.Int(1), args.Error(2)
 }
 
+// Sorted methods
+func (m *MockCovidService) GetNationalCasesSorted(sortParams utils.SortParams) ([]models.NationalCase, error) {
+	args := m.Called(sortParams)
+	return args.Get(0).([]models.NationalCase), args.Error(1)
+}
+
+func (m *MockCovidService) GetNationalCasesByDateRangeSorted(startDate, endDate string, sortParams utils.SortParams) ([]models.NationalCase, error) {
+	args := m.Called(startDate, endDate, sortParams)
+	return args.Get(0).([]models.NationalCase), args.Error(1)
+}
+
+func (m *MockCovidService) GetProvinceCasesSorted(provinceID string, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, error) {
+	args := m.Called(provinceID, sortParams)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Error(1)
+}
+
+func (m *MockCovidService) GetProvinceCasesPaginatedSorted(provinceID string, limit, offset int, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, int, error) {
+	args := m.Called(provinceID, limit, offset, sortParams)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Int(1), args.Error(2)
+}
+
+func (m *MockCovidService) GetProvinceCasesByDateRangeSorted(provinceID, startDate, endDate string, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, error) {
+	args := m.Called(provinceID, startDate, endDate, sortParams)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Error(1)
+}
+
+func (m *MockCovidService) GetProvinceCasesByDateRangePaginatedSorted(provinceID, startDate, endDate string, limit, offset int, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, int, error) {
+	args := m.Called(provinceID, startDate, endDate, limit, offset, sortParams)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Int(1), args.Error(2)
+}
+
+func (m *MockCovidService) GetAllProvinceCasesSorted(sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, error) {
+	args := m.Called(sortParams)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Error(1)
+}
+
+func (m *MockCovidService) GetAllProvinceCasesPaginatedSorted(limit, offset int, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, int, error) {
+	args := m.Called(limit, offset, sortParams)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Int(1), args.Error(2)
+}
+
+func (m *MockCovidService) GetAllProvinceCasesByDateRangeSorted(startDate, endDate string, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, error) {
+	args := m.Called(startDate, endDate, sortParams)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Error(1)
+}
+
+func (m *MockCovidService) GetAllProvinceCasesByDateRangePaginatedSorted(startDate, endDate string, limit, offset int, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, int, error) {
+	args := m.Called(startDate, endDate, limit, offset, sortParams)
+	return args.Get(0).([]models.ProvinceCaseWithDate), args.Int(1), args.Error(2)
+}
+
 func TestCovidHandler_GetNationalCases(t *testing.T) {
 	mockService := new(MockCovidService)
 	handler := NewCovidHandler(mockService, nil)
@@ -96,7 +148,7 @@ func TestCovidHandler_GetNationalCases(t *testing.T) {
 		{ID: 1, Positive: 100, Recovered: 80, Deceased: 5},
 	}
 
-	mockService.On("GetNationalCases").Return(expectedCases, nil)
+	mockService.On("GetNationalCasesSorted", utils.SortParams{Field: "date", Order: "asc"}).Return(expectedCases, nil)
 
 	req, err := http.NewRequest("GET", "/api/v1/national", nil)
 	assert.NoError(t, err)
@@ -123,7 +175,7 @@ func TestCovidHandler_GetNationalCases_WithDateRange(t *testing.T) {
 		{ID: 1, Positive: 100, Date: time.Date(2020, 3, 15, 0, 0, 0, 0, time.UTC)},
 	}
 
-	mockService.On("GetNationalCasesByDateRange", "2020-03-01", "2020-03-31").Return(expectedCases, nil)
+	mockService.On("GetNationalCasesByDateRangeSorted", "2020-03-01", "2020-03-31", utils.SortParams{Field: "date", Order: "asc"}).Return(expectedCases, nil)
 
 	req, err := http.NewRequest("GET", "/api/v1/national?start_date=2020-03-01&end_date=2020-03-31", nil)
 	assert.NoError(t, err)
@@ -145,7 +197,7 @@ func TestCovidHandler_GetNationalCases_ServiceError(t *testing.T) {
 	mockService := new(MockCovidService)
 	handler := NewCovidHandler(mockService, nil)
 
-	mockService.On("GetNationalCases").Return([]models.NationalCase{}, errors.New("database error"))
+	mockService.On("GetNationalCasesSorted", utils.SortParams{Field: "date", Order: "asc"}).Return([]models.NationalCase{}, errors.New("database error"))
 
 	req, err := http.NewRequest("GET", "/api/v1/national", nil)
 	assert.NoError(t, err)
@@ -262,7 +314,7 @@ func TestCovidHandler_GetProvinceCases_AllProvinces_Paginated(t *testing.T) {
 	}
 	expectedTotal := 100
 
-	mockService.On("GetAllProvinceCasesPaginated", 50, 0).Return(expectedCases, expectedTotal, nil)
+	mockService.On("GetAllProvinceCasesPaginatedSorted", 50, 0, utils.SortParams{Field: "date", Order: "asc"}).Return(expectedCases, expectedTotal, nil)
 
 	req, err := http.NewRequest("GET", "/api/v1/provinces/cases", nil)
 	assert.NoError(t, err)
@@ -304,7 +356,7 @@ func TestCovidHandler_GetProvinceCases_SpecificProvince_Paginated(t *testing.T) 
 	}
 	expectedTotal := 50
 
-	mockService.On("GetProvinceCasesPaginated", "11", 50, 0).Return(expectedCases, expectedTotal, nil)
+	mockService.On("GetProvinceCasesPaginatedSorted", "11", 50, 0, utils.SortParams{Field: "date", Order: "asc"}).Return(expectedCases, expectedTotal, nil)
 
 	req, err := http.NewRequest("GET", "/api/v1/provinces/11/cases", nil)
 	assert.NoError(t, err)
@@ -339,7 +391,7 @@ func TestCovidHandler_GetProvinceCases_AllData(t *testing.T) {
 		{ProvinceCase: models.ProvinceCase{ID: 2, ProvinceID: "31", Positive: 100}},
 	}
 
-	mockService.On("GetAllProvinceCases").Return(expectedCases, nil)
+	mockService.On("GetAllProvinceCasesSorted", utils.SortParams{Field: "date", Order: "asc"}).Return(expectedCases, nil)
 
 	req, err := http.NewRequest("GET", "/api/v1/provinces/cases?all=true", nil)
 	assert.NoError(t, err)
@@ -371,7 +423,7 @@ func TestCovidHandler_GetProvinceCases_CustomPagination(t *testing.T) {
 	}
 	expectedTotal := 200
 
-	mockService.On("GetAllProvinceCasesPaginated", 100, 50).Return(expectedCases, expectedTotal, nil)
+	mockService.On("GetAllProvinceCasesPaginatedSorted", 100, 50, utils.SortParams{Field: "date", Order: "asc"}).Return(expectedCases, expectedTotal, nil)
 
 	req, err := http.NewRequest("GET", "/api/v1/provinces/cases?limit=100&offset=50", nil)
 	assert.NoError(t, err)
@@ -411,7 +463,7 @@ func TestCovidHandler_GetProvinceCases_DateRange_Paginated(t *testing.T) {
 	}
 	expectedTotal := 30
 
-	mockService.On("GetAllProvinceCasesByDateRangePaginated", "2024-01-01", "2024-01-31", 50, 0).Return(expectedCases, expectedTotal, nil)
+	mockService.On("GetAllProvinceCasesByDateRangePaginatedSorted", "2024-01-01", "2024-01-31", 50, 0, utils.SortParams{Field: "date", Order: "asc"}).Return(expectedCases, expectedTotal, nil)
 
 	req, err := http.NewRequest("GET", "/api/v1/provinces/cases?start_date=2024-01-01&end_date=2024-01-31", nil)
 	assert.NoError(t, err)
@@ -442,7 +494,7 @@ func TestCovidHandler_GetProvinceCases_DateRange_AllData(t *testing.T) {
 		{ProvinceCase: models.ProvinceCase{ID: 1, ProvinceID: "11", Positive: 50}},
 	}
 
-	mockService.On("GetAllProvinceCasesByDateRange", "2024-01-01", "2024-01-31").Return(expectedCases, nil)
+	mockService.On("GetAllProvinceCasesByDateRangeSorted", "2024-01-01", "2024-01-31", utils.SortParams{Field: "date", Order: "asc"}).Return(expectedCases, nil)
 
 	req, err := http.NewRequest("GET", "/api/v1/provinces/cases?start_date=2024-01-01&end_date=2024-01-31&all=true", nil)
 	assert.NoError(t, err)
@@ -473,7 +525,7 @@ func TestCovidHandler_GetProvinceCases_SpecificProvince_AllData(t *testing.T) {
 		{ProvinceCase: models.ProvinceCase{ID: 1, ProvinceID: "31", Positive: 200}},
 	}
 
-	mockService.On("GetProvinceCases", "31").Return(expectedCases, nil)
+	mockService.On("GetProvinceCasesSorted", "31", utils.SortParams{Field: "date", Order: "asc"}).Return(expectedCases, nil)
 
 	req, err := http.NewRequest("GET", "/api/v1/provinces/31/cases?all=true", nil)
 	assert.NoError(t, err)
