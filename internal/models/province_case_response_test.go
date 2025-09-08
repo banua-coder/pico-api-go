@@ -22,26 +22,26 @@ func TestProvinceCase_TransformToResponse(t *testing.T) {
 		{
 			name: "complete province case data",
 			provinceCase: ProvinceCase{
-				ID:                                         1,
-				Day:                                        100,
-				ProvinceID:                                 "ID-JK",
-				Positive:                                   150,
-				Recovered:                                  120,
-				Deceased:                                   10,
-				PersonUnderObservation:                     25,
-				FinishedPersonUnderObservation:             20,
-				PersonUnderSupervision:                     30,
-				FinishedPersonUnderSupervision:             25,
-				CumulativePositive:                         5000,
-				CumulativeRecovered:                        4500,
-				CumulativeDeceased:                         300,
-				CumulativePersonUnderObservation:           800,
-				CumulativeFinishedPersonUnderObservation:   750,
-				CumulativePersonUnderSupervision:           600,
-				CumulativeFinishedPersonUnderSupervision:   580,
-				Rt:                                         &rt,
-				RtUpper:                                    &rtUpper,
-				RtLower:                                    &rtLower,
+				ID:                                       1,
+				Day:                                      100,
+				ProvinceID:                               "ID-JK",
+				Positive:                                 150,
+				Recovered:                                120,
+				Deceased:                                 10,
+				PersonUnderObservation:                   25,
+				FinishedPersonUnderObservation:           20,
+				PersonUnderSupervision:                   30,
+				FinishedPersonUnderSupervision:           25,
+				CumulativePositive:                       5000,
+				CumulativeRecovered:                      4500,
+				CumulativeDeceased:                       300,
+				CumulativePersonUnderObservation:         800,
+				CumulativeFinishedPersonUnderObservation: 750,
+				CumulativePersonUnderSupervision:         600,
+				CumulativeFinishedPersonUnderSupervision: 580,
+				Rt:                                       &rt,
+				RtUpper:                                  &rtUpper,
+				RtLower:                                  &rtLower,
 				Province: &Province{
 					ID:   "ID-JK",
 					Name: "DKI Jakarta",
@@ -57,11 +57,11 @@ func TestProvinceCase_TransformToResponse(t *testing.T) {
 					Deceased:  10,
 					Active:    20, // 150 - 120 - 10
 					ODP: DailyObservationData{
-						Active:   5,  // 25 - 20
+						Active:   5, // 25 - 20
 						Finished: 20,
 					},
 					PDP: DailySupervisionData{
-						Active:   5,  // 30 - 25
+						Active:   5, // 30 - 25
 						Finished: 25,
 					},
 				},
@@ -71,12 +71,12 @@ func TestProvinceCase_TransformToResponse(t *testing.T) {
 					Deceased:  300,
 					Active:    200, // 5000 - 4500 - 300
 					ODP: ObservationData{
-						Active:   50,  // 800 - 750
+						Active:   50, // 800 - 750
 						Finished: 750,
 						Total:    800,
 					},
 					PDP: SupervisionData{
-						Active:   20,  // 600 - 580
+						Active:   20, // 600 - 580
 						Finished: 580,
 						Total:    600,
 					},
@@ -102,26 +102,26 @@ func TestProvinceCase_TransformToResponse(t *testing.T) {
 		{
 			name: "province case without reproduction rate",
 			provinceCase: ProvinceCase{
-				ID:                                         2,
-				Day:                                        50,
-				ProvinceID:                                 "ID-JB",
-				Positive:                                   100,
-				Recovered:                                  80,
-				Deceased:                                   5,
-				PersonUnderObservation:                     15,
-				FinishedPersonUnderObservation:             10,
-				PersonUnderSupervision:                     20,
-				FinishedPersonUnderSupervision:             15,
-				CumulativePositive:                         2000,
-				CumulativeRecovered:                        1800,
-				CumulativeDeceased:                         100,
-				CumulativePersonUnderObservation:           400,
-				CumulativeFinishedPersonUnderObservation:   350,
-				CumulativePersonUnderSupervision:           300,
-				CumulativeFinishedPersonUnderSupervision:   290,
-				Rt:                                         nil,
-				RtUpper:                                    nil,
-				RtLower:                                    nil,
+				ID:                                       2,
+				Day:                                      50,
+				ProvinceID:                               "ID-JB",
+				Positive:                                 100,
+				Recovered:                                80,
+				Deceased:                                 5,
+				PersonUnderObservation:                   15,
+				FinishedPersonUnderObservation:           10,
+				PersonUnderSupervision:                   20,
+				FinishedPersonUnderSupervision:           15,
+				CumulativePositive:                       2000,
+				CumulativeRecovered:                      1800,
+				CumulativeDeceased:                       100,
+				CumulativePersonUnderObservation:         400,
+				CumulativeFinishedPersonUnderObservation: 350,
+				CumulativePersonUnderSupervision:         300,
+				CumulativeFinishedPersonUnderSupervision: 290,
+				Rt:                                       nil,
+				RtUpper:                                  nil,
+				RtLower:                                  nil,
 				Province: &Province{
 					ID:   "ID-JB",
 					Name: "Jawa Barat",
@@ -137,11 +137,11 @@ func TestProvinceCase_TransformToResponse(t *testing.T) {
 					Deceased:  5,
 					Active:    15, // 100 - 80 - 5
 					ODP: DailyObservationData{
-						Active:   5,  // 15 - 10
+						Active:   5, // 15 - 10
 						Finished: 10,
 					},
 					PDP: DailySupervisionData{
-						Active:   5,  // 20 - 15
+						Active:   5, // 20 - 15
 						Finished: 15,
 					},
 				},
@@ -151,12 +151,12 @@ func TestProvinceCase_TransformToResponse(t *testing.T) {
 					Deceased:  100,
 					Active:    100, // 2000 - 1800 - 100
 					ODP: ObservationData{
-						Active:   50,  // 400 - 350
+						Active:   50, // 400 - 350
 						Finished: 350,
 						Total:    400,
 					},
 					PDP: SupervisionData{
-						Active:   10,  // 300 - 290
+						Active:   10, // 300 - 290
 						Finished: 290,
 						Total:    300,
 					},
@@ -182,26 +182,26 @@ func TestProvinceCase_TransformToResponse(t *testing.T) {
 		{
 			name: "province case with zero cumulative positive",
 			provinceCase: ProvinceCase{
-				ID:                                         3,
-				Day:                                        1,
-				ProvinceID:                                 "ID-AC",
-				Positive:                                   0,
-				Recovered:                                  0,
-				Deceased:                                   0,
-				PersonUnderObservation:                     0,
-				FinishedPersonUnderObservation:             0,
-				PersonUnderSupervision:                     0,
-				FinishedPersonUnderSupervision:             0,
-				CumulativePositive:                         0,
-				CumulativeRecovered:                        0,
-				CumulativeDeceased:                         0,
-				CumulativePersonUnderObservation:           0,
-				CumulativeFinishedPersonUnderObservation:   0,
-				CumulativePersonUnderSupervision:           0,
-				CumulativeFinishedPersonUnderSupervision:   0,
-				Rt:                                         nil,
-				RtUpper:                                    nil,
-				RtLower:                                    nil,
+				ID:                                       3,
+				Day:                                      1,
+				ProvinceID:                               "ID-AC",
+				Positive:                                 0,
+				Recovered:                                0,
+				Deceased:                                 0,
+				PersonUnderObservation:                   0,
+				FinishedPersonUnderObservation:           0,
+				PersonUnderSupervision:                   0,
+				FinishedPersonUnderSupervision:           0,
+				CumulativePositive:                       0,
+				CumulativeRecovered:                      0,
+				CumulativeDeceased:                       0,
+				CumulativePersonUnderObservation:         0,
+				CumulativeFinishedPersonUnderObservation: 0,
+				CumulativePersonUnderSupervision:         0,
+				CumulativeFinishedPersonUnderSupervision: 0,
+				Rt:                                       nil,
+				RtUpper:                                  nil,
+				RtLower:                                  nil,
 				Province: &Province{
 					ID:   "ID-AC",
 					Name: "Aceh",
@@ -277,26 +277,26 @@ func TestProvinceCaseWithDate_TransformToResponse(t *testing.T) {
 
 	provinceCaseWithDate := ProvinceCaseWithDate{
 		ProvinceCase: ProvinceCase{
-			ID:                                         1,
-			Day:                                        200,
-			ProvinceID:                                 "ID-JT",
-			Positive:                                   50,
-			Recovered:                                  40,
-			Deceased:                                   2,
-			PersonUnderObservation:                     10,
-			FinishedPersonUnderObservation:             8,
-			PersonUnderSupervision:                     12,
-			FinishedPersonUnderSupervision:             10,
-			CumulativePositive:                         3000,
-			CumulativeRecovered:                        2700,
-			CumulativeDeceased:                         200,
-			CumulativePersonUnderObservation:           500,
-			CumulativeFinishedPersonUnderObservation:   450,
-			CumulativePersonUnderSupervision:           350,
-			CumulativeFinishedPersonUnderSupervision:   320,
-			Rt:                                         &rt,
-			RtUpper:                                    &rtUpper,
-			RtLower:                                    &rtLower,
+			ID:                                       1,
+			Day:                                      200,
+			ProvinceID:                               "ID-JT",
+			Positive:                                 50,
+			Recovered:                                40,
+			Deceased:                                 2,
+			PersonUnderObservation:                   10,
+			FinishedPersonUnderObservation:           8,
+			PersonUnderSupervision:                   12,
+			FinishedPersonUnderSupervision:           10,
+			CumulativePositive:                       3000,
+			CumulativeRecovered:                      2700,
+			CumulativeDeceased:                       200,
+			CumulativePersonUnderObservation:         500,
+			CumulativeFinishedPersonUnderObservation: 450,
+			CumulativePersonUnderSupervision:         350,
+			CumulativeFinishedPersonUnderSupervision: 320,
+			Rt:                                       &rt,
+			RtUpper:                                  &rtUpper,
+			RtLower:                                  &rtLower,
 			Province: &Province{
 				ID:   "ID-JT",
 				Name: "Jawa Tengah",
@@ -316,11 +316,11 @@ func TestProvinceCaseWithDate_TransformToResponse(t *testing.T) {
 			Deceased:  2,
 			Active:    8, // 50 - 40 - 2
 			ODP: DailyObservationData{
-				Active:   2,  // 10 - 8
+				Active:   2, // 10 - 8
 				Finished: 8,
 			},
 			PDP: DailySupervisionData{
-				Active:   2,  // 12 - 10
+				Active:   2, // 12 - 10
 				Finished: 10,
 			},
 		},
@@ -330,12 +330,12 @@ func TestProvinceCaseWithDate_TransformToResponse(t *testing.T) {
 			Deceased:  200,
 			Active:    100, // 3000 - 2700 - 200
 			ODP: ObservationData{
-				Active:   50,  // 500 - 450
+				Active:   50, // 500 - 450
 				Finished: 450,
 				Total:    500,
 			},
 			PDP: SupervisionData{
-				Active:   30,  // 350 - 320
+				Active:   30, // 350 - 320
 				Finished: 320,
 				Total:    350,
 			},
@@ -343,8 +343,8 @@ func TestProvinceCaseWithDate_TransformToResponse(t *testing.T) {
 		Statistics: ProvinceCaseStatistics{
 			Percentages: CasePercentages{
 				Active:    3.3333333333333335, // (100 / 3000) * 100
-				Recovered: 90.0,              // (2700 / 3000) * 100
-				Deceased:  6.666666666666667, // (200 / 3000) * 100
+				Recovered: 90.0,               // (2700 / 3000) * 100
+				Deceased:  6.666666666666667,  // (200 / 3000) * 100
 			},
 			ReproductionRate: &ReproductionRate{
 				Value:      &[]float64{1.2}[0],
@@ -371,26 +371,26 @@ func TestTransformProvinceCaseSliceToResponse(t *testing.T) {
 	cases := []ProvinceCaseWithDate{
 		{
 			ProvinceCase: ProvinceCase{
-				ID:                                         1,
-				Day:                                        1,
-				ProvinceID:                                 "ID-JK",
-				Positive:                                   100,
-				Recovered:                                  80,
-				Deceased:                                   5,
-				PersonUnderObservation:                     20,
-				FinishedPersonUnderObservation:             15,
-				PersonUnderSupervision:                     25,
-				FinishedPersonUnderSupervision:             20,
-				CumulativePositive:                         1000,
-				CumulativeRecovered:                        800,
-				CumulativeDeceased:                         50,
-				CumulativePersonUnderObservation:           200,
-				CumulativeFinishedPersonUnderObservation:   180,
-				CumulativePersonUnderSupervision:           250,
-				CumulativeFinishedPersonUnderSupervision:   230,
-				Rt:                                         &rt,
-				RtUpper:                                    &rtUpper,
-				RtLower:                                    &rtLower,
+				ID:                                       1,
+				Day:                                      1,
+				ProvinceID:                               "ID-JK",
+				Positive:                                 100,
+				Recovered:                                80,
+				Deceased:                                 5,
+				PersonUnderObservation:                   20,
+				FinishedPersonUnderObservation:           15,
+				PersonUnderSupervision:                   25,
+				FinishedPersonUnderSupervision:           20,
+				CumulativePositive:                       1000,
+				CumulativeRecovered:                      800,
+				CumulativeDeceased:                       50,
+				CumulativePersonUnderObservation:         200,
+				CumulativeFinishedPersonUnderObservation: 180,
+				CumulativePersonUnderSupervision:         250,
+				CumulativeFinishedPersonUnderSupervision: 230,
+				Rt:                                       &rt,
+				RtUpper:                                  &rtUpper,
+				RtLower:                                  &rtLower,
 				Province: &Province{
 					ID:   "ID-JK",
 					Name: "DKI Jakarta",
@@ -400,26 +400,26 @@ func TestTransformProvinceCaseSliceToResponse(t *testing.T) {
 		},
 		{
 			ProvinceCase: ProvinceCase{
-				ID:                                         2,
-				Day:                                        2,
-				ProvinceID:                                 "ID-JK",
-				Positive:                                   50,
-				Recovered:                                  45,
-				Deceased:                                   2,
-				PersonUnderObservation:                     10,
-				FinishedPersonUnderObservation:             8,
-				PersonUnderSupervision:                     12,
-				FinishedPersonUnderSupervision:             10,
-				CumulativePositive:                         1050,
-				CumulativeRecovered:                        845,
-				CumulativeDeceased:                         52,
-				CumulativePersonUnderObservation:           210,
-				CumulativeFinishedPersonUnderObservation:   188,
-				CumulativePersonUnderSupervision:           262,
-				CumulativeFinishedPersonUnderSupervision:   240,
-				Rt:                                         &rt,
-				RtUpper:                                    &rtUpper,
-				RtLower:                                    &rtLower,
+				ID:                                       2,
+				Day:                                      2,
+				ProvinceID:                               "ID-JK",
+				Positive:                                 50,
+				Recovered:                                45,
+				Deceased:                                 2,
+				PersonUnderObservation:                   10,
+				FinishedPersonUnderObservation:           8,
+				PersonUnderSupervision:                   12,
+				FinishedPersonUnderSupervision:           10,
+				CumulativePositive:                       1050,
+				CumulativeRecovered:                      845,
+				CumulativeDeceased:                       52,
+				CumulativePersonUnderObservation:         210,
+				CumulativeFinishedPersonUnderObservation: 188,
+				CumulativePersonUnderSupervision:         262,
+				CumulativeFinishedPersonUnderSupervision: 240,
+				Rt:                                       &rt,
+				RtUpper:                                  &rtUpper,
+				RtLower:                                  &rtLower,
 				Province: &Province{
 					ID:   "ID-JK",
 					Name: "DKI Jakarta",
@@ -432,7 +432,7 @@ func TestTransformProvinceCaseSliceToResponse(t *testing.T) {
 	result := TransformProvinceCaseSliceToResponse(cases)
 
 	assert.Len(t, result, 2)
-	
+
 	// Test first case
 	assert.Equal(t, int64(1), result[0].Day)
 	assert.Equal(t, testDate1, result[0].Date)
@@ -462,26 +462,26 @@ func TestProvinceCaseResponse_JSONStructure(t *testing.T) {
 	rt := 1.5
 
 	provinceCase := ProvinceCase{
-		ID:                                         1,
-		Day:                                        100,
-		ProvinceID:                                 "ID-JK",
-		Positive:                                   150,
-		Recovered:                                  120,
-		Deceased:                                   10,
-		PersonUnderObservation:                     25,
-		FinishedPersonUnderObservation:             20,
-		PersonUnderSupervision:                     30,
-		FinishedPersonUnderSupervision:             25,
-		CumulativePositive:                         5000,
-		CumulativeRecovered:                        4500,
-		CumulativeDeceased:                         300,
-		CumulativePersonUnderObservation:           800,
-		CumulativeFinishedPersonUnderObservation:   750,
-		CumulativePersonUnderSupervision:           600,
-		CumulativeFinishedPersonUnderSupervision:   580,
-		Rt:                                         &rt,
-		RtUpper:                                    &rt,
-		RtLower:                                    &rt,
+		ID:                                       1,
+		Day:                                      100,
+		ProvinceID:                               "ID-JK",
+		Positive:                                 150,
+		Recovered:                                120,
+		Deceased:                                 10,
+		PersonUnderObservation:                   25,
+		FinishedPersonUnderObservation:           20,
+		PersonUnderSupervision:                   30,
+		FinishedPersonUnderSupervision:           25,
+		CumulativePositive:                       5000,
+		CumulativeRecovered:                      4500,
+		CumulativeDeceased:                       300,
+		CumulativePersonUnderObservation:         800,
+		CumulativeFinishedPersonUnderObservation: 750,
+		CumulativePersonUnderSupervision:         600,
+		CumulativeFinishedPersonUnderSupervision: 580,
+		Rt:                                       &rt,
+		RtUpper:                                  &rt,
+		RtLower:                                  &rt,
 		Province: &Province{
 			ID:   "ID-JK",
 			Name: "DKI Jakarta",
@@ -499,8 +499,8 @@ func TestProvinceCaseResponse_JSONStructure(t *testing.T) {
 	assert.NotNil(t, result.Province)
 
 	// Verify key field names are in English
-	assert.Equal(t, int64(100), result.Day)        // "day"
-	assert.Equal(t, testDate, result.Date)         // "date"
+	assert.Equal(t, int64(100), result.Day) // "day"
+	assert.Equal(t, testDate, result.Date)  // "date"
 	// "daily" nested structure
 	assert.Equal(t, int64(150), result.Daily.Positive)  // "positive"
 	assert.Equal(t, int64(120), result.Daily.Recovered) // "recovered"

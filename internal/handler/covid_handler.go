@@ -26,22 +26,31 @@ func NewCovidHandler(covidService service.CovidService, db *database.DB) *CovidH
 // GetNationalCases godoc
 //
 //	@Summary		Get national COVID-19 cases
-//	@Description	Retrieve national COVID-19 cases data with optional date range filtering
+//	@Description	Retrieve national COVID-19 cases data with optional date range filtering and sorting
 //	@Tags			national
 //	@Accept			json
 //	@Produce		json
 //	@Param			start_date	query		string	false	"Start date (YYYY-MM-DD)"
 //	@Param			end_date	query		string	false	"End date (YYYY-MM-DD)"
+//	@Param			sort		query		string	false	"Sort by field:order (e.g., date:desc, positive:asc). Default: date:asc"
 //	@Success		200			{object}	Response{data=[]models.NationalCaseResponse}
 //	@Failure		400			{object}	Response
+//	@Failure		429			{object}	Response	"Rate limit exceeded"
 //	@Failure		500			{object}	Response
+//	@Header			200			{string}	X-RateLimit-Limit		"Request limit per window"
+//	@Header			200			{string}	X-RateLimit-Remaining	"Requests remaining in current window"
+//	@Header			429			{string}	X-RateLimit-Reset		"Unix timestamp when rate limit resets"
+//	@Header			429			{string}	Retry-After				"Seconds to wait before retrying"
 //	@Router			/national [get]
 func (h *CovidHandler) GetNationalCases(w http.ResponseWriter, r *http.Request) {
 	startDate := r.URL.Query().Get("start_date")
 	endDate := r.URL.Query().Get("end_date")
 
+	// Parse sort parameters (default: date ascending)
+	sortParams := utils.ParseSortParam(r, "date")
+
 	if startDate != "" && endDate != "" {
-		cases, err := h.covidService.GetNationalCasesByDateRange(startDate, endDate)
+		cases, err := h.covidService.GetNationalCasesByDateRangeSorted(startDate, endDate, sortParams)
 		if err != nil {
 			writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -52,7 +61,7 @@ func (h *CovidHandler) GetNationalCases(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	cases, err := h.covidService.GetNationalCases()
+	cases, err := h.covidService.GetNationalCasesSorted(sortParams)
 	if err != nil {
 		writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
@@ -139,6 +148,7 @@ func (h *CovidHandler) GetProvinces(w http.ResponseWriter, r *http.Request) {
 //	@Param			all			query		boolean	false	"Return all data without pagination"
 //	@Param			start_date	query		string	false	"Start date (YYYY-MM-DD)"
 //	@Param			end_date	query		string	false	"End date (YYYY-MM-DD)"
+//	@Param			sort		query		string	false	"Sort by field:order (e.g., date:desc, positive:asc). Default: date:asc"
 //	@Success		200			{object}	Response{data=models.PaginatedResponse{data=[]models.ProvinceCaseResponse}}	"Paginated response"
 //	@Success		200			{object}	Response{data=[]models.ProvinceCaseResponse}							"All data response when all=true"
 //	@Failure		400			{object}	Response
@@ -156,6 +166,9 @@ func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) 
 	startDate := r.URL.Query().Get("start_date")
 	endDate := r.URL.Query().Get("end_date")
 
+	// Parse sort parameters (default: date ascending)
+	sortParams := utils.ParseSortParam(r, "date")
+
 	// Validate pagination params
 	limit, offset = utils.ValidatePaginationParams(limit, offset)
 
@@ -164,7 +177,7 @@ func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) 
 		if all {
 			// Return all data without pagination
 			if startDate != "" && endDate != "" {
-				cases, err := h.covidService.GetAllProvinceCasesByDateRange(startDate, endDate)
+				cases, err := h.covidService.GetAllProvinceCasesByDateRangeSorted(startDate, endDate, sortParams)
 				if err != nil {
 					writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 					return
@@ -174,7 +187,7 @@ func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) 
 				return
 			}
 
-			cases, err := h.covidService.GetAllProvinceCases()
+			cases, err := h.covidService.GetAllProvinceCasesSorted(sortParams)
 			if err != nil {
 				writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
@@ -186,7 +199,7 @@ func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) 
 
 		// Return paginated data
 		if startDate != "" && endDate != "" {
-			cases, total, err := h.covidService.GetAllProvinceCasesByDateRangePaginated(startDate, endDate, limit, offset)
+			cases, total, err := h.covidService.GetAllProvinceCasesByDateRangePaginatedSorted(startDate, endDate, limit, offset, sortParams)
 			if err != nil {
 				writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
@@ -201,7 +214,7 @@ func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		cases, total, err := h.covidService.GetAllProvinceCasesPaginated(limit, offset)
+		cases, total, err := h.covidService.GetAllProvinceCasesPaginatedSorted(limit, offset, sortParams)
 		if err != nil {
 			writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -220,7 +233,7 @@ func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) 
 	if all {
 		// Return all data without pagination
 		if startDate != "" && endDate != "" {
-			cases, err := h.covidService.GetProvinceCasesByDateRange(provinceID, startDate, endDate)
+			cases, err := h.covidService.GetProvinceCasesByDateRangeSorted(provinceID, startDate, endDate, sortParams)
 			if err != nil {
 				writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
@@ -230,7 +243,7 @@ func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		cases, err := h.covidService.GetProvinceCases(provinceID)
+		cases, err := h.covidService.GetProvinceCasesSorted(provinceID, sortParams)
 		if err != nil {
 			writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -242,7 +255,7 @@ func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) 
 
 	// Return paginated data
 	if startDate != "" && endDate != "" {
-		cases, total, err := h.covidService.GetProvinceCasesByDateRangePaginated(provinceID, startDate, endDate, limit, offset)
+		cases, total, err := h.covidService.GetProvinceCasesByDateRangePaginatedSorted(provinceID, startDate, endDate, limit, offset, sortParams)
 		if err != nil {
 			writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -257,7 +270,7 @@ func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	cases, total, err := h.covidService.GetProvinceCasesPaginated(provinceID, limit, offset)
+	cases, total, err := h.covidService.GetProvinceCasesPaginatedSorted(provinceID, limit, offset, sortParams)
 	if err != nil {
 		writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
@@ -285,7 +298,7 @@ func (h *CovidHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	health := map[string]interface{}{
 		"status":    "healthy",
 		"service":   "COVID-19 API",
-		"version":   "2.1.0",
+		"version": "2.2.0",
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
 	}
 
@@ -342,7 +355,7 @@ func (h *CovidHandler) GetAPIIndex(w http.ResponseWriter, r *http.Request) {
 	endpoints := map[string]interface{}{
 		"api": map[string]interface{}{
 			"title":       "Sulawesi Tengah COVID-19 Data API",
-			"version":     "2.1.0",
+			"version": "2.2.0",
 			"description": "A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central Sulawesi)",
 		},
 		"documentation": map[string]interface{}{

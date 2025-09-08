@@ -8,11 +8,11 @@ import (
 
 func TestCalculatePaginationMeta(t *testing.T) {
 	tests := []struct {
-		name          string
-		limit         int
-		offset        int
-		total         int
-		expectedMeta  PaginationMeta
+		name         string
+		limit        int
+		offset       int
+		total        int
+		expectedMeta PaginationMeta
 	}{
 		{
 			name:   "First page with results",
@@ -148,7 +148,7 @@ func TestPaginationMetaCalculations(t *testing.T) {
 	t.Run("Total pages calculation for different scenarios", func(t *testing.T) {
 		// Test ceiling division for total pages
 		assert.Equal(t, 4, CalculatePaginationMeta(33, 0, 100).TotalPages) // 100/33 = 3.03 -> 4 pages
-		assert.Equal(t, 2, CalculatePaginationMeta(50, 0, 100).TotalPages) // 100/50 = 2 -> 2 pages  
+		assert.Equal(t, 2, CalculatePaginationMeta(50, 0, 100).TotalPages) // 100/50 = 2 -> 2 pages
 		assert.Equal(t, 3, CalculatePaginationMeta(33, 0, 99).TotalPages)  // 99/33 = 3 -> 3 pages
 	})
 

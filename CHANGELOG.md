@@ -8,6 +8,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+
+## [v2.2.0] - 2025-09-08
+
+### Fixed
+
+- Handle error return values in rate limit tests for linter (9597171)
+
+### Documentation
+
+- Update .env.example with rate limiting configuration (73a9d63)
+
+### CI/CD
+
+- Add cleanup job (workflow) (cdf5dc7)
+
+### Maintenance
+
+- Update for next version (version) (80d5451)
+
+### Style
+
+- Add missing newline at end of workflow file (5266ab2)
+- Fix formatting and add missing newlines (f2f373a)
+
 ## [v2.1.0] - 2025-09-08
 
 ### Maintenance

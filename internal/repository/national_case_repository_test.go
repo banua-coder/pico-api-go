@@ -14,7 +14,7 @@ import (
 func setupMockDB(t *testing.T) (*database.DB, sqlmock.Sqlmock) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	
+
 	return &database.DB{DB: db}, mock
 }
 
@@ -49,7 +49,7 @@ func TestNationalCaseRepository_GetAll(t *testing.T) {
 	assert.Equal(t, int64(1), cases[0].ID)
 	assert.Equal(t, int64(100), cases[0].Positive)
 	assert.Equal(t, &rt, cases[0].Rt)
-	
+
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -83,7 +83,7 @@ func TestNationalCaseRepository_GetByDateRange(t *testing.T) {
 	assert.Len(t, cases, 1)
 	assert.Equal(t, int64(1), cases[0].ID)
 	assert.Nil(t, cases[0].Rt)
-	
+
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -116,7 +116,7 @@ func TestNationalCaseRepository_GetLatest(t *testing.T) {
 	assert.Equal(t, int64(1), nationalCase.ID)
 	assert.Equal(t, &rt, nationalCase.Rt)
 	assert.Nil(t, nationalCase.RtUpper)
-	
+
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -137,7 +137,7 @@ func TestNationalCaseRepository_GetLatest_NotFound(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Nil(t, nationalCase)
-	
+
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -169,7 +169,7 @@ func TestNationalCaseRepository_GetByDay(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, nationalCase)
 	assert.Equal(t, day, nationalCase.Day)
-	
+
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -193,6 +193,6 @@ func TestNationalCaseRepository_GetByDay_NotFound(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Nil(t, nationalCase)
-	
+
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

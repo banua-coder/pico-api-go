@@ -1,0 +1,648 @@
+name: Release Branch Creation & Changelog
+
+on:
+  create:
+  push:
+    branches:
+      - "release/**"
+      - "hotfix/**"
+
+jobs:
+  release-branch-setup:
+    if: github.event_name == 'create' && github.event.ref_type == 'branch' && (startsWith(github.event.ref, 'release/') || startsWith(github.event.ref, 'hotfix/'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout the new branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.ref }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Analyze branch and version
+        id: version_info
+        run: |
+          BRANCH_NAME="${{ github.event.ref }}"
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
+          if [[ $BRANCH_NAME == release/* ]]; then
+            VERSION=$(echo $BRANCH_NAME | sed 's/release\///')
+            TYPE="release"
+            BASE_BRANCH="develop"
+            SHOULD_BUMP_DEVELOP="true"
+          elif [[ $BRANCH_NAME == hotfix/* ]]; then
+            VERSION=$(echo $BRANCH_NAME | sed 's/hotfix\///')
+            TYPE="hotfix"
+            BASE_BRANCH="main"
+            SHOULD_BUMP_DEVELOP="false"
+          fi
+
+          # Ensure version starts with 'v'
+          if [[ ! $VERSION == v* ]]; then
+            VERSION="v$VERSION"
+          fi
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "type=$TYPE" >> $GITHUB_OUTPUT
+          echo "base_branch=$BASE_BRANCH" >> $GITHUB_OUTPUT
+          echo "should_bump_develop=$SHOULD_BUMP_DEVELOP" >> $GITHUB_OUTPUT
+          echo "clean_version=$(echo $VERSION | sed 's/^v//')" >> $GITHUB_OUTPUT
+
+      - name: Get previous version for changelog
+        id: previous_version
+        run: |
+          # Get the last tag for changelog range
+          LAST_TAG=$(git tag --sort=-version:refname | head -n1 || echo "")
+          echo "last_tag=$LAST_TAG" >> $GITHUB_OUTPUT
+          echo "Previous version: $LAST_TAG"
+
+          # Determine base commit for changelog
+          if [ -n "$LAST_TAG" ]; then
+            BASE_COMMIT="$LAST_TAG"
+          else
+            # If no tags exist, use first commit
+            BASE_COMMIT=$(git rev-list --max-parents=0 HEAD)
+          fi
+          echo "base_commit=$BASE_COMMIT" >> $GITHUB_OUTPUT
+
+      - name: Load version configuration
+        id: version_config
+        run: |
+          CONFIG_FILE=".version-config.yml"
+
+          if [ -f "$CONFIG_FILE" ]; then
+            echo "📋 Loading version configuration from $CONFIG_FILE"
+            
+            # Parse YAML configuration with better error handling
+            NEXT_MAJOR=$(grep "^next_major:" "$CONFIG_FILE" | awk '{print $2}' | head -1 || echo "false")
+            MAJOR_TARGET=$(grep "^major_version_target:" "$CONFIG_FILE" | awk '{print $2}' | tr -d '"' | head -1 || echo "")
+            DEFAULT_BUMP=$(grep -A 10 "^version_rules:" "$CONFIG_FILE" | grep "default_release_bump:" | awk '{print $2}' | tr -d '"' | head -1 || echo "minor")
+            AUTO_DETECT=$(grep -A 10 "^version_rules:" "$CONFIG_FILE" | grep "auto_detect_breaking:" | awk '{print $2}' | head -1 || echo "true")
+            REQUIRE_MANUAL=$(grep -A 10 "^version_rules:" "$CONFIG_FILE" | grep "require_manual_major:" | awk '{print $2}' | head -1 || echo "false")
+            
+            # Clean up values and set defaults if empty
+            NEXT_MAJOR=$(echo "$NEXT_MAJOR" | tr -d ' \n\r' || echo "false")
+            MAJOR_TARGET=$(echo "$MAJOR_TARGET" | tr -d ' \n\r' || echo "")
+            DEFAULT_BUMP=$(echo "$DEFAULT_BUMP" | tr -d ' \n\r' || echo "minor")
+            AUTO_DETECT=$(echo "$AUTO_DETECT" | tr -d ' \n\r' || echo "true")
+            REQUIRE_MANUAL=$(echo "$REQUIRE_MANUAL" | tr -d ' \n\r' || echo "false")
+            
+            # Ensure values are not empty for GitHub Actions
+            [ -z "$NEXT_MAJOR" ] && NEXT_MAJOR="false"
+            [ -z "$MAJOR_TARGET" ] && MAJOR_TARGET="none"
+            [ -z "$DEFAULT_BUMP" ] && DEFAULT_BUMP="minor"
+            [ -z "$AUTO_DETECT" ] && AUTO_DETECT="true"
+            [ -z "$REQUIRE_MANUAL" ] && REQUIRE_MANUAL="false"
+            
+            echo "next_major=${NEXT_MAJOR}" >> $GITHUB_OUTPUT
+            echo "major_target=${MAJOR_TARGET}" >> $GITHUB_OUTPUT
+            echo "default_bump=${DEFAULT_BUMP}" >> $GITHUB_OUTPUT
+            echo "auto_detect_breaking=${AUTO_DETECT}" >> $GITHUB_OUTPUT
+            echo "require_manual_major=${REQUIRE_MANUAL}" >> $GITHUB_OUTPUT
+            echo "config_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️  No version configuration found, using defaults"
+            echo "next_major=false" >> $GITHUB_OUTPUT
+            echo "major_target=none" >> $GITHUB_OUTPUT
+            echo "default_bump=minor" >> $GITHUB_OUTPUT
+            echo "auto_detect_breaking=true" >> $GITHUB_OUTPUT
+            echo "require_manual_major=false" >> $GITHUB_OUTPUT
+            echo "config_exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Detect version bump type
+        id: version_type
+        run: |
+          VERSION="${{ steps.version_info.outputs.version }}"
+          LAST_TAG="${{ steps.previous_version.outputs.last_tag }}"
+          TYPE="${{ steps.version_info.outputs.type }}"
+
+          # Get configuration
+          NEXT_MAJOR="${{ steps.version_config.outputs.next_major }}"
+          MAJOR_TARGET="${{ steps.version_config.outputs.major_target }}"
+          DEFAULT_BUMP="${{ steps.version_config.outputs.default_bump }}"
+          AUTO_DETECT="${{ steps.version_config.outputs.auto_detect_breaking }}"
+
+          # Start with default bump type
+          BUMP_TYPE="$DEFAULT_BUMP"
+
+          if [ -n "$LAST_TAG" ]; then
+            # Parse current and previous versions
+            CURRENT_MAJOR=$(echo $VERSION | sed 's/v\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\).*/\1/')
+            CURRENT_MINOR=$(echo $VERSION | sed 's/v\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\).*/\2/')
+            CURRENT_PATCH=$(echo $VERSION | sed 's/v\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\).*/\3/')
+            
+            LAST_MAJOR=$(echo $LAST_TAG | sed 's/v\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\).*/\1/')
+            LAST_MINOR=$(echo $LAST_TAG | sed 's/v\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\).*/\2/')
+            LAST_PATCH=$(echo $LAST_TAG | sed 's/v\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\).*/\3/')
+            
+            # Determine actual bump type from version numbers
+            if [ "$CURRENT_MAJOR" -gt "$LAST_MAJOR" ]; then
+              BUMP_TYPE="major"
+            elif [ "$CURRENT_MINOR" -gt "$LAST_MINOR" ]; then
+              BUMP_TYPE="minor"
+            elif [ "$CURRENT_PATCH" -gt "$LAST_PATCH" ]; then
+              BUMP_TYPE="patch"
+            fi
+            
+            # For hotfix, it's always a patch
+            if [ "$TYPE" = "hotfix" ]; then
+              BUMP_TYPE="patch"
+            fi
+          fi
+
+          # Check configuration for major version planning
+          if [ "$NEXT_MAJOR" = "true" ]; then
+            if [ -n "$MAJOR_TARGET" ] && [ "$MAJOR_TARGET" != "none" ] && [ "$VERSION" = "$MAJOR_TARGET" ]; then
+              BUMP_TYPE="major"
+              echo "🚀 Major version release configured: $MAJOR_TARGET"
+            fi
+          fi
+
+          # Auto-detect breaking changes if enabled
+          if [ "$AUTO_DETECT" = "true" ]; then
+            BASE_COMMIT="${{ steps.previous_version.outputs.base_commit }}"
+            BREAKING_COMMITS=$(git log --pretty=format:"%s" "$BASE_COMMIT..HEAD" | \
+                              grep -E "(BREAKING CHANGE|!:|feat!:|fix!:)" || echo "")
+            
+            if [ -n "$BREAKING_COMMITS" ]; then
+              echo "🚨 Breaking changes detected in commit messages:"
+              echo "$BREAKING_COMMITS"
+              
+              if [ "$BUMP_TYPE" != "major" ]; then
+                echo "⚠️  Detected breaking changes but version is not major!"
+                echo "   Consider updating .version-config.yml or using major version"
+                echo "   Breaking commits found:"
+                echo "$BREAKING_COMMITS" | head -3
+              fi
+              
+              # Auto-promote to major if breaking changes detected and not manual
+              if [ "${{ steps.version_config.outputs.require_manual_major }}" != "true" ]; then
+                echo "🔄 Auto-promoting to major version due to breaking changes"
+                BUMP_TYPE="major"
+              fi
+            fi
+          fi
+
+          echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
+          echo "Final version bump type: $BUMP_TYPE"
+
+          # Additional validation
+          if [ "$BUMP_TYPE" = "major" ]; then
+            echo "🚨 MAJOR VERSION RELEASE DETECTED"
+            echo "   This will be a breaking change release"
+            echo "   Please ensure all breaking changes are documented"
+          fi
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+
+      - name: Generate changelog using Ruby script
+        id: changelog
+        run: |
+          VERSION="${{ steps.version_info.outputs.version }}"
+          TYPE="${{ steps.version_info.outputs.type }}"
+          BUMP_TYPE="${{ steps.version_type.outputs.bump_type }}"
+
+          echo "🚀 Generating changelog for $VERSION using generate-changelog.rb..."
+          echo "Current branch: $(git branch --show-current)"
+          echo "Working directory: $(pwd)"
+          
+          # Make the script executable
+          chmod +x generate-changelog.rb
+          
+          # Debug: Check if we're on the right branch format
+          CURRENT_BRANCH=$(git branch --show-current)
+          if [[ ! "$CURRENT_BRANCH" =~ ^(release|hotfix)/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "⚠️  Branch format issue: '$CURRENT_BRANCH' doesn't match required pattern"
+            echo "Expected: release/v1.2.3 or hotfix/v1.2.3"
+          fi
+          
+          # Run changelog generation with debug output
+          echo "Running: ruby generate-changelog.rb --force"
+          if ruby generate-changelog.rb --force 2>&1; then
+            echo "✅ Changelog generation completed"
+            
+            # Check if CHANGELOG.md was actually updated
+            if git diff --quiet CHANGELOG.md; then
+              echo "⚠️  CHANGELOG.md was not modified by Ruby script"
+              CHANGELOG_STATUS="false"
+            else
+              echo "✅ CHANGELOG.md was updated"
+              git diff --stat CHANGELOG.md
+              CHANGELOG_STATUS="true"
+            fi
+            
+            echo "changelog_updated=$CHANGELOG_STATUS" >> $GITHUB_OUTPUT
+          else
+            RUBY_EXIT_CODE=$?
+            echo "❌ Changelog generation failed with exit code: $RUBY_EXIT_CODE"
+            echo "This might be due to:"
+            echo "- Branch naming format (needs release/vX.Y.Z or hotfix/vX.Y.Z)"
+            echo "- No commits since last tag"
+            echo "- Missing dependencies or Ruby issues"
+            
+            echo "changelog_updated=false" >> $GITHUB_OUTPUT
+          fi
+          
+          # No separate release notes file needed - CHANGELOG.md is the source of truth
+          echo "changelog_file=CHANGELOG.md" >> $GITHUB_OUTPUT
+
+      - name: Update version in source files
+        run: |
+          VERSION="${{ steps.version_info.outputs.version }}"
+          CLEAN_VERSION="${{ steps.version_info.outputs.clean_version }}"
+
+          echo "📝 Updating version to $CLEAN_VERSION in source files..."
+
+          # Update main.go version annotation
+          if [ -f "cmd/main.go" ]; then
+            sed -i.bak "s/@version.*/@version\t\t$CLEAN_VERSION/" cmd/main.go && rm -f cmd/main.go.bak
+            echo "✅ Updated cmd/main.go"
+          fi
+
+          # Update handler version
+          if [ -f "internal/handler/covid_handler.go" ]; then
+            sed -i.bak "s/\"version\":\s*\"[^\"]*\"/\"version\": \"$CLEAN_VERSION\"/" internal/handler/covid_handler.go && rm -f internal/handler/covid_handler.go.bak
+            echo "✅ Updated internal/handler/covid_handler.go"
+          fi
+
+      - name: Install and regenerate documentation
+        run: |
+          echo "📚 Regenerating API documentation..."
+          go install github.com/swaggo/swag/cmd/swag@latest
+          export PATH=$PATH:$(go env GOPATH)/bin
+          swag init -g cmd/main.go -o ./docs
+          echo "✅ Documentation regenerated"
+
+      - name: Create preparation PR branch
+        id: pr_branch
+        run: |
+          VERSION="${{ steps.version_info.outputs.version }}"
+          TYPE="${{ steps.version_info.outputs.type }}"
+          RELEASE_BRANCH="${{ steps.version_info.outputs.branch_name }}"
+          
+          # Create PR branch for changelog and version updates
+          PR_BRANCH="chore/prepare-$TYPE-$VERSION"
+          git checkout -b "$PR_BRANCH"
+          echo "pr_branch=$PR_BRANCH" >> $GITHUB_OUTPUT
+          
+          # Add all changes
+          git add .
+          
+          # Check if there are changes to commit
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            
+            # Commit changes
+            CHANGELOG_STATUS="${{ steps.changelog.outputs.changelog_updated }}"
+            if [[ "$CHANGELOG_STATUS" == "true" ]]; then
+              CHANGELOG_INFO="- Generate release changelog using generate-changelog.rb"
+            else
+              CHANGELOG_INFO="- Changelog generation skipped (manual update needed)"
+            fi
+            
+            git commit -m "chore: prepare $VERSION $TYPE
+
+            - Update version to ${{ steps.version_info.outputs.clean_version }} in source files
+            $CHANGELOG_INFO
+            - Regenerate API documentation with new version
+            
+            This commit prepares the $RELEASE_BRANCH branch for $TYPE."
+            
+            # Push the PR branch
+            git push origin "$PR_BRANCH"
+          fi
+
+      - name: Create preparation PR
+        if: steps.pr_branch.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.version_info.outputs.version }}"
+          TYPE="${{ steps.version_info.outputs.type }}"
+          RELEASE_BRANCH="${{ steps.version_info.outputs.branch_name }}"
+          PR_BRANCH="${{ steps.pr_branch.outputs.pr_branch }}"
+          CHANGELOG_STATUS="${{ steps.changelog.outputs.changelog_updated }}"
+          
+          # Create PR to the release branch
+          gh pr create \
+            --base "$RELEASE_BRANCH" \
+            --head "$PR_BRANCH" \
+            --title "chore: prepare $VERSION $TYPE" \
+            --body "$(cat <<EOF
+          ## Summary
+          Automated preparation for $TYPE $VERSION.
+          
+          This PR was automatically created when the \`$RELEASE_BRANCH\` branch was detected.
+          
+          ## Changes Made
+          
+          ### 📝 Version Updates
+          - Updated version to \`${{ steps.version_info.outputs.clean_version }}\` in source files:
+            - \`cmd/main.go\` - Swagger annotation
+            - \`internal/handler/covid_handler.go\` - Health endpoint
+            - Auto-regenerated API documentation
+          
+          ### 📋 Changelog
+          $(if [[ "$CHANGELOG_STATUS" == "true" ]]; then
+            echo "- ✅ Generated changelog entries using \`generate-changelog.rb\`"
+            echo "- Categorized commits since last release"
+          else
+            echo "- ⚠️ Changelog generation was skipped (manual update needed)"
+            echo "- Please manually update CHANGELOG.md before merging"
+          fi)
+          
+          ### 📚 Documentation
+          - Regenerated OpenAPI/Swagger documentation
+          - Updated version references across documentation files
+          
+          ## Auto-generated
+          This PR was automatically created by GitHub Actions when the $TYPE branch was created.
+          
+          **Review and merge when ready** - this prepares the $TYPE branch for completion.
+          EOF
+          )" \
+            --label "chore" \
+            --label "auto-generated" \
+            --label "$TYPE"
+
+      - name: Create release preparation summary
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.version_info.outputs.version }}"
+          TYPE="${{ steps.version_info.outputs.type }}"
+          BRANCH_NAME="${{ steps.version_info.outputs.branch_name }}"
+          CHANGELOG_FILE="${{ steps.changelog.outputs.changelog_file }}"
+
+          # Create a summary issue/comment if needed
+          echo "## 📋 $TYPE $VERSION Preparation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch**: \`$BRANCH_NAME\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Version**: $VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "**Type**: ${{ steps.version_type.outputs.bump_type }} ($TYPE)" >> $GITHUB_STEP_SUMMARY
+          echo "**Base**: ${{ steps.version_info.outputs.base_branch }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Completed Actions" >> $GITHUB_STEP_SUMMARY
+          CHANGELOG_STATUS="${{ steps.changelog.outputs.changelog_updated }}"
+          if [[ "$CHANGELOG_STATUS" == "true" ]]; then
+            echo "- 📋 Generated changelog using generate-changelog.rb" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ⚠️ Changelog generation skipped (manual update needed)" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "- 📝 Updated version in source files" >> $GITHUB_STEP_SUMMARY
+          echo "- 📚 Regenerated API documentation" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "${{ steps.pr_branch.outputs.has_changes }}" == "true" ]]; then
+            echo "- 📋 Created preparation PR to \`$BRANCH_NAME\` branch" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ℹ️ No changes needed (already up to date)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 Generated Changelog Preview" >> $GITHUB_STEP_SUMMARY
+          echo "<details>" >> $GITHUB_STEP_SUMMARY
+          echo "<summary>Click to expand changelog</summary>" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`markdown" >> $GITHUB_STEP_SUMMARY
+          head -30 $CHANGELOG_FILE >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "</details>" >> $GITHUB_STEP_SUMMARY
+
+  # JOB 2: Bump develop branch version (only for releases, not hotfixes)
+  bump-develop-version:
+    if: github.event_name == 'create' && github.event.ref_type == 'branch' && startsWith(github.event.ref, 'release/')
+    needs: release-branch-setup
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout develop branch
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Load version configuration for develop bump
+        id: dev_config
+        run: |
+          CONFIG_FILE=".version-config.yml"
+
+          if [ -f "$CONFIG_FILE" ]; then
+            echo "📋 Loading develop version configuration"
+            
+            STRATEGY=$(grep -A5 "develop_branch:" "$CONFIG_FILE" | grep "next_version_strategy:" | awk '{print $2}' | tr -d '"' | head -1 || echo "auto")
+            MANUAL_VERSION=$(grep -A5 "develop_branch:" "$CONFIG_FILE" | grep "manual_next_version:" | awk '{print $2}' | tr -d '"' | head -1 || echo "")
+            DEV_SUFFIX=$(grep -A5 "develop_branch:" "$CONFIG_FILE" | grep "dev_suffix:" | awk '{print $2}' | tr -d '"' | head -1 || echo "-dev")
+            
+            # Clean up values and set defaults if empty
+            STRATEGY=$(echo "$STRATEGY" | tr -d ' \n\r' || echo "auto")
+            MANUAL_VERSION=$(echo "$MANUAL_VERSION" | tr -d ' \n\r' || echo "")
+            DEV_SUFFIX=$(echo "$DEV_SUFFIX" | tr -d ' \n\r' || echo "-dev")
+            
+            # Ensure values are not empty for GitHub Actions
+            [ -z "$STRATEGY" ] && STRATEGY="auto"
+            [ -z "$MANUAL_VERSION" ] && MANUAL_VERSION="none"
+            [ -z "$DEV_SUFFIX" ] && DEV_SUFFIX="-dev"
+            
+            echo "strategy=$STRATEGY" >> $GITHUB_OUTPUT
+            echo "manual_version=$MANUAL_VERSION" >> $GITHUB_OUTPUT
+            echo "dev_suffix=$DEV_SUFFIX" >> $GITHUB_OUTPUT
+            echo "config_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️  No version configuration found for develop, using defaults"
+            echo "strategy=auto" >> $GITHUB_OUTPUT
+            echo "manual_version=none" >> $GITHUB_OUTPUT
+            echo "dev_suffix=-dev" >> $GITHUB_OUTPUT
+            echo "config_exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Calculate next development version
+        id: next_version
+        run: |
+          RELEASE_BRANCH="${{ github.event.ref }}"
+          CURRENT_VERSION=$(echo $RELEASE_BRANCH | sed 's/release\///')
+          STRATEGY="${{ steps.dev_config.outputs.strategy }}"
+          MANUAL_VERSION="${{ steps.dev_config.outputs.manual_version }}"
+          DEV_SUFFIX="${{ steps.dev_config.outputs.dev_suffix }}"
+
+          # Ensure version starts with 'v'
+          if [[ ! $CURRENT_VERSION == v* ]]; then
+            CURRENT_VERSION="v$CURRENT_VERSION"
+          fi
+
+          if [ "$STRATEGY" = "manual" ] && [ -n "$MANUAL_VERSION" ] && [ "$MANUAL_VERSION" != "none" ]; then
+            # Use manually specified version
+            NEXT_VERSION="$MANUAL_VERSION"
+            if [[ ! $NEXT_VERSION == v* ]]; then
+              NEXT_VERSION="v$NEXT_VERSION"
+            fi
+            echo "📝 Using manual next version: $NEXT_VERSION"
+          else
+            # Auto-calculate next version (default behavior)
+            MAJOR=$(echo $CURRENT_VERSION | sed 's/v\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\).*/\1/')
+            MINOR=$(echo $CURRENT_VERSION | sed 's/v\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\).*/\2/')
+            PATCH=$(echo $CURRENT_VERSION | sed 's/v\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\).*/\3/')
+            
+            # Determine next version based on current release type
+            if [ "$MAJOR" -gt 0 ] && [ "$MINOR" -eq 0 ] && [ "$PATCH" -eq 0 ]; then
+              # This is a major release, next should be major+1.0.0
+              NEXT_MAJOR=$((MAJOR + 1))
+              NEXT_VERSION="v$NEXT_MAJOR.0.0"
+            else
+              # Regular minor/patch release, increment minor
+              NEXT_MINOR=$((MINOR + 1))
+              NEXT_VERSION="v$MAJOR.$NEXT_MINOR.0"
+            fi
+            echo "🔄 Auto-calculated next version: $NEXT_VERSION"
+          fi
+
+          NEXT_DEV_VERSION="$NEXT_VERSION$DEV_SUFFIX"
+          CLEAN_NEXT_VERSION=$(echo $NEXT_VERSION | sed 's/^v//')
+
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
+          echo "next_dev_version=$NEXT_DEV_VERSION" >> $GITHUB_OUTPUT
+          echo "clean_next_version=$CLEAN_NEXT_VERSION" >> $GITHUB_OUTPUT
+          echo "strategy=$STRATEGY" >> $GITHUB_OUTPUT
+
+          echo "Current release: $CURRENT_VERSION"
+          echo "Next development version: $NEXT_DEV_VERSION (strategy: $STRATEGY)"
+
+      - name: Update develop branch with next version
+        id: update_develop
+        run: |
+          NEXT_VERSION="${{ steps.next_version.outputs.next_version }}"
+          CLEAN_VERSION="${{ steps.next_version.outputs.clean_next_version }}"
+          DEV_VERSION="${{ steps.next_version.outputs.next_dev_version }}"
+
+          echo "📝 Updating develop branch to $DEV_VERSION..."
+
+          # Update main.go version annotation
+          if [ -f "cmd/main.go" ]; then
+            sed -i.bak "s/@version.*/@version\t\t$CLEAN_VERSION/" cmd/main.go && rm -f cmd/main.go.bak
+            echo "✅ Updated cmd/main.go to $CLEAN_VERSION"
+          fi
+
+          # Update handler version  
+          if [ -f "internal/handler/covid_handler.go" ]; then
+            sed -i.bak "s/\"version\":\s*\"[^\"]*\"/\"version\": \"$CLEAN_VERSION\"/" internal/handler/covid_handler.go && rm -f internal/handler/covid_handler.go.bak
+            echo "✅ Updated internal/handler/covid_handler.go to $CLEAN_VERSION"
+          fi
+
+          # Install swag and regenerate docs
+          go install github.com/swaggo/swag/cmd/swag@latest
+          export PATH=$PATH:$(go env GOPATH)/bin
+          swag init -g cmd/main.go -o ./docs
+          echo "✅ Documentation regenerated"
+
+      - name: Create version bump PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RELEASE_VERSION="${{ steps.next_version.outputs.current_version }}"
+          NEXT_VERSION="${{ steps.next_version.outputs.next_version }}"
+          DEV_VERSION="${{ steps.next_version.outputs.next_dev_version }}"
+
+          # Create PR branch
+          PR_BRANCH="chore/bump-version-to-$NEXT_VERSION-dev"
+          git checkout -b "$PR_BRANCH"
+
+          # Add and commit changes
+          git add .
+          git commit -m "chore: bump version to $NEXT_VERSION for next development cycle
+
+          Following release branch creation for $RELEASE_VERSION, updating develop
+          branch to target the next minor version $NEXT_VERSION.
+
+          Changes:
+          - Update version annotations to ${{ steps.next_version.outputs.clean_next_version }}
+          - Regenerate API documentation
+          - Prepare for next development cycle
+
+          This maintains the Git Flow pattern where develop always contains
+          the next planned version."
+
+          # Push PR branch
+          git push origin "$PR_BRANCH"
+
+          # Create pull request
+          gh pr create \
+            --base develop \
+            --head "$PR_BRANCH" \
+            --title "chore: bump version to $NEXT_VERSION for next development cycle" \
+            --body "$(cat <<'EOF'
+          ## Summary
+          Automatic version bump following release branch creation.
+
+          ## Details
+          - **Release Branch Created**: \`${{ github.event.ref }}\`
+          - **Release Version**: $RELEASE_VERSION
+          - **Next Development Version**: $DEV_VERSION
+          - **Next Release Target**: $NEXT_VERSION
+
+          ## Changes Made
+          - 📝 Updated version in source files to ${{ steps.next_version.outputs.clean_next_version }}
+          - 📚 Regenerated API documentation
+          - 🎯 Prepared develop branch for next development cycle
+
+          ## Git Flow Pattern
+          This maintains the Git Flow pattern where:
+          - \`develop\` always contains the next planned version
+          - Release branches contain the current release version
+          - After release cutoff, develop moves to next minor version
+
+          ## Auto-generated
+          This PR was automatically created when the release branch was created.
+
+          **Safe to merge** - contains only version bumps and documentation updates.
+          EOF
+          )" \
+            --label "chore" \
+            --label "auto-generated" \
+            --label "version-bump"
+
+      - name: Create develop bump summary
+        run: |
+          RELEASE_VERSION="${{ steps.next_version.outputs.current_version }}"
+          NEXT_VERSION="${{ steps.next_version.outputs.next_version }}"
+
+          echo "## 🔄 Develop Version Bump" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Release Branch**: \`${{ github.event.ref }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Release Version**: $RELEASE_VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "**Next Dev Version**: ${{ steps.next_version.outputs.next_dev_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Actions Completed" >> $GITHUB_STEP_SUMMARY
+          echo "- 🎯 Calculated next minor version: $NEXT_VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "- 📝 Updated develop branch source files" >> $GITHUB_STEP_SUMMARY
+          echo "- 📚 Regenerated API documentation" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔄 Created PR to merge version bump" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🎯 Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. Review and merge the version bump PR" >> $GITHUB_STEP_SUMMARY
+          echo "2. Continue development on develop branch" >> $GITHUB_STEP_SUMMARY
+          echo "3. All new features will target $NEXT_VERSION" >> $GITHUB_STEP_SUMMARY

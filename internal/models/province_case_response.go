@@ -4,32 +4,32 @@ import "time"
 
 // ProvinceCaseResponse represents the structured response for province COVID-19 case data
 type ProvinceCaseResponse struct {
-	Day        int64                     `json:"day"`
-	Date       time.Time                 `json:"date"`
-	Daily      ProvinceDailyCases        `json:"daily"`
-	Cumulative ProvinceCumulativeCases   `json:"cumulative"`
-	Statistics ProvinceCaseStatistics    `json:"statistics"`
-	Province   *Province                 `json:"province,omitempty"`
+	Day        int64                   `json:"day"`
+	Date       time.Time               `json:"date"`
+	Daily      ProvinceDailyCases      `json:"daily"`
+	Cumulative ProvinceCumulativeCases `json:"cumulative"`
+	Statistics ProvinceCaseStatistics  `json:"statistics"`
+	Province   *Province               `json:"province,omitempty"`
 }
 
 // ProvinceDailyCases represents new cases for a single day in a province
 type ProvinceDailyCases struct {
-	Positive  int64                  `json:"positive"`
-	Recovered int64                  `json:"recovered"`
-	Deceased  int64                  `json:"deceased"`
-	Active    int64                  `json:"active"`
-	ODP       DailyObservationData   `json:"odp"`
-	PDP       DailySupervisionData   `json:"pdp"`
+	Positive  int64                `json:"positive"`
+	Recovered int64                `json:"recovered"`
+	Deceased  int64                `json:"deceased"`
+	Active    int64                `json:"active"`
+	ODP       DailyObservationData `json:"odp"`
+	PDP       DailySupervisionData `json:"pdp"`
 }
 
 // ProvinceCumulativeCases represents total cases accumulated over time in a province
 type ProvinceCumulativeCases struct {
-	Positive  int64              `json:"positive"`
-	Recovered int64              `json:"recovered"`
-	Deceased  int64              `json:"deceased"`
-	Active    int64              `json:"active"`
-	ODP       ObservationData    `json:"odp"`
-	PDP       SupervisionData    `json:"pdp"`
+	Positive  int64           `json:"positive"`
+	Recovered int64           `json:"recovered"`
+	Deceased  int64           `json:"deceased"`
+	Active    int64           `json:"active"`
+	ODP       ObservationData `json:"odp"`
+	PDP       SupervisionData `json:"pdp"`
 }
 
 // DailyObservationData represents daily Person Under Observation (ODP) data

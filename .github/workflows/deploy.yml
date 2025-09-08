@@ -39,6 +39,27 @@ jobs:
         file ${{ secrets.BINARY_NAME }}
         echo "Binary size: $(du -h ${{ secrets.BINARY_NAME }} | cut -f1)"
 
+    - name: Generate Swagger documentation
+      run: |
+        echo "📚 Generating Swagger documentation..."
+        
+        # Install swag tool
+        go install github.com/swaggo/swag/cmd/swag@latest
+        
+        # Generate documentation including HTML
+        swag init -g cmd/main.go -o ./docs --outputTypes go,json,yaml,html
+        
+        # Verify generated files
+        echo "Generated documentation files:"
+        ls -la docs/
+        
+        # Check if HTML was generated
+        if [ -f "docs/swagger.html" ]; then
+          echo "✅ HTML documentation generated successfully"
+        else
+          echo "⚠️  HTML documentation not found, continuing without it"
+        fi
+
     - name: Setup SSH Agent
       uses: webfactory/ssh-agent@v0.8.0
       with:
@@ -70,6 +91,23 @@ jobs:
         # Upload the binary to a temporary location first
         echo "📤 Uploading binary..."
         scp -P ${{ secrets.DEPLOY_PORT }} ${{ secrets.BINARY_NAME }} ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/tmp/${{ secrets.BINARY_NAME }}-${{ env.VERSION }}
+        
+        # Upload documentation files
+        echo "📚 Uploading documentation..."
+        if [ -f "docs/swagger.html" ]; then
+          scp -P ${{ secrets.DEPLOY_PORT }} docs/swagger.html ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/tmp/swagger-${{ env.VERSION }}.html
+          echo "✅ HTML documentation uploaded"
+        fi
+        
+        if [ -f "docs/swagger.json" ]; then
+          scp -P ${{ secrets.DEPLOY_PORT }} docs/swagger.json ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/tmp/swagger-${{ env.VERSION }}.json
+          echo "✅ JSON documentation uploaded"
+        fi
+        
+        if [ -f "docs/swagger.yaml" ]; then
+          scp -P ${{ secrets.DEPLOY_PORT }} docs/swagger.yaml ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/tmp/swagger-${{ env.VERSION }}.yaml
+          echo "✅ YAML documentation uploaded"
+        fi
         
         # Execute deployment script on remote server
         ssh -p ${{ secrets.DEPLOY_PORT }} ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
@@ -104,6 +142,26 @@ jobs:
           chmod +x "$BINARY_NAME"
           echo "✅ Binary replaced and made executable"
           
+          echo "📚 Updating documentation..."
+          # Create docs directory if it doesn't exist
+          mkdir -p docs
+          
+          # Move documentation files if they exist
+          if [ -f "/tmp/swagger-${VERSION}.html" ]; then
+            mv "/tmp/swagger-${VERSION}.html" "docs/swagger.html"
+            echo "✅ HTML documentation updated"
+          fi
+          
+          if [ -f "/tmp/swagger-${VERSION}.json" ]; then
+            mv "/tmp/swagger-${VERSION}.json" "docs/swagger.json"  
+            echo "✅ JSON documentation updated"
+          fi
+          
+          if [ -f "/tmp/swagger-${VERSION}.yaml" ]; then
+            mv "/tmp/swagger-${VERSION}.yaml" "docs/swagger.yaml"
+            echo "✅ YAML documentation updated"
+          fi
+          
           echo "🚀 Starting application..."
           if [ -f "./start.sh" ]; then
             ./start.sh
@@ -112,38 +170,172 @@ jobs:
             echo "⚠️  start.sh not found, skipping start step"
           fi
           
-          echo "🎉 Deployment of ${VERSION} completed successfully!"
+          echo "🎉 Initial deployment of ${VERSION} completed!"
         EOF
 
-    - name: Verify deployment
+    - name: Health check and rollback management
+      id: health_check
       run: |
-        echo "🔍 Verifying deployment..."
-        sleep 5  # Give the service a moment to start
+        echo "🔍 Performing comprehensive health check..."
         
-        # Check if the service is responding (using health endpoint if available)
-        if [ -n "${{ secrets.HEALTH_CHECK_URL }}" ]; then
-          if curl -f -s "${{ secrets.HEALTH_CHECK_URL }}" > /dev/null; then
-            echo "✅ Deployment verification successful - API is responding"
+        # Wait for service to fully start
+        echo "⏳ Waiting 10 seconds for service to initialize..."
+        sleep 10
+        
+        HEALTH_CHECK_PASSED="false"
+        MAX_RETRIES=3
+        RETRY_COUNT=0
+        
+        # Retry health check up to MAX_RETRIES times
+        while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+          RETRY_COUNT=$((RETRY_COUNT + 1))
+          echo "🔍 Health check attempt $RETRY_COUNT of $MAX_RETRIES..."
+          
+          if [ -n "${{ secrets.HEALTH_CHECK_URL }}" ]; then
+            # Perform detailed health check
+            RESPONSE=$(curl -s -w "HTTPSTATUS:%{http_code}" "${{ secrets.HEALTH_CHECK_URL }}" || echo "HTTPSTATUS:000")
+            HTTP_STATUS=$(echo $RESPONSE | grep -o 'HTTPSTATUS:[0-9]*' | cut -d: -f2)
+            RESPONSE_BODY=$(echo $RESPONSE | sed 's/HTTPSTATUS:[0-9]*$//')
+            
+            echo "HTTP Status: $HTTP_STATUS"
+            echo "Response: $RESPONSE_BODY"
+            
+            if [ "$HTTP_STATUS" = "200" ]; then
+              # Additional validation - check if response contains expected data
+              if echo "$RESPONSE_BODY" | grep -q '"status".*"success"'; then
+                echo "✅ Health check passed - API is responding correctly"
+                HEALTH_CHECK_PASSED="true"
+                break
+              else
+                echo "⚠️  Health check failed - API responding but with unexpected data"
+              fi
+            else
+              echo "⚠️  Health check failed - HTTP $HTTP_STATUS"
+            fi
           else
-            echo "⚠️  Deployment verification failed - API might not be responding yet"
-            echo "Please check the logs manually"
+            echo "⚠️  No health check URL configured - cannot verify deployment"
+            # Without health check URL, assume success (maintain backward compatibility)
+            HEALTH_CHECK_PASSED="true"
+            break
           fi
+          
+          if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+            echo "⏳ Waiting 5 seconds before retry..."
+            sleep 5
+          fi
+        done
+        
+        echo "health_check_passed=$HEALTH_CHECK_PASSED" >> $GITHUB_OUTPUT
+        
+        # Handle rollback if health check failed
+        if [ "$HEALTH_CHECK_PASSED" = "false" ]; then
+          echo "❌ Health check failed after $MAX_RETRIES attempts - initiating rollback..."
+          
+          ssh -p ${{ secrets.DEPLOY_PORT }} ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
+            set -e
+            
+            DEPLOY_PATH="${{ secrets.DEPLOY_PATH }}"
+            BINARY_NAME="${{ secrets.BINARY_NAME }}"
+            VERSION="${{ env.VERSION }}"
+            
+            echo "🔄 Rolling back to previous version..."
+            cd "$DEPLOY_PATH"
+            
+            # Stop the failed application
+            if [ -f "./stop.sh" ]; then
+              ./stop.sh || echo "⚠️  Stop script failed, but continuing rollback"
+            fi
+            
+            # Find the most recent backup
+            BACKUP_FILE=$(ls -t ${BINARY_NAME}.backup.* 2>/dev/null | head -n1)
+            
+            if [ -n "$BACKUP_FILE" ] && [ -f "$BACKUP_FILE" ]; then
+              echo "📦 Restoring from backup: $BACKUP_FILE"
+              cp "$BACKUP_FILE" "$BINARY_NAME"
+              chmod +x "$BINARY_NAME"
+              echo "✅ Binary restored from backup"
+              
+              # Restart with previous version
+              if [ -f "./start.sh" ]; then
+                ./start.sh
+                echo "✅ Previous version restarted"
+              fi
+              
+              echo "🔄 Rollback completed successfully"
+            else
+              echo "❌ No backup file found - cannot rollback automatically"
+              echo "Manual intervention required!"
+              exit 1
+            fi
+          EOF
+          
+          echo "❌ Deployment failed and rolled back"
+          exit 1
         else
-          echo "ℹ️  No health check URL configured, skipping verification"
+          echo "✅ Health check passed - proceeding with cleanup"
         fi
+
+    - name: Cleanup backup files
+      if: steps.health_check.outputs.health_check_passed == 'true'
+      run: |
+        echo "🧹 Cleaning up backup files after successful deployment..."
+        
+        ssh -p ${{ secrets.DEPLOY_PORT }} ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
+          DEPLOY_PATH="${{ secrets.DEPLOY_PATH }}"
+          BINARY_NAME="${{ secrets.BINARY_NAME }}"
+          
+          cd "$DEPLOY_PATH"
+          
+          # Remove backup files (keep only the most recent one as safety measure)
+          BACKUP_FILES=$(ls -t ${BINARY_NAME}.backup.* 2>/dev/null || true)
+          BACKUP_COUNT=$(echo "$BACKUP_FILES" | wc -l)
+          
+          if [ "$BACKUP_COUNT" -gt 1 ]; then
+            # Keep the most recent backup, remove others
+            echo "$BACKUP_FILES" | tail -n +2 | while read backup_file; do
+              if [ -n "$backup_file" ] && [ -f "$backup_file" ]; then
+                rm "$backup_file"
+                echo "🗑️  Removed old backup: $backup_file"
+              fi
+            done
+            echo "✅ Cleaned up old backups (kept most recent for safety)"
+          else
+            echo "ℹ️  Only one or no backup files found, no cleanup needed"
+          fi
+        EOF
 
     - name: Create deployment summary
       run: |
-        echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
-        echo "- **Version**: ${{ env.VERSION }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Binary**: ${{ secrets.BINARY_NAME }}" >> $GITHUB_STEP_SUMMARY  
-        echo "- **Target**: ${{ secrets.DEPLOY_PATH }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Status**: ✅ Deployed successfully" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
-        echo "1. Verify application functionality" >> $GITHUB_STEP_SUMMARY
-        echo "2. Monitor logs for any issues" >> $GITHUB_STEP_SUMMARY
-        echo "3. Update documentation if needed" >> $GITHUB_STEP_SUMMARY
+        if [[ "${{ steps.health_check.outputs.health_check_passed }}" == "true" ]]; then
+          echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ env.VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Binary**: ${{ secrets.BINARY_NAME }}" >> $GITHUB_STEP_SUMMARY  
+          echo "- **Target**: ${{ secrets.DEPLOY_PATH }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ✅ Deployed successfully" >> $GITHUB_STEP_SUMMARY
+          echo "- **Health Check**: ✅ Passed" >> $GITHUB_STEP_SUMMARY
+          echo "- **Documentation**: 📚 Updated" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Completed Actions" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Binary deployed and started" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Documentation updated (HTML, JSON, YAML)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Health check verification passed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Old backups cleaned up" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "## ❌ Deployment Failed" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ env.VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ❌ Failed and rolled back" >> $GITHUB_STEP_SUMMARY
+          echo "- **Health Check**: ❌ Failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### What Happened" >> $GITHUB_STEP_SUMMARY
+          echo "- ⚠️  Deployment completed but health check failed" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔄 Automatic rollback to previous version executed" >> $GITHUB_STEP_SUMMARY
+          echo "- 🛡️  Service restored to last known good state" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. 🔍 Check application logs for errors" >> $GITHUB_STEP_SUMMARY
+          echo "2. 🐛 Debug the issue in the new version" >> $GITHUB_STEP_SUMMARY
+          echo "3. 🔧 Fix the problem and redeploy" >> $GITHUB_STEP_SUMMARY
+        fi
 
   create-release:
     runs-on: ubuntu-latest

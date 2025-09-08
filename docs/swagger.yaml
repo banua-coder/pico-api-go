@@ -58,22 +58,22 @@ definitions:
   models.NationalCaseResponse:
     properties:
       cumulative:
-        $ref: "#/definitions/models.CumulativeCases"
+        $ref: '#/definitions/models.CumulativeCases'
       daily:
-        $ref: "#/definitions/models.DailyCases"
+        $ref: '#/definitions/models.DailyCases'
       date:
         type: string
       day:
         type: integer
       statistics:
-        $ref: "#/definitions/models.NationalCaseStatistics"
+        $ref: '#/definitions/models.NationalCaseStatistics'
     type: object
   models.NationalCaseStatistics:
     properties:
       percentages:
-        $ref: "#/definitions/models.CasePercentages"
+        $ref: '#/definitions/models.CasePercentages'
       reproduction_rate:
-        $ref: "#/definitions/models.ReproductionRate"
+        $ref: '#/definitions/models.ReproductionRate'
     type: object
   models.ObservationData:
     properties:
@@ -88,7 +88,7 @@ definitions:
     properties:
       data: {}
       pagination:
-        $ref: "#/definitions/models.PaginationMeta"
+        $ref: '#/definitions/models.PaginationMeta'
     type: object
   models.PaginationMeta:
     properties:
@@ -117,24 +117,24 @@ definitions:
   models.ProvinceCaseResponse:
     properties:
       cumulative:
-        $ref: "#/definitions/models.ProvinceCumulativeCases"
+        $ref: '#/definitions/models.ProvinceCumulativeCases'
       daily:
-        $ref: "#/definitions/models.ProvinceDailyCases"
+        $ref: '#/definitions/models.ProvinceDailyCases'
       date:
         type: string
       day:
         type: integer
       province:
-        $ref: "#/definitions/models.Province"
+        $ref: '#/definitions/models.Province'
       statistics:
-        $ref: "#/definitions/models.ProvinceCaseStatistics"
+        $ref: '#/definitions/models.ProvinceCaseStatistics'
     type: object
   models.ProvinceCaseStatistics:
     properties:
       percentages:
-        $ref: "#/definitions/models.CasePercentages"
+        $ref: '#/definitions/models.CasePercentages'
       reproduction_rate:
-        $ref: "#/definitions/models.ReproductionRate"
+        $ref: '#/definitions/models.ReproductionRate'
     type: object
   models.ProvinceCumulativeCases:
     properties:
@@ -143,9 +143,9 @@ definitions:
       deceased:
         type: integer
       odp:
-        $ref: "#/definitions/models.ObservationData"
+        $ref: '#/definitions/models.ObservationData'
       pdp:
-        $ref: "#/definitions/models.SupervisionData"
+        $ref: '#/definitions/models.SupervisionData'
       positive:
         type: integer
       recovered:
@@ -158,9 +158,9 @@ definitions:
       deceased:
         type: integer
       odp:
-        $ref: "#/definitions/models.DailyObservationData"
+        $ref: '#/definitions/models.DailyObservationData'
       pdp:
-        $ref: "#/definitions/models.DailySupervisionData"
+        $ref: '#/definitions/models.DailySupervisionData'
       positive:
         type: integer
       recovered:
@@ -171,7 +171,7 @@ definitions:
       id:
         type: string
       latest_case:
-        $ref: "#/definitions/models.ProvinceCaseResponse"
+        $ref: '#/definitions/models.ProvinceCaseResponse'
       name:
         type: string
     type: object
@@ -199,293 +199,322 @@ info:
     email: support@banuacoder.com
     name: API Support
     url: https://github.com/banua-coder/pico-api-go
-  description:
-    A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central
+  description: 'A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central
     Sulawesi), with additional national and provincial data for context. Features
-    enhanced ODP/PDP grouping and hybrid pagination.
+    enhanced ODP/PDP grouping, hybrid pagination, and rate limiting protection. Rate
+    limiting: 100 requests per minute per IP address by default, with appropriate
+    HTTP headers for client guidance.'
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
   termsOfService: http://swagger.io/terms/
   title: Sulawesi Tengah COVID-19 Data API
-  version: 2.1.0
+  version: 2.2.0
 paths:
   /:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Get a list of all available API endpoints with descriptions
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
             allOf:
-              - $ref: "#/definitions/handler.Response"
-              - properties:
-                  data:
-                    additionalProperties: true
-                    type: object
-                type: object
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
       summary: API endpoint index
       tags:
-        - health
+      - health
   /health:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Check API health status and database connectivity
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: API is healthy
           schema:
             allOf:
-              - $ref: "#/definitions/handler.Response"
-              - properties:
-                  data:
-                    additionalProperties: true
-                    type: object
-                type: object
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
         "503":
           description: API is degraded (database issues)
           schema:
             allOf:
-              - $ref: "#/definitions/handler.Response"
-              - properties:
-                  data:
-                    additionalProperties: true
-                    type: object
-                type: object
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
       summary: Health check
       tags:
-        - health
+      - health
   /national:
     get:
       consumes:
-        - application/json
-      description:
-        Retrieve national COVID-19 cases data with optional date range
-        filtering
+      - application/json
+      description: Retrieve national COVID-19 cases data with optional date range
+        filtering and sorting
       parameters:
-        - description: Start date (YYYY-MM-DD)
-          in: query
-          name: start_date
-          type: string
-        - description: End date (YYYY-MM-DD)
-          in: query
-          name: end_date
-          type: string
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: start_date
+        type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: end_date
+        type: string
+      - description: 'Sort by field:order (e.g., date:desc, positive:asc). Default:
+          date:asc'
+        in: query
+        name: sort
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
+          headers:
+            X-RateLimit-Limit:
+              description: Request limit per window
+              type: string
+            X-RateLimit-Remaining:
+              description: Requests remaining in current window
+              type: string
           schema:
             allOf:
-              - $ref: "#/definitions/handler.Response"
-              - properties:
-                  data:
-                    items:
-                      $ref: "#/definitions/models.NationalCaseResponse"
-                    type: array
-                type: object
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.NationalCaseResponse'
+                  type: array
+              type: object
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/handler.Response"
+            $ref: '#/definitions/handler.Response'
+        "429":
+          description: Rate limit exceeded
+          headers:
+            Retry-After:
+              description: Seconds to wait before retrying
+              type: string
+            X-RateLimit-Reset:
+              description: Unix timestamp when rate limit resets
+              type: string
+          schema:
+            $ref: '#/definitions/handler.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/handler.Response"
+            $ref: '#/definitions/handler.Response'
       summary: Get national COVID-19 cases
       tags:
-        - national
+      - national
   /national/latest:
     get:
       consumes:
-        - application/json
+      - application/json
       description: Retrieve the most recent national COVID-19 case data
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
             allOf:
-              - $ref: "#/definitions/handler.Response"
-              - properties:
-                  data:
-                    $ref: "#/definitions/models.NationalCaseResponse"
-                type: object
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.NationalCaseResponse'
+              type: object
         "404":
           description: Not Found
           schema:
-            $ref: "#/definitions/handler.Response"
+            $ref: '#/definitions/handler.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/handler.Response"
+            $ref: '#/definitions/handler.Response'
       summary: Get latest national COVID-19 case
       tags:
-        - national
+      - national
   /provinces:
     get:
       consumes:
-        - application/json
-      description:
-        Retrieve all provinces with their latest COVID-19 case data by
+      - application/json
+      description: Retrieve all provinces with their latest COVID-19 case data by
         default. Use exclude_latest_case=true for basic province list only.
       parameters:
-        - description: "Exclude latest case data (default: false)"
-          in: query
-          name: exclude_latest_case
-          type: boolean
+      - description: 'Exclude latest case data (default: false)'
+        in: query
+        name: exclude_latest_case
+        type: boolean
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: Basic province list when exclude_latest_case=true
           schema:
             allOf:
-              - $ref: "#/definitions/handler.Response"
-              - properties:
-                  data:
-                    items:
-                      $ref: "#/definitions/models.Province"
-                    type: array
-                type: object
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.Province'
+                  type: array
+              type: object
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/handler.Response"
+            $ref: '#/definitions/handler.Response'
       summary: Get provinces with COVID-19 data
       tags:
-        - provinces
+      - provinces
   /provinces/{provinceId}/cases:
     get:
       consumes:
-        - application/json
-      description:
-        Retrieve COVID-19 cases for all provinces or a specific province
+      - application/json
+      description: Retrieve COVID-19 cases for all provinces or a specific province
         with hybrid pagination support
       parameters:
-        - description: Province ID (e.g., '31' for Jakarta)
-          in: path
-          name: provinceId
-          type: string
-        - description: "Records per page (default: 50, max: 1000)"
-          in: query
-          name: limit
-          type: integer
-        - description: "Records to skip (default: 0)"
-          in: query
-          name: offset
-          type: integer
-        - description: Return all data without pagination
-          in: query
-          name: all
-          type: boolean
-        - description: Start date (YYYY-MM-DD)
-          in: query
-          name: start_date
-          type: string
-        - description: End date (YYYY-MM-DD)
-          in: query
-          name: end_date
-          type: string
+      - description: Province ID (e.g., '31' for Jakarta)
+        in: path
+        name: provinceId
+        type: string
+      - description: 'Records per page (default: 50, max: 1000)'
+        in: query
+        name: limit
+        type: integer
+      - description: 'Records to skip (default: 0)'
+        in: query
+        name: offset
+        type: integer
+      - description: Return all data without pagination
+        in: query
+        name: all
+        type: boolean
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: start_date
+        type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: end_date
+        type: string
+      - description: 'Sort by field:order (e.g., date:desc, positive:asc). Default:
+          date:asc'
+        in: query
+        name: sort
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: All data response when all=true
           schema:
             allOf:
-              - $ref: "#/definitions/handler.Response"
-              - properties:
-                  data:
-                    items:
-                      $ref: "#/definitions/models.ProvinceCaseResponse"
-                    type: array
-                type: object
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.ProvinceCaseResponse'
+                  type: array
+              type: object
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/handler.Response"
+            $ref: '#/definitions/handler.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/handler.Response"
+            $ref: '#/definitions/handler.Response'
       summary: Get province COVID-19 cases
       tags:
-        - province-cases
+      - province-cases
   /provinces/cases:
     get:
       consumes:
-        - application/json
-      description:
-        Retrieve COVID-19 cases for all provinces or a specific province
+      - application/json
+      description: Retrieve COVID-19 cases for all provinces or a specific province
         with hybrid pagination support
       parameters:
-        - description: "Records per page (default: 50, max: 1000)"
-          in: query
-          name: limit
-          type: integer
-        - description: "Records to skip (default: 0)"
-          in: query
-          name: offset
-          type: integer
-        - description: Return all data without pagination
-          in: query
-          name: all
-          type: boolean
-        - description: Start date (YYYY-MM-DD)
-          in: query
-          name: start_date
-          type: string
-        - description: End date (YYYY-MM-DD)
-          in: query
-          name: end_date
-          type: string
+      - description: 'Records per page (default: 50, max: 1000)'
+        in: query
+        name: limit
+        type: integer
+      - description: 'Records to skip (default: 0)'
+        in: query
+        name: offset
+        type: integer
+      - description: Return all data without pagination
+        in: query
+        name: all
+        type: boolean
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: start_date
+        type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: end_date
+        type: string
+      - description: 'Sort by field:order (e.g., date:desc, positive:asc). Default:
+          date:asc'
+        in: query
+        name: sort
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: All data response when all=true
           schema:
             allOf:
-              - $ref: "#/definitions/handler.Response"
-              - properties:
-                  data:
-                    items:
-                      $ref: "#/definitions/models.ProvinceCaseResponse"
-                    type: array
-                type: object
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.ProvinceCaseResponse'
+                  type: array
+              type: object
         "400":
           description: Bad Request
           schema:
-            $ref: "#/definitions/handler.Response"
+            $ref: '#/definitions/handler.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: "#/definitions/handler.Response"
+            $ref: '#/definitions/handler.Response'
       summary: Get province COVID-19 cases
       tags:
-        - province-cases
+      - province-cases
 schemes:
-  - https
-  - http
+- https
+- http
 swagger: "2.0"
 tags:
-  - description: Health check operations
-    name: health
-  - description: National COVID-19 case operations (for context)
-    name: national
-  - description:
-      Province information and COVID-19 case operations (focus on Sulawesi
-      Tengah)
-    name: provinces
-  - description: Province-level COVID-19 case data with pagination support
-    name: province-cases
+- description: Health check operations
+  name: health
+- description: National COVID-19 case operations (for context)
+  name: national
+- description: Province information and COVID-19 case operations (focus on Sulawesi
+    Tengah)
+  name: provinces
+- description: Province-level COVID-19 case data with pagination support
+  name: province-cases
