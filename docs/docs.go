@@ -117,7 +117,7 @@ const docTemplate = `{
         },
         "/national": {
             "get": {
-                "description": "Retrieve national COVID-19 cases data with optional date range filtering and sorting",
+                "description": "Retrieve national COVID-19 cases data with optional date range filtering, sorting, and pagination",
                 "consumes": [
                     "application/json"
                 ],
@@ -129,6 +129,30 @@ const docTemplate = `{
                 ],
                 "summary": "Get national COVID-19 cases",
                 "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Records per page (default: 50, max: 1000)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Records to skip (default: 0)",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number (1-based, alternative to offset)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Return all data without pagination",
+                        "name": "all",
+                        "in": "query"
+                    },
                     {
                         "type": "string",
                         "description": "Start date (YYYY-MM-DD)",
@@ -150,7 +174,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "All data response when all=true",
                         "schema": {
                             "allOf": [
                                 {
@@ -337,6 +361,12 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "integer",
+                        "description": "Page number (1-based, alternative to offset)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
                         "type": "boolean",
                         "description": "Return all data without pagination",
                         "name": "all",
@@ -428,6 +458,12 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "Records to skip (default: 0)",
                         "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number (1-based, alternative to offset)",
+                        "name": "page",
                         "in": "query"
                     },
                     {
@@ -815,7 +851,7 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "2.3.0",
+	Version:          "2.2.0",
 	Host:             "pico-api.banuacoder.com",
 	BasePath:         "/api/v1",
 	Schemes:          []string{"https", "http"},

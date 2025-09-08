@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+
+## [v2.3.0] - 2025-09-08
+
+### Documentation
+
+- Remove rate_limiting.md documentation file (6c43bb3)
+
 ## [v2.2.0] - 2025-09-08
 
 ### Fixed
