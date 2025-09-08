@@ -280,16 +280,21 @@ jobs:
           swag init -g cmd/main.go -o ./docs
           echo "✅ Documentation regenerated"
 
-      - name: Commit release preparation changes
-        id: commit_changes
+      - name: Create preparation PR branch
+        id: pr_branch
         run: |
           VERSION="${{ steps.version_info.outputs.version }}"
           TYPE="${{ steps.version_info.outputs.type }}"
-          CHANGELOG_FILE="${{ steps.changelog.outputs.changelog_file }}"
-
+          RELEASE_BRANCH="${{ steps.version_info.outputs.branch_name }}"
+          
+          # Create PR branch for changelog and version updates
+          PR_BRANCH="chore/prepare-$TYPE-$VERSION"
+          git checkout -b "$PR_BRANCH"
+          echo "pr_branch=$PR_BRANCH" >> $GITHUB_OUTPUT
+          
           # Add all changes
           git add .
-
+          
           # Check if there are changes to commit
           if git diff --cached --quiet; then
             echo "No changes to commit"
@@ -305,17 +310,70 @@ jobs:
               CHANGELOG_INFO="- Changelog generation skipped (manual update needed)"
             fi
             
-            git commit -m "$TYPE: prepare $VERSION release
+            git commit -m "chore: prepare $VERSION $TYPE
 
             - Update version to ${{ steps.version_info.outputs.clean_version }} in source files
             $CHANGELOG_INFO
             - Regenerate API documentation with new version
             
-            This commit was automatically generated when the ${{ steps.version_info.outputs.branch_name }} branch was created."
+            This commit prepares the $RELEASE_BRANCH branch for $TYPE."
             
-            # Push the changes
-            git push origin "${{ steps.version_info.outputs.branch_name }}"
+            # Push the PR branch
+            git push origin "$PR_BRANCH"
           fi
+
+      - name: Create preparation PR
+        if: steps.pr_branch.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.version_info.outputs.version }}"
+          TYPE="${{ steps.version_info.outputs.type }}"
+          RELEASE_BRANCH="${{ steps.version_info.outputs.branch_name }}"
+          PR_BRANCH="${{ steps.pr_branch.outputs.pr_branch }}"
+          CHANGELOG_STATUS="${{ steps.changelog.outputs.changelog_updated }}"
+          
+          # Create PR to the release branch
+          gh pr create \
+            --base "$RELEASE_BRANCH" \
+            --head "$PR_BRANCH" \
+            --title "chore: prepare $VERSION $TYPE" \
+            --body "$(cat <<EOF
+          ## Summary
+          Automated preparation for $TYPE $VERSION.
+          
+          This PR was automatically created when the \`$RELEASE_BRANCH\` branch was detected.
+          
+          ## Changes Made
+          
+          ### 📝 Version Updates
+          - Updated version to \`${{ steps.version_info.outputs.clean_version }}\` in source files:
+            - \`cmd/main.go\` - Swagger annotation
+            - \`internal/handler/covid_handler.go\` - Health endpoint
+            - Auto-regenerated API documentation
+          
+          ### 📋 Changelog
+          $(if [[ "$CHANGELOG_STATUS" == "true" ]]; then
+            echo "- ✅ Generated changelog entries using \`generate-changelog.rb\`"
+            echo "- Categorized commits since last release"
+          else
+            echo "- ⚠️ Changelog generation was skipped (manual update needed)"
+            echo "- Please manually update CHANGELOG.md before merging"
+          fi)
+          
+          ### 📚 Documentation
+          - Regenerated OpenAPI/Swagger documentation
+          - Updated version references across documentation files
+          
+          ## Auto-generated
+          This PR was automatically created by GitHub Actions when the $TYPE branch was created.
+          
+          **Review and merge when ready** - this prepares the $TYPE branch for completion.
+          EOF
+          )" \
+            --label "chore" \
+            --label "auto-generated" \
+            --label "$TYPE"
 
       - name: Create release preparation summary
         env:
@@ -344,8 +402,8 @@ jobs:
           echo "- 📝 Updated version in source files" >> $GITHUB_STEP_SUMMARY
           echo "- 📚 Regenerated API documentation" >> $GITHUB_STEP_SUMMARY
 
-          if [[ "${{ steps.commit_changes.outputs.has_changes }}" == "true" ]]; then
-            echo "- 💾 Committed preparation changes" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ steps.pr_branch.outputs.has_changes }}" == "true" ]]; then
+            echo "- 📋 Created preparation PR to \`$BRANCH_NAME\` branch" >> $GITHUB_STEP_SUMMARY
           else
             echo "- ℹ️ No changes needed (already up to date)" >> $GITHUB_STEP_SUMMARY
           fi
