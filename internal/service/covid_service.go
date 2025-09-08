@@ -36,9 +36,9 @@ type CovidService interface {
 }
 
 type covidService struct {
-	nationalCaseRepo  repository.NationalCaseRepository
-	provinceRepo      repository.ProvinceRepository
-	provinceCaseRepo  repository.ProvinceCaseRepository
+	nationalCaseRepo repository.NationalCaseRepository
+	provinceRepo     repository.ProvinceRepository
+	provinceCaseRepo repository.ProvinceCaseRepository
 }
 
 func NewCovidService(
@@ -128,26 +128,26 @@ func (s *covidService) GetProvincesWithLatestCase() ([]models.ProvinceWithLatest
 	}
 
 	result := make([]models.ProvinceWithLatestCase, len(provinces))
-	
+
 	for i, province := range provinces {
 		result[i] = models.ProvinceWithLatestCase{
 			Province: province,
 		}
-		
+
 		// Get latest case for this province
 		latestCase, err := s.provinceCaseRepo.GetLatestByProvinceID(province.ID)
 		if err != nil {
 			// If error or no data, continue without latest case
 			continue
 		}
-		
+
 		if latestCase != nil {
 			// Transform to response format
 			caseResponse := latestCase.TransformToResponse()
 			result[i].LatestCase = &caseResponse
 		}
 	}
-	
+
 	return result, nil
 }
 

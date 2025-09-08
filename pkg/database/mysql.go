@@ -8,8 +8,8 @@ import (
 	"math"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/banua-coder/pico-api-go/internal/config"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 type DB struct {
@@ -34,7 +34,7 @@ func NewMySQLConnection(cfg *config.DatabaseConfig) (*DB, error) {
 		RetryAttempts:   3,
 		RetryDelay:      1 * time.Second,
 	}
-	
+
 	return NewMySQLConnectionWithConfig(cfg, connCfg)
 }
 
@@ -54,13 +54,13 @@ func NewMySQLConnectionWithConfig(cfg *config.DatabaseConfig, connCfg Connection
 	// Retry connection with exponential backoff
 	for attempt := 1; attempt <= connCfg.RetryAttempts; attempt++ {
 		log.Printf("Attempting to connect to database (attempt %d/%d)", attempt, connCfg.RetryAttempts)
-		
+
 		db, err = sql.Open("mysql", dsn)
 		if err != nil {
 			if attempt == connCfg.RetryAttempts {
 				return nil, fmt.Errorf("failed to open database connection after %d attempts: %w", connCfg.RetryAttempts, err)
 			}
-			
+
 			backoffDelay := time.Duration(math.Pow(2, float64(attempt-1))) * connCfg.RetryDelay
 			log.Printf("Database connection failed (attempt %d), retrying in %v: %v", attempt, backoffDelay, err)
 			time.Sleep(backoffDelay)
@@ -76,7 +76,7 @@ func NewMySQLConnectionWithConfig(cfg *config.DatabaseConfig, connCfg Connection
 		// Test the connection
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
-		
+
 		if err = db.PingContext(ctx); err != nil {
 			if closeErr := db.Close(); closeErr != nil {
 				log.Printf("Error closing database connection: %v", closeErr)
@@ -84,7 +84,7 @@ func NewMySQLConnectionWithConfig(cfg *config.DatabaseConfig, connCfg Connection
 			if attempt == connCfg.RetryAttempts {
 				return nil, fmt.Errorf("failed to ping database after %d attempts: %w", connCfg.RetryAttempts, err)
 			}
-			
+
 			backoffDelay := time.Duration(math.Pow(2, float64(attempt-1))) * connCfg.RetryDelay
 			log.Printf("Database ping failed (attempt %d), retrying in %v: %v", attempt, backoffDelay, err)
 			time.Sleep(backoffDelay)
@@ -100,8 +100,8 @@ func NewMySQLConnectionWithConfig(cfg *config.DatabaseConfig, connCfg Connection
 
 func DefaultConnectionConfig() ConnectionConfig {
 	return ConnectionConfig{
-		MaxOpenConns:    5,   // Very conservative for shared hosting
-		MaxIdleConns:    2,   // Minimal idle connections to prevent timeouts
+		MaxOpenConns:    5,                // Very conservative for shared hosting
+		MaxIdleConns:    2,                // Minimal idle connections to prevent timeouts
 		ConnMaxLifetime: 30 * time.Second, // Very short-lived connections for shared hosting
 		ConnMaxIdleTime: 15 * time.Second, // Close idle connections very quickly
 		RetryAttempts:   3,
@@ -113,17 +113,17 @@ func DefaultConnectionConfig() ConnectionConfig {
 func (db *DB) HealthCheck() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	
+
 	if err := db.PingContext(ctx); err != nil {
 		return fmt.Errorf("database health check failed: %w", err)
 	}
-	
+
 	// Perform a simple query to ensure the database is responsive
 	var result int
 	if err := db.QueryRowContext(ctx, "SELECT 1").Scan(&result); err != nil {
 		return fmt.Errorf("database query test failed: %w", err)
 	}
-	
+
 	return nil
 }
 

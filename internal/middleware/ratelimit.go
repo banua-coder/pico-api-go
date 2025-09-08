@@ -40,11 +40,11 @@ type ClientRecord struct {
 
 // RateLimiter implements a sliding window rate limiter
 type RateLimiter struct {
-	clients   map[string]*ClientRecord
-	mutex     sync.RWMutex
-	config    config.RateLimitConfig
+	clients       map[string]*ClientRecord
+	mutex         sync.RWMutex
+	config        config.RateLimitConfig
 	cleanupTicker *time.Ticker
-	stopChan  chan struct{}
+	stopChan      chan struct{}
 }
 
 // NewRateLimiter creates a new rate limiter instance
@@ -90,10 +90,10 @@ func (rl *RateLimiter) cleanOldClients() {
 	defer rl.mutex.Unlock()
 
 	cutoff := time.Now().Add(-rl.config.WindowSize * 2) // Keep records for 2x window size
-	
+
 	for clientIP, record := range rl.clients {
 		record.mutex.RLock()
-		shouldDelete := len(record.requests) == 0 || 
+		shouldDelete := len(record.requests) == 0 ||
 			(len(record.requests) > 0 && record.requests[len(record.requests)-1].Before(cutoff))
 		record.mutex.RUnlock()
 
@@ -175,7 +175,7 @@ func (rl *RateLimiter) isAllowed(clientIP string) (bool, int, time.Duration) {
 	// Allow the request and record it
 	client.requests = append(client.requests, now)
 	remaining := rl.config.RequestsPerMinute - len(client.requests)
-	
+
 	return true, remaining, 0
 }
 
@@ -198,11 +198,11 @@ func RateLimit(cfg config.RateLimitConfig) func(http.Handler) http.Handler {
 			// Set rate limiting headers
 			w.Header().Set("X-RateLimit-Limit", fmt.Sprintf("%d", cfg.RequestsPerMinute))
 			w.Header().Set("X-RateLimit-Remaining", fmt.Sprintf("%d", remaining))
-			
+
 			if !allowed {
 				w.Header().Set("X-RateLimit-Reset", fmt.Sprintf("%d", time.Now().Add(resetTime).Unix()))
 				w.Header().Set("Retry-After", fmt.Sprintf("%d", int(resetTime.Seconds())))
-				
+
 				writeRateLimitError(w, http.StatusTooManyRequests, "Rate limit exceeded. Too many requests.")
 				return
 			}
@@ -211,3 +211,4 @@ func RateLimit(cfg config.RateLimitConfig) func(http.Handler) http.Handler {
 		})
 	}
 }
+

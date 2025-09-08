@@ -56,7 +56,7 @@ func TestRateLimit_WithinLimits(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, rr.Code)
 		assert.Equal(t, "OK", rr.Body.String())
-		
+
 		// Check rate limit headers
 		assert.Equal(t, "10", rr.Header().Get("X-RateLimit-Limit"))
 		assert.NotEmpty(t, rr.Header().Get("X-RateLimit-Remaining"))
@@ -96,7 +96,7 @@ func TestRateLimit_ExceedsLimit(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 
 	assert.Equal(t, http.StatusTooManyRequests, rr.Code)
-	
+
 	// Check rate limit headers
 	assert.Equal(t, "5", rr.Header().Get("X-RateLimit-Limit"))
 	assert.Equal(t, "0", rr.Header().Get("X-RateLimit-Remaining"))
@@ -264,9 +264,9 @@ func TestRateLimiter_GetClientIP(t *testing.T) {
 	limiter := NewRateLimiter(config.RateLimitConfig{})
 
 	tests := []struct {
-		name           string
-		setupRequest   func(*http.Request)
-		expectedIP     string
+		name         string
+		setupRequest func(*http.Request)
+		expectedIP   string
 	}{
 		{
 			name: "X-Forwarded-For header",
@@ -304,7 +304,7 @@ func TestRateLimiter_GetClientIP(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			req := httptest.NewRequest("GET", "/test", nil)
 			tt.setupRequest(req)
-			
+
 			ip := limiter.getClientIP(req)
 			assert.Equal(t, tt.expectedIP, ip)
 		})
@@ -388,3 +388,4 @@ func BenchmarkRateLimit_Reject(b *testing.B) {
 		}
 	})
 }
+

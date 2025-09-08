@@ -10,9 +10,9 @@ import (
 )
 
 type Config struct {
-	Database    DatabaseConfig
-	Server      ServerConfig
-	RateLimit   RateLimitConfig
+	Database  DatabaseConfig
+	Server    ServerConfig
+	RateLimit RateLimitConfig
 }
 
 type DatabaseConfig struct {
@@ -33,10 +33,10 @@ type ServerConfig struct {
 }
 
 type RateLimitConfig struct {
-	Enabled        bool
+	Enabled           bool
 	RequestsPerMinute int
-	BurstSize      int
-	WindowSize     time.Duration
+	BurstSize         int
+	WindowSize        time.Duration
 }
 
 func Load() *Config {

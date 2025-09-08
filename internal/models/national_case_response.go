@@ -4,11 +4,11 @@ import "time"
 
 // NationalCaseResponse represents the structured response for national COVID-19 case data
 type NationalCaseResponse struct {
-	Day        int64                        `json:"day"`
-	Date       time.Time                    `json:"date"`
-	Daily      DailyCases                   `json:"daily"`
-	Cumulative CumulativeCases              `json:"cumulative"`
-	Statistics NationalCaseStatistics       `json:"statistics"`
+	Day        int64                  `json:"day"`
+	Date       time.Time              `json:"date"`
+	Daily      DailyCases             `json:"daily"`
+	Cumulative CumulativeCases        `json:"cumulative"`
+	Statistics NationalCaseStatistics `json:"statistics"`
 }
 
 // DailyCases represents new cases for a single day
@@ -29,8 +29,8 @@ type CumulativeCases struct {
 
 // NationalCaseStatistics contains calculated statistics and metrics
 type NationalCaseStatistics struct {
-	Percentages      CasePercentages      `json:"percentages"`
-	ReproductionRate *ReproductionRate    `json:"reproduction_rate,omitempty"`
+	Percentages      CasePercentages   `json:"percentages"`
+	ReproductionRate *ReproductionRate `json:"reproduction_rate,omitempty"`
 }
 
 // CasePercentages represents percentage distribution of cases
