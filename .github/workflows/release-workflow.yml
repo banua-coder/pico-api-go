@@ -127,47 +127,113 @@ jobs:
           echo "✅ Tag $VERSION created and pushed successfully"
 
       # STEP 2: CREATE BACK-MERGE TO DEVELOP
+      - name: Generate unique back-merge branch name
+        id: branch_name
+        run: |
+          BASE_BRANCH="chore/back-merge-${{ steps.version.outputs.version }}-to-develop"
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          UNIQUE_BRANCH="${BASE_BRANCH}-${TIMESTAMP}"
+          
+          echo "base_branch=$BASE_BRANCH" >> $GITHUB_OUTPUT
+          echo "unique_branch=$UNIQUE_BRANCH" >> $GITHUB_OUTPUT
+          echo "Generated unique branch name: $UNIQUE_BRANCH"
+
+      - name: Check for existing back-merge branches
+        id: check_branch
+        run: |
+          BASE_BRANCH="${{ steps.branch_name.outputs.base_branch }}"
+          UNIQUE_BRANCH="${{ steps.branch_name.outputs.unique_branch }}"
+          
+          # Check if base branch name already exists
+          if git ls-remote --heads origin "$BASE_BRANCH" | grep -q "$BASE_BRANCH"; then
+            echo "base_branch_exists=true" >> $GITHUB_OUTPUT
+            echo "⚠️  Base branch $BASE_BRANCH already exists, using unique name"
+            FINAL_BRANCH="$UNIQUE_BRANCH"
+          else
+            echo "base_branch_exists=false" >> $GITHUB_OUTPUT
+            echo "✅ Base branch $BASE_BRANCH available"
+            FINAL_BRANCH="$BASE_BRANCH"
+          fi
+          
+          # Double-check the final branch name doesn't exist
+          if git ls-remote --heads origin "$FINAL_BRANCH" | grep -q "$FINAL_BRANCH"; then
+            echo "⚠️  Branch $FINAL_BRANCH also exists, adding random suffix"
+            RANDOM_SUFFIX=$(openssl rand -hex 4)
+            FINAL_BRANCH="${UNIQUE_BRANCH}-${RANDOM_SUFFIX}"
+          fi
+          
+          echo "final_branch=$FINAL_BRANCH" >> $GITHUB_OUTPUT
+          echo "Final branch name: $FINAL_BRANCH"
+
       - name: Create back-merge branch
         id: backmerge
         run: |
-          BACKMERGE_BRANCH="chore/back-merge-${{ steps.version.outputs.version }}-to-develop"
+          BACKMERGE_BRANCH="${{ steps.check_branch.outputs.final_branch }}"
           echo "backmerge_branch=$BACKMERGE_BRANCH" >> $GITHUB_OUTPUT
           
-          # Create and checkout new branch from develop
+          # Fetch latest develop
           git fetch origin develop:develop
+          
+          # Create and checkout new branch from develop
+          echo "🌿 Creating branch $BACKMERGE_BRANCH from develop"
           git checkout -b "$BACKMERGE_BRANCH" develop
           
+          # Verify we're on the correct branch
+          CURRENT_BRANCH=$(git branch --show-current)
+          echo "Current branch: $CURRENT_BRANCH"
+          
+          if [ "$CURRENT_BRANCH" != "$BACKMERGE_BRANCH" ]; then
+            echo "❌ Failed to create/checkout branch $BACKMERGE_BRANCH"
+            exit 1
+          fi
+          
           # Merge main into the back-merge branch
+          echo "🔄 Merging main into $BACKMERGE_BRANCH"
           git merge --no-ff main -m "chore: back-merge ${{ steps.version.outputs.version }} from main to develop
 
           Automated back-merge of ${{ steps.version.outputs.type }} ${{ steps.version.outputs.version }} from main branch.
           
           Original PR: ${{ github.event.pull_request.html_url }}
           Merged commit: ${{ github.event.pull_request.merge_commit_sha }}
-          Tag created: ${{ steps.version.outputs.version }}"
+          Tag created: ${{ steps.version.outputs.version }}
+          Branch: $BACKMERGE_BRANCH"
           
           # Push the back-merge branch
+          echo "⬆️  Pushing $BACKMERGE_BRANCH to origin"
           git push origin "$BACKMERGE_BRANCH"
+          
+          echo "✅ Back-merge branch created and pushed successfully"
 
       - name: Create back-merge PR
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          BACKMERGE_BRANCH="${{ steps.backmerge.outputs.backmerge_branch }}"
+          BASE_BRANCH_EXISTS="${{ steps.check_branch.outputs.base_branch_exists }}"
+          
+          # Add branch conflict info to description if needed
+          if [[ "$BASE_BRANCH_EXISTS" == "true" ]]; then
+            BRANCH_INFO="- **Branch**: \`$BACKMERGE_BRANCH\` ⚠️ (unique name due to conflict)"
+          else
+            BRANCH_INFO="- **Branch**: \`$BACKMERGE_BRANCH\`"
+          fi
+          
           gh pr create \
             --base develop \
-            --head "${{ steps.backmerge.outputs.backmerge_branch }}" \
+            --head "$BACKMERGE_BRANCH" \
             --title "chore: back-merge ${{ steps.version.outputs.version }} from main to develop" \
-            --body "$(cat <<'EOF'
+            --body "$(cat <<EOF
           ## Summary
           Automated back-merge of ${{ steps.version.outputs.type }} ${{ steps.version.outputs.version }} from main to develop branch.
           
           ## Details
           - **Original PR**: ${{ github.event.pull_request.html_url }}
-          - **Merged Branch**: `${{ steps.version.outputs.branch_name }}`
+          - **Merged Branch**: \`${{ steps.version.outputs.branch_name }}\`
           - **Version**: ${{ steps.version.outputs.version }}
           - **Type**: ${{ steps.version.outputs.type }}
           - **Merge Commit**: ${{ github.event.pull_request.merge_commit_sha }}
           - **Tag Created**: ${{ steps.check_tag.outputs.tag_exists == 'false' && '✅ Yes' || '⚠️ Already existed' }}
+          $BRANCH_INFO
           
           ## What this PR does
           - Syncs develop branch with main after ${{ steps.version.outputs.type }} merge
@@ -262,11 +328,20 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          BACKMERGE_BRANCH="${{ steps.backmerge.outputs.backmerge_branch }}"
+          BASE_BRANCH_EXISTS="${{ steps.check_branch.outputs.base_branch_exists }}"
+          
+          if [[ "$BASE_BRANCH_EXISTS" == "true" ]]; then
+            BRANCH_NOTE=" ⚠️ (unique branch name used due to conflict)"
+          else
+            BRANCH_NOTE=""
+          fi
+          
           gh pr comment ${{ github.event.pull_request.number }} --body "🔄 **Back-merge PR Created**
 
           A back-merge PR has been automatically created to sync the develop branch:
-          - **Back-merge PR**: [chore: back-merge ${{ steps.version.outputs.version }} from main to develop]($(gh pr list --base develop --head ${{ steps.backmerge.outputs.backmerge_branch }} --json url --jq '.[0].url'))
-          - **Branch**: \`${{ steps.backmerge.outputs.backmerge_branch }}\`
+          - **Back-merge PR**: [chore: back-merge ${{ steps.version.outputs.version }} from main to develop]($(gh pr list --base develop --head $BACKMERGE_BRANCH --json url --jq '.[0].url'))
+          - **Branch**: \`$BACKMERGE_BRANCH\`$BRANCH_NOTE
           
           Please review and merge the back-merge PR to complete the ${{ steps.version.outputs.type }} process."
 
@@ -275,12 +350,15 @@ jobs:
           VERSION="${{ steps.version.outputs.version }}"
           TYPE="${{ steps.version.outputs.type }}"
           BRANCH_NAME="${{ steps.version.outputs.branch_name }}"
+          BACKMERGE_BRANCH="${{ steps.backmerge.outputs.backmerge_branch }}"
+          BASE_BRANCH_EXISTS="${{ steps.check_branch.outputs.base_branch_exists }}"
           
           echo "## 🚀 Release Workflow Completed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Version**: \`$VERSION\`" >> $GITHUB_STEP_SUMMARY
           echo "**Type**: $TYPE" >> $GITHUB_STEP_SUMMARY
           echo "**Original Branch**: \`$BRANCH_NAME\` (cleaned up)" >> $GITHUB_STEP_SUMMARY
+          echo "**Back-merge Branch**: \`$BACKMERGE_BRANCH\`" >> $GITHUB_STEP_SUMMARY
           echo "**Merge Commit**: \`${{ github.event.pull_request.merge_commit_sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### ✅ Completed Actions" >> $GITHUB_STEP_SUMMARY
@@ -292,10 +370,22 @@ jobs:
             echo "- 🚀 Triggered deployment workflow" >> $GITHUB_STEP_SUMMARY
           fi
           
-          echo "- 🔄 Created back-merge PR to develop" >> $GITHUB_STEP_SUMMARY
+          if [[ "$BASE_BRANCH_EXISTS" == "true" ]]; then
+            echo "- 🔄 Created back-merge PR to develop (unique branch name due to conflict)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- 🔄 Created back-merge PR to develop" >> $GITHUB_STEP_SUMMARY
+          fi
+          
           echo "- 🧹 Deleted merged branch \`$BRANCH_NAME\`" >> $GITHUB_STEP_SUMMARY
           echo "- 💬 Updated original PR with status" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "$BASE_BRANCH_EXISTS" == "true" ]]; then
+            echo "### ⚠️  Branch Conflict Handled" >> $GITHUB_STEP_SUMMARY
+            echo "A branch conflict was detected and resolved by using a unique branch name with timestamp/random suffix." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+          
           echo "### 🔗 Next Steps" >> $GITHUB_STEP_SUMMARY
           echo "1. 🔍 [Monitor deployment progress](${{ github.server_url }}/${{ github.repository }}/actions)" >> $GITHUB_STEP_SUMMARY
           echo "2. ✅ Review and merge the back-merge PR to develop" >> $GITHUB_STEP_SUMMARY
@@ -372,3 +462,4 @@ jobs:
           \`\`\`
           
           **Status**: ❌ Failed - manual intervention required"
+            
