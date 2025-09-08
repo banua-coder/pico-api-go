@@ -82,23 +82,37 @@ jobs:
           if [ -f "$CONFIG_FILE" ]; then
             echo "📋 Loading version configuration from $CONFIG_FILE"
             
-            # Parse YAML configuration (simple parsing)
-            NEXT_MAJOR=$(grep "next_major:" "$CONFIG_FILE" | awk '{print $2}' || echo "false")
-            MAJOR_TARGET=$(grep "major_version_target:" "$CONFIG_FILE" | awk '{print $2}' | tr -d '"' || echo "")
-            DEFAULT_BUMP=$(grep "default_release_bump:" "$CONFIG_FILE" | awk '{print $2}' | tr -d '"' || echo "minor")
-            AUTO_DETECT=$(grep "auto_detect_breaking:" "$CONFIG_FILE" | awk '{print $2}' || echo "true")
-            REQUIRE_MANUAL=$(grep "require_manual_major:" "$CONFIG_FILE" | awk '{print $2}' || echo "false")
+            # Parse YAML configuration with better error handling
+            NEXT_MAJOR=$(grep "^next_major:" "$CONFIG_FILE" | awk '{print $2}' | head -1 || echo "false")
+            MAJOR_TARGET=$(grep "^major_version_target:" "$CONFIG_FILE" | awk '{print $2}' | tr -d '"' | head -1 || echo "")
+            DEFAULT_BUMP=$(grep -A 10 "^version_rules:" "$CONFIG_FILE" | grep "default_release_bump:" | awk '{print $2}' | tr -d '"' | head -1 || echo "minor")
+            AUTO_DETECT=$(grep -A 10 "^version_rules:" "$CONFIG_FILE" | grep "auto_detect_breaking:" | awk '{print $2}' | head -1 || echo "true")
+            REQUIRE_MANUAL=$(grep -A 10 "^version_rules:" "$CONFIG_FILE" | grep "require_manual_major:" | awk '{print $2}' | head -1 || echo "false")
             
-            echo "next_major=$NEXT_MAJOR" >> $GITHUB_OUTPUT
-            echo "major_target=$MAJOR_TARGET" >> $GITHUB_OUTPUT
-            echo "default_bump=$DEFAULT_BUMP" >> $GITHUB_OUTPUT
-            echo "auto_detect_breaking=$AUTO_DETECT" >> $GITHUB_OUTPUT
-            echo "require_manual_major=$REQUIRE_MANUAL" >> $GITHUB_OUTPUT
+            # Clean up values and set defaults if empty
+            NEXT_MAJOR=$(echo "$NEXT_MAJOR" | tr -d ' \n\r' || echo "false")
+            MAJOR_TARGET=$(echo "$MAJOR_TARGET" | tr -d ' \n\r' || echo "")
+            DEFAULT_BUMP=$(echo "$DEFAULT_BUMP" | tr -d ' \n\r' || echo "minor")
+            AUTO_DETECT=$(echo "$AUTO_DETECT" | tr -d ' \n\r' || echo "true")
+            REQUIRE_MANUAL=$(echo "$REQUIRE_MANUAL" | tr -d ' \n\r' || echo "false")
+            
+            # Ensure values are not empty for GitHub Actions
+            [ -z "$NEXT_MAJOR" ] && NEXT_MAJOR="false"
+            [ -z "$MAJOR_TARGET" ] && MAJOR_TARGET="none"
+            [ -z "$DEFAULT_BUMP" ] && DEFAULT_BUMP="minor"
+            [ -z "$AUTO_DETECT" ] && AUTO_DETECT="true"
+            [ -z "$REQUIRE_MANUAL" ] && REQUIRE_MANUAL="false"
+            
+            echo "next_major=${NEXT_MAJOR}" >> $GITHUB_OUTPUT
+            echo "major_target=${MAJOR_TARGET}" >> $GITHUB_OUTPUT
+            echo "default_bump=${DEFAULT_BUMP}" >> $GITHUB_OUTPUT
+            echo "auto_detect_breaking=${AUTO_DETECT}" >> $GITHUB_OUTPUT
+            echo "require_manual_major=${REQUIRE_MANUAL}" >> $GITHUB_OUTPUT
             echo "config_exists=true" >> $GITHUB_OUTPUT
           else
             echo "⚠️  No version configuration found, using defaults"
             echo "next_major=false" >> $GITHUB_OUTPUT
-            echo "major_target=" >> $GITHUB_OUTPUT
+            echo "major_target=none" >> $GITHUB_OUTPUT
             echo "default_bump=minor" >> $GITHUB_OUTPUT
             echo "auto_detect_breaking=true" >> $GITHUB_OUTPUT
             echo "require_manual_major=false" >> $GITHUB_OUTPUT
@@ -148,7 +162,7 @@ jobs:
 
           # Check configuration for major version planning
           if [ "$NEXT_MAJOR" = "true" ]; then
-            if [ -n "$MAJOR_TARGET" ] && [ "$VERSION" = "$MAJOR_TARGET" ]; then
+            if [ -n "$MAJOR_TARGET" ] && [ "$MAJOR_TARGET" != "none" ] && [ "$VERSION" = "$MAJOR_TARGET" ]; then
               BUMP_TYPE="major"
               echo "🚀 Major version release configured: $MAJOR_TARGET"
             fi
@@ -375,9 +389,19 @@ jobs:
           if [ -f "$CONFIG_FILE" ]; then
             echo "📋 Loading develop version configuration"
             
-            STRATEGY=$(grep -A5 "develop_branch:" "$CONFIG_FILE" | grep "next_version_strategy:" | awk '{print $2}' | tr -d '"' || echo "auto")
-            MANUAL_VERSION=$(grep -A5 "develop_branch:" "$CONFIG_FILE" | grep "manual_next_version:" | awk '{print $2}' | tr -d '"' || echo "")
-            DEV_SUFFIX=$(grep -A5 "develop_branch:" "$CONFIG_FILE" | grep "dev_suffix:" | awk '{print $2}' | tr -d '"' || echo "-dev")
+            STRATEGY=$(grep -A5 "develop_branch:" "$CONFIG_FILE" | grep "next_version_strategy:" | awk '{print $2}' | tr -d '"' | head -1 || echo "auto")
+            MANUAL_VERSION=$(grep -A5 "develop_branch:" "$CONFIG_FILE" | grep "manual_next_version:" | awk '{print $2}' | tr -d '"' | head -1 || echo "")
+            DEV_SUFFIX=$(grep -A5 "develop_branch:" "$CONFIG_FILE" | grep "dev_suffix:" | awk '{print $2}' | tr -d '"' | head -1 || echo "-dev")
+            
+            # Clean up values and set defaults if empty
+            STRATEGY=$(echo "$STRATEGY" | tr -d ' \n\r' || echo "auto")
+            MANUAL_VERSION=$(echo "$MANUAL_VERSION" | tr -d ' \n\r' || echo "")
+            DEV_SUFFIX=$(echo "$DEV_SUFFIX" | tr -d ' \n\r' || echo "-dev")
+            
+            # Ensure values are not empty for GitHub Actions
+            [ -z "$STRATEGY" ] && STRATEGY="auto"
+            [ -z "$MANUAL_VERSION" ] && MANUAL_VERSION="none"
+            [ -z "$DEV_SUFFIX" ] && DEV_SUFFIX="-dev"
             
             echo "strategy=$STRATEGY" >> $GITHUB_OUTPUT
             echo "manual_version=$MANUAL_VERSION" >> $GITHUB_OUTPUT
@@ -386,7 +410,7 @@ jobs:
           else
             echo "⚠️  No version configuration found for develop, using defaults"
             echo "strategy=auto" >> $GITHUB_OUTPUT
-            echo "manual_version=" >> $GITHUB_OUTPUT
+            echo "manual_version=none" >> $GITHUB_OUTPUT
             echo "dev_suffix=-dev" >> $GITHUB_OUTPUT
             echo "config_exists=false" >> $GITHUB_OUTPUT
           fi
@@ -405,7 +429,7 @@ jobs:
             CURRENT_VERSION="v$CURRENT_VERSION"
           fi
 
-          if [ "$STRATEGY" = "manual" ] && [ -n "$MANUAL_VERSION" ]; then
+          if [ "$STRATEGY" = "manual" ] && [ -n "$MANUAL_VERSION" ] && [ "$MANUAL_VERSION" != "none" ]; then
             # Use manually specified version
             NEXT_VERSION="$MANUAL_VERSION"
             if [[ ! $NEXT_VERSION == v* ]]; then
