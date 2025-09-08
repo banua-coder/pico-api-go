@@ -36,9 +36,11 @@ jobs:
           if [[ $BRANCH_NAME == release/* ]]; then
             VERSION=$(echo $BRANCH_NAME | sed 's/release\///')
             TYPE="release"
+            BASE_BRANCH="develop"
           elif [[ $BRANCH_NAME == hotfix/* ]]; then
             VERSION=$(echo $BRANCH_NAME | sed 's/hotfix\///')
             TYPE="hotfix"
+            BASE_BRANCH="main"
           fi
           
           # Ensure version starts with 'v'
@@ -48,6 +50,7 @@ jobs:
           
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "type=$TYPE" >> $GITHUB_OUTPUT
+          echo "base_branch=$BASE_BRANCH" >> $GITHUB_OUTPUT
           echo "clean_version=$(echo $VERSION | sed 's/^v//')" >> $GITHUB_OUTPUT
 
       # STEP 1: CREATE TAG AND TRIGGER DEPLOYMENT
@@ -64,6 +67,28 @@ jobs:
             echo "✅ Tag $VERSION does not exist, will create"
           fi
 
+      - name: Load version configuration
+        id: version_config
+        run: |
+          CONFIG_FILE=".version-config.yml"
+          
+          if [ -f "$CONFIG_FILE" ]; then
+            echo "📋 Loading version configuration from $CONFIG_FILE"
+            
+            # Parse YAML configuration
+            AUTO_DETECT=$(grep "auto_detect_breaking:" "$CONFIG_FILE" | awk '{print $2}' || echo "true")
+            DEFAULT_BUMP=$(grep "default_release_bump:" "$CONFIG_FILE" | awk '{print $2}' | tr -d '"' || echo "minor")
+            
+            echo "auto_detect_breaking=$AUTO_DETECT" >> $GITHUB_OUTPUT
+            echo "default_bump=$DEFAULT_BUMP" >> $GITHUB_OUTPUT
+            echo "config_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️  No version configuration found, using defaults"
+            echo "auto_detect_breaking=true" >> $GITHUB_OUTPUT
+            echo "default_bump=minor" >> $GITHUB_OUTPUT
+            echo "config_exists=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Get previous tag for changelog
         id: previous_tag
         run: |
@@ -71,6 +96,15 @@ jobs:
           PREVIOUS_TAG=$(git tag --sort=-version:refname | head -n1 || echo "")
           echo "previous_tag=$PREVIOUS_TAG" >> $GITHUB_OUTPUT
           echo "Previous tag: $PREVIOUS_TAG"
+          
+          # Determine base commit for changelog
+          if [ -n "$PREVIOUS_TAG" ]; then
+            BASE_COMMIT="$PREVIOUS_TAG"
+          else
+            # If no tags exist, use first commit
+            BASE_COMMIT=$(git rev-list --max-parents=0 HEAD)
+          fi
+          echo "base_commit=$BASE_COMMIT" >> $GITHUB_OUTPUT
 
       - name: Generate tag message and changelog
         id: tag_info
@@ -78,12 +112,14 @@ jobs:
           VERSION="${{ steps.version.outputs.version }}"
           TYPE="${{ steps.version.outputs.type }}"
           PREVIOUS_TAG="${{ steps.previous_tag.outputs.previous_tag }}"
+          BASE_COMMIT="${{ steps.previous_tag.outputs.base_commit }}"
+          AUTO_DETECT="${{ steps.version_config.outputs.auto_detect_breaking }}"
           
           # Create tag message
           TAG_MESSAGE="$TYPE: $VERSION"
           echo "tag_message=$TAG_MESSAGE" >> $GITHUB_OUTPUT
           
-          # Generate changelog for tag annotation
+          # Generate categorized changelog for tag annotation
           CHANGELOG_FILE="tag_changelog.txt"
           
           echo "$TYPE $VERSION" > $CHANGELOG_FILE
@@ -94,18 +130,42 @@ jobs:
           
           if [ -n "$PREVIOUS_TAG" ]; then
             echo "Changes since $PREVIOUS_TAG:" >> $CHANGELOG_FILE
-            echo "" >> $CHANGELOG_FILE
-            
-            # Get commits between previous tag and current merge commit
-            git log --pretty=format:"- %s (%h)" "${PREVIOUS_TAG}..HEAD" | \
-            grep -v "Merge branch\|Merge pull request\|chore.*auto-bump\|chore.*back-merge" | \
-            head -20 >> $CHANGELOG_FILE
           else
-            echo "- Initial release" >> $CHANGELOG_FILE
+            echo "Initial release changes:" >> $CHANGELOG_FILE
+          fi
+          echo "" >> $CHANGELOG_FILE
+          
+          # Categorize changes
+          echo "🚀 Features:" >> $CHANGELOG_FILE
+          git log --pretty=format:"- %s (%h)" "$BASE_COMMIT..HEAD" | \
+          grep -E "^- (feat|feature):" | head -10 >> $CHANGELOG_FILE || echo "- No new features" >> $CHANGELOG_FILE
+          echo "" >> $CHANGELOG_FILE
+          
+          echo "🐛 Bug Fixes:" >> $CHANGELOG_FILE
+          git log --pretty=format:"- %s (%h)" "$BASE_COMMIT..HEAD" | \
+          grep -E "^- (fix|bugfix):" | head -10 >> $CHANGELOG_FILE || echo "- No bug fixes" >> $CHANGELOG_FILE
+          echo "" >> $CHANGELOG_FILE
+          
+          # Check for breaking changes if auto-detection is enabled
+          if [ "$AUTO_DETECT" = "true" ]; then
+            BREAKING_COMMITS=$(git log --pretty=format:"- %s (%h)" "$BASE_COMMIT..HEAD" | \
+                              grep -E "(BREAKING CHANGE|!:|feat!:|fix!:)" || echo "")
+            
+            if [ -n "$BREAKING_COMMITS" ]; then
+              echo "⚠️ Breaking Changes:" >> $CHANGELOG_FILE
+              echo "$BREAKING_COMMITS" | head -5 >> $CHANGELOG_FILE
+            else
+              echo "✅ No Breaking Changes" >> $CHANGELOG_FILE
+            fi
+            echo "" >> $CHANGELOG_FILE
           fi
           
+          echo "🛠️ Other Changes:" >> $CHANGELOG_FILE
+          git log --pretty=format:"- %s (%h)" "$BASE_COMMIT..HEAD" | \
+          grep -vE "^- (feat|feature|fix|bugfix):|Merge branch|Merge pull request|chore.*auto-bump|chore.*back-merge|(BREAKING CHANGE|!:|feat!:|fix!:)" | \
+          head -10 >> $CHANGELOG_FILE || echo "- No other changes" >> $CHANGELOG_FILE
           echo "" >> $CHANGELOG_FILE
-          echo "Deployment will be triggered automatically." >> $CHANGELOG_FILE
+          echo "🚀 Deployment will be triggered automatically." >> $CHANGELOG_FILE
           
           echo "changelog_file=$CHANGELOG_FILE" >> $GITHUB_OUTPUT
 

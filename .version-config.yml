@@ -1,0 +1,70 @@
+# Version Management Configuration
+# This file controls version bumping strategy for the project
+
+# Next Major Version Planning
+next_major: false  # Set to true when planning a major version release
+major_version_target: ""  # Target version like "v3.0.0" when next_major is true
+
+# Breaking Changes Planning  
+breaking_changes:
+  planned: false  # Set to true when breaking changes are being developed
+  target_version: ""  # Version where breaking changes will be introduced
+  description: ""  # Description of planned breaking changes
+
+# Version Bump Rules
+version_rules:
+  # Default bump type for releases (minor|major)
+  default_release_bump: "minor"
+  
+  # Force major version if any of these patterns are found in commits
+  major_indicators:
+    - "BREAKING CHANGE:"
+    - "feat!:"
+    - "fix!:" 
+    - "refactor!:"
+    - "perf!:"
+  
+  # Automatic detection settings
+  auto_detect_breaking: true  # Scan commit messages for breaking change indicators
+  require_manual_major: false  # If true, major versions must be set manually in this file
+
+# Development Branch Behavior
+develop_branch:
+  # Version suffix for development versions
+  dev_suffix: "-dev"
+  
+  # Next version calculation strategy
+  # "auto" - automatically bump minor after release cutoff
+  # "manual" - require manual version setting in this file
+  next_version_strategy: "auto"
+  
+  # If manual strategy, specify next target version
+  manual_next_version: ""
+
+# Release Process Configuration  
+release_process:
+  # Automatically create changelog when release branch is created
+  auto_changelog: true
+  
+  # Include breaking change detection in changelog
+  detect_breaking_changes: true
+  
+  # Require confirmation for major version releases
+  require_major_confirmation: true
+
+# Examples of usage:
+#
+# For planning a major version:
+# next_major: true
+# major_version_target: "v3.0.0"
+#
+# For tracking breaking changes:
+# breaking_changes:
+#   planned: true
+#   target_version: "v3.0.0"
+#   description: "Remove deprecated API endpoints, change authentication method"
+#
+# For manual version control:
+# develop_branch:
+#   next_version_strategy: "manual"
+#   manual_next_version: "v2.5.0"
