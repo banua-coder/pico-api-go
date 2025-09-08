@@ -19,17 +19,17 @@ func TestProvinceCase_Structure(t *testing.T) {
 		Positive:                                 50,
 		Recovered:                                40,
 		Deceased:                                 2,
-		PersonUnderObservation:                   &[]int64{10}[0],
-		FinishedPersonUnderObservation:           &[]int64{8}[0],
-		PersonUnderSupervision:                   &[]int64{5}[0],
-		FinishedPersonUnderSupervision:           &[]int64{3}[0],
+		PersonUnderObservation:                   10,
+		FinishedPersonUnderObservation:           8,
+		PersonUnderSupervision:                   5,
+		FinishedPersonUnderSupervision:           3,
 		CumulativePositive:                       500,
 		CumulativeRecovered:                      400,
 		CumulativeDeceased:                       20,
-		CumulativePersonUnderObservation:         &[]int64{100}[0],
-		CumulativeFinishedPersonUnderObservation: &[]int64{80}[0],
-		CumulativePersonUnderSupervision:         &[]int64{50}[0],
-		CumulativeFinishedPersonUnderSupervision: &[]int64{30}[0],
+		CumulativePersonUnderObservation:         100,
+		CumulativeFinishedPersonUnderObservation: 80,
+		CumulativePersonUnderSupervision:         50,
+		CumulativeFinishedPersonUnderSupervision: 30,
 		Rt:                                       &rt,
 		RtUpper:                                  &rtUpper,
 		RtLower:                                  &rtLower,
@@ -42,10 +42,10 @@ func TestProvinceCase_Structure(t *testing.T) {
 	assert.Equal(t, int64(50), provinceCase.Positive)
 	assert.Equal(t, int64(40), provinceCase.Recovered)
 	assert.Equal(t, int64(2), provinceCase.Deceased)
-	assert.Equal(t, int64(10), *provinceCase.PersonUnderObservation)
-	assert.Equal(t, int64(8), *provinceCase.FinishedPersonUnderObservation)
-	assert.Equal(t, int64(5), *provinceCase.PersonUnderSupervision)
-	assert.Equal(t, int64(3), *provinceCase.FinishedPersonUnderSupervision)
+	assert.Equal(t, int64(10), provinceCase.PersonUnderObservation)
+	assert.Equal(t, int64(8), provinceCase.FinishedPersonUnderObservation)
+	assert.Equal(t, int64(5), provinceCase.PersonUnderSupervision)
+	assert.Equal(t, int64(3), provinceCase.FinishedPersonUnderSupervision)
 	assert.Equal(t, int64(500), provinceCase.CumulativePositive)
 	assert.Equal(t, int64(400), provinceCase.CumulativeRecovered)
 	assert.Equal(t, int64(20), provinceCase.CumulativeDeceased)

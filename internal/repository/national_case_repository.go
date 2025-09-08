@@ -13,10 +13,8 @@ import (
 type NationalCaseRepository interface {
 	GetAll() ([]models.NationalCase, error)
 	GetAllSorted(sortParams utils.SortParams) ([]models.NationalCase, error)
-	GetAllPaginatedSorted(limit, offset int, sortParams utils.SortParams) ([]models.NationalCase, int, error)
 	GetByDateRange(startDate, endDate time.Time) ([]models.NationalCase, error)
 	GetByDateRangeSorted(startDate, endDate time.Time, sortParams utils.SortParams) ([]models.NationalCase, error)
-	GetByDateRangePaginatedSorted(startDate, endDate time.Time, limit, offset int, sortParams utils.SortParams) ([]models.NationalCase, int, error)
 	GetLatest() (*models.NationalCase, error)
 	GetByDay(day int64) (*models.NationalCase, error)
 }
@@ -151,95 +149,4 @@ func (r *nationalCaseRepository) GetByDay(day int64) (*models.NationalCase, erro
 	}
 
 	return &c, nil
-}
-
-func (r *nationalCaseRepository) GetAllPaginatedSorted(limit, offset int, sortParams utils.SortParams) ([]models.NationalCase, int, error) {
-	// First get the total count
-	countQuery := `SELECT COUNT(*) FROM national_cases`
-	var total int
-	err := r.db.QueryRow(countQuery).Scan(&total)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to get total count: %w", err)
-	}
-
-	// Get paginated data
-	query := `SELECT id, day, date, positive, recovered, deceased, 
-			  cumulative_positive, cumulative_recovered, cumulative_deceased,
-			  rt, rt_upper, rt_lower 
-			  FROM national_cases 
-			  ORDER BY ` + sortParams.GetSQLOrderClause() + ` LIMIT ? OFFSET ?`
-
-	rows, err := r.db.Query(query, limit, offset)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to query paginated national cases: %w", err)
-	}
-	defer func() {
-		if err := rows.Close(); err != nil {
-			fmt.Printf("Error closing rows: %v\n", err)
-		}
-	}()
-
-	var cases []models.NationalCase
-	for rows.Next() {
-		var c models.NationalCase
-		err := rows.Scan(&c.ID, &c.Day, &c.Date, &c.Positive, &c.Recovered, &c.Deceased,
-			&c.CumulativePositive, &c.CumulativeRecovered, &c.CumulativeDeceased,
-			&c.Rt, &c.RtUpper, &c.RtLower)
-		if err != nil {
-			return nil, 0, fmt.Errorf("failed to scan national case: %w", err)
-		}
-		cases = append(cases, c)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, 0, fmt.Errorf("row iteration error: %w", err)
-	}
-
-	return cases, total, nil
-}
-
-func (r *nationalCaseRepository) GetByDateRangePaginatedSorted(startDate, endDate time.Time, limit, offset int, sortParams utils.SortParams) ([]models.NationalCase, int, error) {
-	// First get the total count
-	countQuery := `SELECT COUNT(*) FROM national_cases WHERE date BETWEEN ? AND ?`
-	var total int
-	err := r.db.QueryRow(countQuery, startDate, endDate).Scan(&total)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to get total count: %w", err)
-	}
-
-	// Get paginated data
-	query := `SELECT id, day, date, positive, recovered, deceased, 
-			  cumulative_positive, cumulative_recovered, cumulative_deceased,
-			  rt, rt_upper, rt_lower 
-			  FROM national_cases 
-			  WHERE date BETWEEN ? AND ? 
-			  ORDER BY ` + sortParams.GetSQLOrderClause() + ` LIMIT ? OFFSET ?`
-
-	rows, err := r.db.Query(query, startDate, endDate, limit, offset)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to query paginated national cases by date range: %w", err)
-	}
-	defer func() {
-		if err := rows.Close(); err != nil {
-			fmt.Printf("Error closing rows: %v\n", err)
-		}
-	}()
-
-	var cases []models.NationalCase
-	for rows.Next() {
-		var c models.NationalCase
-		err := rows.Scan(&c.ID, &c.Day, &c.Date, &c.Positive, &c.Recovered, &c.Deceased,
-			&c.CumulativePositive, &c.CumulativeRecovered, &c.CumulativeDeceased,
-			&c.Rt, &c.RtUpper, &c.RtLower)
-		if err != nil {
-			return nil, 0, fmt.Errorf("failed to scan national case: %w", err)
-		}
-		cases = append(cases, c)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, 0, fmt.Errorf("row iteration error: %w", err)
-	}
-
-	return cases, total, nil
 }
