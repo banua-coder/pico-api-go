@@ -39,6 +39,27 @@ jobs:
         file ${{ secrets.BINARY_NAME }}
         echo "Binary size: $(du -h ${{ secrets.BINARY_NAME }} | cut -f1)"
 
+    - name: Generate Swagger documentation
+      run: |
+        echo "📚 Generating Swagger documentation..."
+        
+        # Install swag tool
+        go install github.com/swaggo/swag/cmd/swag@latest
+        
+        # Generate documentation including HTML
+        swag init -g cmd/main.go -o ./docs --outputTypes go,json,yaml,html
+        
+        # Verify generated files
+        echo "Generated documentation files:"
+        ls -la docs/
+        
+        # Check if HTML was generated
+        if [ -f "docs/swagger.html" ]; then
+          echo "✅ HTML documentation generated successfully"
+        else
+          echo "⚠️  HTML documentation not found, continuing without it"
+        fi
+
     - name: Setup SSH Agent
       uses: webfactory/ssh-agent@v0.8.0
       with:
@@ -70,6 +91,23 @@ jobs:
         # Upload the binary to a temporary location first
         echo "📤 Uploading binary..."
         scp -P ${{ secrets.DEPLOY_PORT }} ${{ secrets.BINARY_NAME }} ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/tmp/${{ secrets.BINARY_NAME }}-${{ env.VERSION }}
+        
+        # Upload documentation files
+        echo "📚 Uploading documentation..."
+        if [ -f "docs/swagger.html" ]; then
+          scp -P ${{ secrets.DEPLOY_PORT }} docs/swagger.html ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/tmp/swagger-${{ env.VERSION }}.html
+          echo "✅ HTML documentation uploaded"
+        fi
+        
+        if [ -f "docs/swagger.json" ]; then
+          scp -P ${{ secrets.DEPLOY_PORT }} docs/swagger.json ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/tmp/swagger-${{ env.VERSION }}.json
+          echo "✅ JSON documentation uploaded"
+        fi
+        
+        if [ -f "docs/swagger.yaml" ]; then
+          scp -P ${{ secrets.DEPLOY_PORT }} docs/swagger.yaml ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/tmp/swagger-${{ env.VERSION }}.yaml
+          echo "✅ YAML documentation uploaded"
+        fi
         
         # Execute deployment script on remote server
         ssh -p ${{ secrets.DEPLOY_PORT }} ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
@@ -103,6 +141,26 @@ jobs:
           mv "$TEMP_BINARY" "$BINARY_NAME"
           chmod +x "$BINARY_NAME"
           echo "✅ Binary replaced and made executable"
+          
+          echo "📚 Updating documentation..."
+          # Create docs directory if it doesn't exist
+          mkdir -p docs
+          
+          # Move documentation files if they exist
+          if [ -f "/tmp/swagger-${VERSION}.html" ]; then
+            mv "/tmp/swagger-${VERSION}.html" "docs/swagger.html"
+            echo "✅ HTML documentation updated"
+          fi
+          
+          if [ -f "/tmp/swagger-${VERSION}.json" ]; then
+            mv "/tmp/swagger-${VERSION}.json" "docs/swagger.json"  
+            echo "✅ JSON documentation updated"
+          fi
+          
+          if [ -f "/tmp/swagger-${VERSION}.yaml" ]; then
+            mv "/tmp/swagger-${VERSION}.yaml" "docs/swagger.yaml"
+            echo "✅ YAML documentation updated"
+          fi
           
           echo "🚀 Starting application..."
           if [ -f "./start.sh" ]; then
