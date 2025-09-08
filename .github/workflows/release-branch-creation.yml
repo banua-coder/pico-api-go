@@ -256,25 +256,8 @@ jobs:
             echo "changelog_updated=false" >> $GITHUB_OUTPUT
           fi
           
-          # Always create a summary for PR description (separate from main changelog)
-          SUMMARY_FILE="RELEASE_NOTES.md"
-          echo "# Release Notes for $VERSION" > $SUMMARY_FILE
-          echo "" >> $SUMMARY_FILE
-          echo "**Type**: $TYPE ($BUMP_TYPE version)" >> $SUMMARY_FILE
-          echo "**Branch**: ${{ steps.version_info.outputs.branch_name }}" >> $SUMMARY_FILE
-          echo "**Base**: ${{ steps.version_info.outputs.base_branch }}" >> $SUMMARY_FILE
-          echo "**Generated**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $SUMMARY_FILE
-          echo "" >> $SUMMARY_FILE
-          
-          if [[ "$(cat $GITHUB_OUTPUT | grep changelog_updated | cut -d'=' -f2)" == "true" ]]; then
-            echo "✅ Main CHANGELOG.md has been updated with categorized changes." >> $SUMMARY_FILE
-            echo "Please review the changelog entries before merging this PR." >> $SUMMARY_FILE
-          else
-            echo "⚠️ Automatic changelog generation was skipped or failed." >> $SUMMARY_FILE
-            echo "Please manually update CHANGELOG.md before merging this PR." >> $SUMMARY_FILE
-          fi
-          
-          echo "changelog_file=$SUMMARY_FILE" >> $GITHUB_OUTPUT
+          # No separate release notes file needed - CHANGELOG.md is the source of truth
+          echo "changelog_file=CHANGELOG.md" >> $GITHUB_OUTPUT
 
       - name: Update version in source files
         run: |

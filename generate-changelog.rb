@@ -646,14 +646,20 @@ class ChangelogGenerator
     # Clean up text - remove conventional commit prefix if it exists
     text = text.gsub(/^(feat|fix|docs|style|refactor|perf|test|chore|ci|build|hotfix):\s*/i, '')
     
-    # Format: "- description (scope if present) (#PR if present)"
+    # Get commit hash (short form)
+    commit_hash = commit_info.dig(:commit, :hash)
+    short_hash = commit_hash ? commit_hash[0..6] : nil
+    
+    # Format: "- description (scope if present) (hash) (#PR if present)"
     line = "- #{text.capitalize}"
     line += " (#{scope})" if scope && !scope.empty?
+    line += " (#{short_hash})" if short_hash
     line += " (##{pr_number})" if pr_number
     
     # Add breaking change marker
     if commit_info[:breaking]
       line = "- **BREAKING**: #{text.capitalize}"
+      line += " (#{short_hash})" if short_hash
       line += " (##{pr_number})" if pr_number
     end
     
