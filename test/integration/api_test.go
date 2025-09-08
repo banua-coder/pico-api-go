@@ -228,7 +228,7 @@ func TestAPI_GetNationalCases(t *testing.T) {
 		},
 	}
 
-	mockNationalRepo.On("GetAll").Return(expectedCases, nil)
+	mockNationalRepo.On("GetAllSorted", utils.SortParams{Field: "date", Order: "asc"}).Return(expectedCases, nil)
 
 	resp, err := http.Get(server.URL + "/api/v1/national")
 	assert.NoError(t, err)
@@ -259,7 +259,7 @@ func TestAPI_GetNationalCasesWithDateRange(t *testing.T) {
 		{ID: 1, Date: startDate, Positive: 100},
 	}
 
-	mockNationalRepo.On("GetByDateRange", startDate, endDate).Return(expectedCases, nil)
+	mockNationalRepo.On("GetByDateRangeSorted", startDate, endDate, utils.SortParams{Field: "date", Order: "asc"}).Return(expectedCases, nil)
 
 	resp, err := http.Get(server.URL + "/api/v1/national?start_date=2020-03-01&end_date=2020-03-31")
 	assert.NoError(t, err)
@@ -370,7 +370,7 @@ func TestAPI_GetProvinceCases(t *testing.T) {
 		},
 	}
 
-	mockProvinceCaseRepo.On("GetAllPaginated", 50, 0).Return(expectedCases, len(expectedCases), nil)
+	mockProvinceCaseRepo.On("GetAllPaginatedSorted", 50, 0, utils.SortParams{Field: "date", Order: "asc"}).Return(expectedCases, len(expectedCases), nil)
 
 	resp, err := http.Get(server.URL + "/api/v1/provinces/cases")
 	assert.NoError(t, err)
