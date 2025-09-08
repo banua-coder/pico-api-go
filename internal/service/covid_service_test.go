@@ -49,6 +49,16 @@ func (m *MockNationalCaseRepository) GetByDateRangeSorted(startDate, endDate tim
 	return args.Get(0).([]models.NationalCase), args.Error(1)
 }
 
+func (m *MockNationalCaseRepository) GetAllPaginatedSorted(limit, offset int, sortParams utils.SortParams) ([]models.NationalCase, int, error) {
+	args := m.Called(limit, offset, sortParams)
+	return args.Get(0).([]models.NationalCase), args.Int(1), args.Error(2)
+}
+
+func (m *MockNationalCaseRepository) GetByDateRangePaginatedSorted(startDate, endDate time.Time, limit, offset int, sortParams utils.SortParams) ([]models.NationalCase, int, error) {
+	args := m.Called(startDate, endDate, limit, offset, sortParams)
+	return args.Get(0).([]models.NationalCase), args.Int(1), args.Error(2)
+}
+
 type MockProvinceRepository struct {
 	mock.Mock
 }

@@ -54,6 +54,16 @@ func (m *MockNationalCaseRepo) GetByDateRangeSorted(startDate, endDate time.Time
 	return args.Get(0).([]models.NationalCase), args.Error(1)
 }
 
+func (m *MockNationalCaseRepo) GetAllPaginatedSorted(limit, offset int, sortParams utils.SortParams) ([]models.NationalCase, int, error) {
+	args := m.Called(limit, offset, sortParams)
+	return args.Get(0).([]models.NationalCase), args.Int(1), args.Error(2)
+}
+
+func (m *MockNationalCaseRepo) GetByDateRangePaginatedSorted(startDate, endDate time.Time, limit, offset int, sortParams utils.SortParams) ([]models.NationalCase, int, error) {
+	args := m.Called(startDate, endDate, limit, offset, sortParams)
+	return args.Get(0).([]models.NationalCase), args.Int(1), args.Error(2)
+}
+
 type MockProvinceRepo struct {
 	mock.Mock
 }
@@ -229,7 +239,7 @@ func TestAPI_GetNationalCases(t *testing.T) {
 
 	mockNationalRepo.On("GetAllSorted", utils.SortParams{Field: "date", Order: "asc"}).Return(expectedCases, nil)
 
-	resp, err := http.Get(server.URL + "/api/v1/national")
+	resp, err := http.Get(server.URL + "/api/v1/national?all=true")
 	assert.NoError(t, err)
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
@@ -260,7 +270,7 @@ func TestAPI_GetNationalCasesWithDateRange(t *testing.T) {
 
 	mockNationalRepo.On("GetByDateRangeSorted", startDate, endDate, utils.SortParams{Field: "date", Order: "asc"}).Return(expectedCases, nil)
 
-	resp, err := http.Get(server.URL + "/api/v1/national?start_date=2020-03-01&end_date=2020-03-31")
+	resp, err := http.Get(server.URL + "/api/v1/national?start_date=2020-03-01&end_date=2020-03-31&all=true")
 	assert.NoError(t, err)
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
@@ -274,6 +284,51 @@ func TestAPI_GetNationalCasesWithDateRange(t *testing.T) {
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
 	assert.Equal(t, "success", response.Status)
+
+	mockNationalRepo.AssertExpectations(t)
+}
+
+func TestAPI_GetNationalCasesPaginated(t *testing.T) {
+	server, mockNationalRepo, _, _ := setupTestServer()
+	defer server.Close()
+
+	now := time.Now()
+	rt := 1.2
+	expectedCases := []models.NationalCase{
+		{
+			ID:        1,
+			Day:       1,
+			Date:      now,
+			Positive:  100,
+			Recovered: 80,
+			Deceased:  5,
+			Rt:        &rt,
+		},
+	}
+
+	mockNationalRepo.On("GetAllPaginatedSorted", 20, 0, utils.SortParams{Field: "date", Order: "asc"}).Return(expectedCases, 1, nil)
+
+	resp, err := http.Get(server.URL + "/api/v1/national?limit=20")
+	assert.NoError(t, err)
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Logf("Error closing response body: %v", err)
+		}
+	}()
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var response handler.Response
+	err = json.NewDecoder(resp.Body).Decode(&response)
+	assert.NoError(t, err)
+	assert.Equal(t, "success", response.Status)
+	assert.NotNil(t, response.Data)
+
+	// Verify it's a paginated response
+	paginatedData, ok := response.Data.(map[string]interface{})
+	assert.True(t, ok)
+	assert.Contains(t, paginatedData, "data")
+	assert.Contains(t, paginatedData, "pagination")
 
 	mockNationalRepo.AssertExpectations(t)
 }
