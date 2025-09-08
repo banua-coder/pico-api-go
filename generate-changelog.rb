@@ -201,20 +201,20 @@ class ChangelogGenerator
     
     puts "📋 Fetching commits since #{last_tag || 'beginning'}..."
     
-    commit_format = '%H|%s|%b|%an|%ae|%ad'
+    commit_format = '%H|%s|%an|%ae|%ad'
     commits_output = `git log #{range} --pretty=format:"#{commit_format}" --date=iso`
     
     commits = commits_output.split("\n").map do |line|
-      parts = line.split('|', 6)
-      next if parts.length < 6
+      parts = line.split('|', 5)
+      next if parts.length < 5
 
       {
         hash: parts[0],
         subject: parts[1],
-        body: parts[2],
-        author_name: parts[3],
-        author_email: parts[4],
-        date: parts[5]
+        body: '',
+        author_name: parts[2],
+        author_email: parts[3],
+        date: parts[4]
       }
     end.compact
     
