@@ -18,7 +18,7 @@ func TestRateLimit_Disabled(t *testing.T) {
 
 	handler := RateLimit(cfg)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+		_, _ = w.Write([]byte("OK"))
 	}))
 
 	// Make multiple requests - all should pass
@@ -43,7 +43,7 @@ func TestRateLimit_WithinLimits(t *testing.T) {
 
 	handler := RateLimit(cfg)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+		_, _ = w.Write([]byte("OK"))
 	}))
 
 	// Make requests within the limit
@@ -73,7 +73,7 @@ func TestRateLimit_ExceedsLimit(t *testing.T) {
 
 	handler := RateLimit(cfg)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+		_, _ = w.Write([]byte("OK"))
 	}))
 
 	clientIP := "192.168.1.1:12345"
@@ -121,7 +121,7 @@ func TestRateLimit_DifferentClients(t *testing.T) {
 
 	handler := RateLimit(cfg)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+		_, _ = w.Write([]byte("OK"))
 	}))
 
 	// Client 1 makes requests up to limit
@@ -159,7 +159,7 @@ func TestRateLimit_XForwardedFor(t *testing.T) {
 
 	handler := RateLimit(cfg)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+		_, _ = w.Write([]byte("OK"))
 	}))
 
 	// Make requests with X-Forwarded-For header
@@ -193,7 +193,7 @@ func TestRateLimit_XRealIP(t *testing.T) {
 
 	handler := RateLimit(cfg)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+		_, _ = w.Write([]byte("OK"))
 	}))
 
 	// Make requests with X-Real-IP header
@@ -227,7 +227,7 @@ func TestRateLimit_SlidingWindow(t *testing.T) {
 
 	handler := RateLimit(cfg)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+		_, _ = w.Write([]byte("OK"))
 	}))
 
 	clientIP := "192.168.1.1:12345"
