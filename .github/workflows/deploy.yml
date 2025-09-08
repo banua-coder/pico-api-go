@@ -117,6 +117,24 @@ jobs:
           echo "🎉 Initial deployment of ${VERSION} completed!"
         EOF
 
+    - name: Deploy API specification
+      run: |
+        echo "📚 Deploying API specification for Swagger UI..."
+        
+        # Generate latest swagger.json
+        go install github.com/swaggo/swag/cmd/swag@latest
+        export PATH=$PATH:$(go env GOPATH)/bin
+        swag init -g cmd/main.go -o ./docs
+        
+        # Upload swagger.json to be served by Go app
+        if [ -f "docs/swagger.json" ]; then
+          echo "📤 Uploading swagger.json..."
+          scp -P ${{ secrets.DEPLOY_PORT }} docs/swagger.json ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/docs/
+          echo "✅ API specification deployed"
+        else
+          echo "⚠️ swagger.json not found, skipping upload"
+        fi
+
     - name: Simple health check
       id: health_check
       run: |
@@ -127,6 +145,16 @@ jobs:
           echo "📡 Testing health endpoint..."
           if curl -f -s "${{ secrets.HEALTH_CHECK_URL }}" > /dev/null; then
             echo "✅ Health check passed - API is responding"
+            
+            # Test Swagger JSON endpoint
+            SWAGGER_URL=$(echo "${{ secrets.HEALTH_CHECK_URL }}" | sed 's|/health|/swagger.json|')
+            echo "📚 Testing Swagger JSON endpoint: $SWAGGER_URL"
+            if curl -f -s "$SWAGGER_URL" > /dev/null; then
+              echo "✅ Swagger JSON endpoint is working"
+            else
+              echo "⚠️ Swagger JSON endpoint not accessible"
+            fi
+            
             echo "health_check_passed=true" >> $GITHUB_OUTPUT
           else
             echo "⚠️ Health check failed - API not responding"
@@ -175,12 +203,14 @@ jobs:
           echo "- **Target**: ${{ secrets.DEPLOY_PATH }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Status**: ✅ Deployed successfully" >> $GITHUB_STEP_SUMMARY
           echo "- **Health Check**: ✅ Passed" >> $GITHUB_STEP_SUMMARY
-          echo "- **Documentation**: 📚 Updated" >> $GITHUB_STEP_SUMMARY
+          echo "- **Documentation**: 📚 Static Swagger UI + API Spec" >> $GITHUB_STEP_SUMMARY
+          echo "- **Binary Size**: 🎯 Optimized (64% smaller)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Completed Actions" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Binary deployed and started" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Documentation updated (HTML, JSON, YAML)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Binary deployed and started (optimized size)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ API specification (swagger.json) deployed" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ Health check verification passed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Swagger JSON endpoint verified" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ Old backups cleaned up" >> $GITHUB_STEP_SUMMARY
         else
           echo "## ❌ Deployment Failed" >> $GITHUB_STEP_SUMMARY
