@@ -276,6 +276,7 @@ jobs:
         run: |
           echo "📚 Regenerating API documentation..."
           go install github.com/swaggo/swag/cmd/swag@latest
+          export PATH=$PATH:$(go env GOPATH)/bin
           swag init -g cmd/main.go -o ./docs
           echo "✅ Documentation regenerated"
 
@@ -490,6 +491,7 @@ jobs:
 
           # Install swag and regenerate docs
           go install github.com/swaggo/swag/cmd/swag@latest
+          export PATH=$PATH:$(go env GOPATH)/bin
           swag init -g cmd/main.go -o ./docs
           echo "✅ Documentation regenerated"
 
