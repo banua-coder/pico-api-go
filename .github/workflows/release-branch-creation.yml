@@ -216,42 +216,65 @@ jobs:
           BUMP_TYPE="${{ steps.version_type.outputs.bump_type }}"
 
           echo "🚀 Generating changelog for $VERSION using generate-changelog.rb..."
-
+          echo "Current branch: $(git branch --show-current)"
+          echo "Working directory: $(pwd)"
+          
           # Make the script executable
           chmod +x generate-changelog.rb
-
-          # Run changelog generation (force mode since we're in automation)
-          if ruby generate-changelog.rb --force; then
-            echo "✅ Changelog generated successfully using Ruby script"
+          
+          # Debug: Check if we're on the right branch format
+          CURRENT_BRANCH=$(git branch --show-current)
+          if [[ ! "$CURRENT_BRANCH" =~ ^(release|hotfix)/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "⚠️  Branch format issue: '$CURRENT_BRANCH' doesn't match required pattern"
+            echo "Expected: release/v1.2.3 or hotfix/v1.2.3"
+          fi
+          
+          # Run changelog generation with debug output
+          echo "Running: ruby generate-changelog.rb --force"
+          if ruby generate-changelog.rb --force 2>&1; then
+            echo "✅ Changelog generation completed"
             
-            # Create additional summary file for PR description
-            SUMMARY_FILE="RELEASE_SUMMARY.md"
-            echo "# Release Summary for $VERSION" > $SUMMARY_FILE
-            echo "" >> $SUMMARY_FILE
-            echo "**Type**: $TYPE ($BUMP_TYPE version)" >> $SUMMARY_FILE
-            echo "**Branch**: ${{ steps.version_info.outputs.branch_name }}" >> $SUMMARY_FILE
-            echo "**Base**: ${{ steps.version_info.outputs.base_branch }}" >> $SUMMARY_FILE
-            echo "**Generated**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $SUMMARY_FILE
-            echo "" >> $SUMMARY_FILE
-            echo "The main CHANGELOG.md has been updated with categorized changes." >> $SUMMARY_FILE
-            echo "Please review the changelog entries before merging." >> $SUMMARY_FILE
+            # Check if CHANGELOG.md was actually updated
+            if git diff --quiet CHANGELOG.md; then
+              echo "⚠️  CHANGELOG.md was not modified by Ruby script"
+              CHANGELOG_STATUS="false"
+            else
+              echo "✅ CHANGELOG.md was updated"
+              git diff --stat CHANGELOG.md
+              CHANGELOG_STATUS="true"
+            fi
             
-            echo "changelog_file=$SUMMARY_FILE" >> $GITHUB_OUTPUT
-            echo "changelog_updated=true" >> $GITHUB_OUTPUT
+            echo "changelog_updated=$CHANGELOG_STATUS" >> $GITHUB_OUTPUT
           else
-            echo "⚠️  Changelog generation failed, but continuing with version bump"
-            echo "This might be expected for initial releases or if no commits since last tag"
+            RUBY_EXIT_CODE=$?
+            echo "❌ Changelog generation failed with exit code: $RUBY_EXIT_CODE"
+            echo "This might be due to:"
+            echo "- Branch naming format (needs release/vX.Y.Z or hotfix/vX.Y.Z)"
+            echo "- No commits since last tag"
+            echo "- Missing dependencies or Ruby issues"
             
-            # Create basic summary file
-            SUMMARY_FILE="RELEASE_SUMMARY.md"
-            echo "# Release Summary for $VERSION" > $SUMMARY_FILE
-            echo "" >> $SUMMARY_FILE
-            echo "**Note**: Automatic changelog generation was skipped." >> $SUMMARY_FILE
-            echo "Please manually update CHANGELOG.md before release." >> $SUMMARY_FILE
-            
-            echo "changelog_file=$SUMMARY_FILE" >> $GITHUB_OUTPUT
             echo "changelog_updated=false" >> $GITHUB_OUTPUT
           fi
+          
+          # Always create a summary for PR description (separate from main changelog)
+          SUMMARY_FILE="RELEASE_NOTES.md"
+          echo "# Release Notes for $VERSION" > $SUMMARY_FILE
+          echo "" >> $SUMMARY_FILE
+          echo "**Type**: $TYPE ($BUMP_TYPE version)" >> $SUMMARY_FILE
+          echo "**Branch**: ${{ steps.version_info.outputs.branch_name }}" >> $SUMMARY_FILE
+          echo "**Base**: ${{ steps.version_info.outputs.base_branch }}" >> $SUMMARY_FILE
+          echo "**Generated**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $SUMMARY_FILE
+          echo "" >> $SUMMARY_FILE
+          
+          if [[ "$(cat $GITHUB_OUTPUT | grep changelog_updated | cut -d'=' -f2)" == "true" ]]; then
+            echo "✅ Main CHANGELOG.md has been updated with categorized changes." >> $SUMMARY_FILE
+            echo "Please review the changelog entries before merging this PR." >> $SUMMARY_FILE
+          else
+            echo "⚠️ Automatic changelog generation was skipped or failed." >> $SUMMARY_FILE
+            echo "Please manually update CHANGELOG.md before merging this PR." >> $SUMMARY_FILE
+          fi
+          
+          echo "changelog_file=$SUMMARY_FILE" >> $GITHUB_OUTPUT
 
       - name: Update version in source files
         run: |
