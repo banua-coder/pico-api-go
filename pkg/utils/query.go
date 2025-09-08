@@ -150,3 +150,23 @@ func ValidatePaginationParams(limit, offset int) (int, int) {
 
 	return limit, offset
 }
+
+// ParsePaginationParams parses pagination parameters from request
+// Supports both offset-based and page-based pagination
+func ParsePaginationParams(r *http.Request) (limit, offset int) {
+	// Parse limit (records per page)
+	limit = ParseIntQueryParam(r, "limit", 50)
+
+	// Check if page parameter is provided
+	page := ParseIntQueryParam(r, "page", 0)
+	if page > 0 {
+		// Page-based pagination (page starts from 1)
+		offset = (page - 1) * limit
+	} else {
+		// Offset-based pagination (fallback)
+		offset = ParseIntQueryParam(r, "offset", 0)
+	}
+
+	// Validate and adjust parameters
+	return ValidatePaginationParams(limit, offset)
+}

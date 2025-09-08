@@ -70,9 +70,17 @@ func (pc *ProvinceCase) TransformToResponse(date time.Time) ProvinceCaseResponse
 	dailyActive := pc.Positive - pc.Recovered - pc.Deceased
 	cumulativeActive := pc.CumulativePositive - pc.CumulativeRecovered - pc.CumulativeDeceased
 
-	// Calculate active under observation and supervision
-	activePersonUnderObservation := pc.CumulativePersonUnderObservation - pc.CumulativeFinishedPersonUnderObservation
-	activePersonUnderSupervision := pc.CumulativePersonUnderSupervision - pc.CumulativeFinishedPersonUnderSupervision
+	// Helper function to safely get int64 value from pointer
+	safeInt64 := func(ptr *int64) int64 {
+		if ptr == nil {
+			return 0
+		}
+		return *ptr
+	}
+
+	// Calculate active under observation and supervision (with null safety)
+	activePersonUnderObservation := safeInt64(pc.CumulativePersonUnderObservation) - safeInt64(pc.CumulativeFinishedPersonUnderObservation)
+	activePersonUnderSupervision := safeInt64(pc.CumulativePersonUnderSupervision) - safeInt64(pc.CumulativeFinishedPersonUnderSupervision)
 
 	// Build response
 	response := ProvinceCaseResponse{
@@ -84,12 +92,12 @@ func (pc *ProvinceCase) TransformToResponse(date time.Time) ProvinceCaseResponse
 			Deceased:  pc.Deceased,
 			Active:    dailyActive,
 			ODP: DailyObservationData{
-				Active:   pc.PersonUnderObservation - pc.FinishedPersonUnderObservation,
-				Finished: pc.FinishedPersonUnderObservation,
+				Active:   safeInt64(pc.PersonUnderObservation) - safeInt64(pc.FinishedPersonUnderObservation),
+				Finished: safeInt64(pc.FinishedPersonUnderObservation),
 			},
 			PDP: DailySupervisionData{
-				Active:   pc.PersonUnderSupervision - pc.FinishedPersonUnderSupervision,
-				Finished: pc.FinishedPersonUnderSupervision,
+				Active:   safeInt64(pc.PersonUnderSupervision) - safeInt64(pc.FinishedPersonUnderSupervision),
+				Finished: safeInt64(pc.FinishedPersonUnderSupervision),
 			},
 		},
 		Cumulative: ProvinceCumulativeCases{
@@ -99,13 +107,13 @@ func (pc *ProvinceCase) TransformToResponse(date time.Time) ProvinceCaseResponse
 			Active:    cumulativeActive,
 			ODP: ObservationData{
 				Active:   activePersonUnderObservation,
-				Finished: pc.CumulativeFinishedPersonUnderObservation,
-				Total:    pc.CumulativePersonUnderObservation,
+				Finished: safeInt64(pc.CumulativeFinishedPersonUnderObservation),
+				Total:    safeInt64(pc.CumulativePersonUnderObservation),
 			},
 			PDP: SupervisionData{
 				Active:   activePersonUnderSupervision,
-				Finished: pc.CumulativeFinishedPersonUnderSupervision,
-				Total:    pc.CumulativePersonUnderSupervision,
+				Finished: safeInt64(pc.CumulativeFinishedPersonUnderSupervision),
+				Total:    safeInt64(pc.CumulativePersonUnderSupervision),
 			},
 		},
 		Statistics: ProvinceCaseStatistics{
