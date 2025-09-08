@@ -68,13 +68,13 @@ func (r *provinceCaseRepository) GetAllPaginatedSorted(limit, offset int, sortPa
 	// First get total count
 	countQuery := `SELECT COUNT(*) FROM province_cases pc
 				   JOIN national_cases nc ON pc.day = nc.id`
-	
+
 	var total int
 	err := r.db.QueryRow(countQuery).Scan(&total)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count province cases: %w", err)
 	}
-	
+
 	// Get paginated data
 	query := `SELECT pc.id, pc.day, pc.province_id, pc.positive, pc.recovered, pc.deceased,
 			  pc.person_under_observation, pc.finished_person_under_observation,
@@ -88,12 +88,12 @@ func (r *provinceCaseRepository) GetAllPaginatedSorted(limit, offset int, sortPa
 			  LEFT JOIN provinces p ON pc.province_id = p.id
 			  ORDER BY ` + r.buildOrderClause(sortParams) + `
 			  LIMIT ? OFFSET ?`
-	
+
 	cases, err := r.queryProvinceCases(query, limit, offset)
 	if err != nil {
 		return nil, 0, err
 	}
-	
+
 	return cases, total, nil
 }
 
@@ -119,13 +119,13 @@ func (r *provinceCaseRepository) GetByProvinceIDPaginated(provinceID string, lim
 	countQuery := `SELECT COUNT(*) FROM province_cases pc
 				   JOIN national_cases nc ON pc.day = nc.id
 				   WHERE pc.province_id = ?`
-	
+
 	var total int
 	err := r.db.QueryRow(countQuery, provinceID).Scan(&total)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count province cases for province %s: %w", provinceID, err)
 	}
-	
+
 	// Get paginated data
 	query := `SELECT pc.id, pc.day, pc.province_id, pc.positive, pc.recovered, pc.deceased,
 			  pc.person_under_observation, pc.finished_person_under_observation,
@@ -140,12 +140,12 @@ func (r *provinceCaseRepository) GetByProvinceIDPaginated(provinceID string, lim
 			  WHERE pc.province_id = ?
 			  ORDER BY nc.date DESC
 			  LIMIT ? OFFSET ?`
-	
+
 	cases, err := r.queryProvinceCases(query, provinceID, limit, offset)
 	if err != nil {
 		return nil, 0, err
 	}
-	
+
 	return cases, total, nil
 }
 
@@ -171,13 +171,13 @@ func (r *provinceCaseRepository) GetByProvinceIDAndDateRangePaginated(provinceID
 	countQuery := `SELECT COUNT(*) FROM province_cases pc
 				   JOIN national_cases nc ON pc.day = nc.id
 				   WHERE pc.province_id = ? AND nc.date BETWEEN ? AND ?`
-	
+
 	var total int
 	err := r.db.QueryRow(countQuery, provinceID, startDate, endDate).Scan(&total)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count province cases for province %s in date range: %w", provinceID, err)
 	}
-	
+
 	// Get paginated data
 	query := `SELECT pc.id, pc.day, pc.province_id, pc.positive, pc.recovered, pc.deceased,
 			  pc.person_under_observation, pc.finished_person_under_observation,
@@ -192,12 +192,12 @@ func (r *provinceCaseRepository) GetByProvinceIDAndDateRangePaginated(provinceID
 			  WHERE pc.province_id = ? AND nc.date BETWEEN ? AND ?
 			  ORDER BY nc.date DESC
 			  LIMIT ? OFFSET ?`
-	
+
 	cases, err := r.queryProvinceCases(query, provinceID, startDate, endDate, limit, offset)
 	if err != nil {
 		return nil, 0, err
 	}
-	
+
 	return cases, total, nil
 }
 
@@ -223,13 +223,13 @@ func (r *provinceCaseRepository) GetByDateRangePaginated(startDate, endDate time
 	countQuery := `SELECT COUNT(*) FROM province_cases pc
 				   JOIN national_cases nc ON pc.day = nc.id
 				   WHERE nc.date BETWEEN ? AND ?`
-	
+
 	var total int
 	err := r.db.QueryRow(countQuery, startDate, endDate).Scan(&total)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count province cases in date range: %w", err)
 	}
-	
+
 	// Get paginated data
 	query := `SELECT pc.id, pc.day, pc.province_id, pc.positive, pc.recovered, pc.deceased,
 			  pc.person_under_observation, pc.finished_person_under_observation,
@@ -244,12 +244,12 @@ func (r *provinceCaseRepository) GetByDateRangePaginated(startDate, endDate time
 			  WHERE nc.date BETWEEN ? AND ?
 			  ORDER BY nc.date DESC, p.name
 			  LIMIT ? OFFSET ?`
-	
+
 	cases, err := r.queryProvinceCases(query, startDate, endDate, limit, offset)
 	if err != nil {
 		return nil, 0, err
 	}
-	
+
 	return cases, total, nil
 }
 
@@ -338,22 +338,22 @@ func (r *provinceCaseRepository) buildOrderClause(sortParams utils.SortParams) s
 		"created_at":    "pc.created_at",
 		"updated_at":    "pc.updated_at",
 	}
-	
+
 	dbField, exists := fieldMapping[sortParams.Field]
 	if !exists {
 		dbField = "nc.date" // fallback to date
 	}
-	
+
 	order := "ASC"
 	if sortParams.Order == "desc" {
 		order = "DESC"
 	}
-	
+
 	// Add secondary sort for consistency
 	if sortParams.Field != "province_name" {
 		return dbField + " " + order + ", p.name ASC"
 	}
-	
+
 	return dbField + " " + order
 }
 

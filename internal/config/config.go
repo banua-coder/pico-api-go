@@ -10,8 +10,9 @@ import (
 )
 
 type Config struct {
-	Database DatabaseConfig
-	Server   ServerConfig
+	Database  DatabaseConfig
+	Server    ServerConfig
+	RateLimit RateLimitConfig
 }
 
 type DatabaseConfig struct {
@@ -29,6 +30,13 @@ type DatabaseConfig struct {
 type ServerConfig struct {
 	Port int
 	Host string
+}
+
+type RateLimitConfig struct {
+	Enabled           bool
+	RequestsPerMinute int
+	BurstSize         int
+	WindowSize        time.Duration
 }
 
 func Load() *Config {
@@ -51,6 +59,12 @@ func Load() *Config {
 		Server: ServerConfig{
 			Port: getEnvAsInt("SERVER_PORT", 8080),
 			Host: getEnv("SERVER_HOST", "localhost"),
+		},
+		RateLimit: RateLimitConfig{
+			Enabled:           getEnvAsBool("RATE_LIMIT_ENABLED", true),
+			RequestsPerMinute: getEnvAsInt("RATE_LIMIT_REQUESTS_PER_MINUTE", 100),
+			BurstSize:         getEnvAsInt("RATE_LIMIT_BURST_SIZE", 20),
+			WindowSize:        getEnvAsDuration("RATE_LIMIT_WINDOW_SIZE", 1*time.Minute),
 		},
 	}
 }
@@ -75,6 +89,15 @@ func getEnvAsDuration(key string, defaultValue time.Duration) time.Duration {
 	if value := os.Getenv(key); value != "" {
 		if duration, err := time.ParseDuration(value); err == nil {
 			return duration
+		}
+	}
+	return defaultValue
+}
+
+func getEnvAsBool(key string, defaultValue bool) bool {
+	if value := os.Getenv(key); value != "" {
+		if boolValue, err := strconv.ParseBool(value); err == nil {
+			return boolValue
 		}
 	}
 	return defaultValue

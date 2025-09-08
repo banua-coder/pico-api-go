@@ -167,9 +167,9 @@ func setupMockService() (*MockNationalCaseRepository, *MockProvinceRepository, *
 	mockNationalRepo := new(MockNationalCaseRepository)
 	mockProvinceRepo := new(MockProvinceRepository)
 	mockProvinceCaseRepo := new(MockProvinceCaseRepository)
-	
+
 	service := NewCovidService(mockNationalRepo, mockProvinceRepo, mockProvinceCaseRepo)
-	
+
 	return mockNationalRepo, mockProvinceRepo, mockProvinceCaseRepo, service
 }
 

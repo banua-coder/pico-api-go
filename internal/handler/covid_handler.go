@@ -35,12 +35,17 @@ func NewCovidHandler(covidService service.CovidService, db *database.DB) *CovidH
 //	@Param			sort		query		string	false	"Sort by field:order (e.g., date:desc, positive:asc). Default: date:asc"
 //	@Success		200			{object}	Response{data=[]models.NationalCaseResponse}
 //	@Failure		400			{object}	Response
+//	@Failure		429			{object}	Response	"Rate limit exceeded"
 //	@Failure		500			{object}	Response
+//	@Header			200			{string}	X-RateLimit-Limit		"Request limit per window"
+//	@Header			200			{string}	X-RateLimit-Remaining	"Requests remaining in current window"
+//	@Header			429			{string}	X-RateLimit-Reset		"Unix timestamp when rate limit resets"
+//	@Header			429			{string}	Retry-After				"Seconds to wait before retrying"
 //	@Router			/national [get]
 func (h *CovidHandler) GetNationalCases(w http.ResponseWriter, r *http.Request) {
 	startDate := r.URL.Query().Get("start_date")
 	endDate := r.URL.Query().Get("end_date")
-	
+
 	// Parse sort parameters (default: date ascending)
 	sortParams := utils.ParseSortParam(r, "date")
 

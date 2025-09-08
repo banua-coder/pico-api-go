@@ -36,7 +36,7 @@ func TestProvinceRepository_GetAll(t *testing.T) {
 	assert.Equal(t, "Sulawesi Tengah", provinces[1].Name)
 	assert.Equal(t, "31", provinces[2].ID)
 	assert.Equal(t, "DKI Jakarta", provinces[2].Name)
-	
+
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -59,7 +59,7 @@ func TestProvinceRepository_GetAll_Empty(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Len(t, provinces, 0)
-	
+
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -87,7 +87,7 @@ func TestProvinceRepository_GetByID(t *testing.T) {
 	assert.NotNil(t, province)
 	assert.Equal(t, provinceID, province.ID)
 	assert.Equal(t, "Aceh", province.Name)
-	
+
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -111,7 +111,7 @@ func TestProvinceRepository_GetByID_NotFound(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Nil(t, province)
-	
+
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -136,6 +136,6 @@ func TestProvinceRepository_GetByID_DatabaseError(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, province)
 	assert.Contains(t, err.Error(), "failed to get province by ID")
-	
+
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

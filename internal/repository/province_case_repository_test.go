@@ -44,7 +44,7 @@ func TestProvinceCaseRepository_GetAll(t *testing.T) {
 	assert.NotNil(t, cases[0].Province)
 	assert.Equal(t, "Aceh", cases[0].Province.Name)
 	assert.Equal(t, &rt, cases[0].Rt)
-	
+
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -81,7 +81,7 @@ func TestProvinceCaseRepository_GetByProvinceID(t *testing.T) {
 	assert.Len(t, cases, 1)
 	assert.Equal(t, provinceID, cases[0].ProvinceID)
 	assert.Nil(t, cases[0].Rt)
-	
+
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -119,7 +119,7 @@ func TestProvinceCaseRepository_GetByProvinceIDAndDateRange(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, cases, 1)
 	assert.Equal(t, provinceID, cases[0].ProvinceID)
-	
+
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -157,7 +157,7 @@ func TestProvinceCaseRepository_GetLatestByProvinceID(t *testing.T) {
 	assert.NotNil(t, provinceCase)
 	assert.Equal(t, provinceID, provinceCase.ProvinceID)
 	assert.Equal(t, &rt, provinceCase.Rt)
-	
+
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -191,6 +191,6 @@ func TestProvinceCaseRepository_GetLatestByProvinceID_NotFound(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Nil(t, provinceCase)
-	
+
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

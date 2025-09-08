@@ -16,7 +16,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-
 type MockNationalCaseRepo struct {
 	mock.Mock
 }
@@ -218,13 +217,13 @@ func TestAPI_GetNationalCases(t *testing.T) {
 	rt := 1.2
 	expectedCases := []models.NationalCase{
 		{
-			ID:       1,
-			Day:      1,
-			Date:     now,
-			Positive: 100,
+			ID:        1,
+			Day:       1,
+			Date:      now,
+			Positive:  100,
 			Recovered: 80,
-			Deceased: 5,
-			Rt:       &rt,
+			Deceased:  5,
+			Rt:        &rt,
 		},
 	}
 
@@ -320,7 +319,7 @@ func TestAPI_GetProvinces(t *testing.T) {
 
 	// Mock the calls needed for GetProvincesWithLatestCase (default behavior)
 	mockProvinceRepo.On("GetAll").Return(expectedProvinces, nil)
-	
+
 	// Mock the latest case data for each province
 	testTime := time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)
 	mockProvinceCaseRepo.On("GetLatestByProvinceID", "11").Return(&models.ProvinceCaseWithDate{
