@@ -199,17 +199,17 @@ info:
     email: support@banuacoder.com
     name: API Support
     url: https://github.com/banua-coder/pico-api-go
-  description: 'A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central
+  description: "A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central
     Sulawesi), with additional national and provincial data for context. Features
     enhanced ODP/PDP grouping, hybrid pagination, and rate limiting protection. Rate
-    limiting: 100 requests per minute per IP address by default, with appropriate
-    HTTP headers for client guidance.'
+    limiting:\t\t2.5.0 requests per minute per IP address by default, with appropriate
+    HTTP headers for client guidance."
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
   termsOfService: http://swagger.io/terms/
   title: Sulawesi Tengah COVID-19 Data API
-  version: 2.4.0
+  version: 2.5.0
 paths:
   /:
     get:

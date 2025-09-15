@@ -5,7 +5,7 @@
     ],
     "swagger": "2.0",
     "info": {
-        "description": "A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central Sulawesi), with additional national and provincial data for context. Features enhanced ODP/PDP grouping, hybrid pagination, and rate limiting protection. Rate limiting: 100 requests per minute per IP address by default, with appropriate HTTP headers for client guidance.",
+        "description": "A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central Sulawesi), with additional national and provincial data for context. Features enhanced ODP/PDP grouping, hybrid pagination, and rate limiting protection. Rate limiting:\t\t2.5.0 requests per minute per IP address by default, with appropriate HTTP headers for client guidance.",
         "title": "Sulawesi Tengah COVID-19 Data API",
         "termsOfService": "http://swagger.io/terms/",
         "contact": {
@@ -17,7 +17,7 @@
             "name": "MIT",
             "url": "https://opensource.org/licenses/MIT"
         },
-        "version": "2.4.0"
+        "version": "2.5.0"
     },
     "host": "pico-api.banuacoder.com",
     "basePath": "/api/v1",
