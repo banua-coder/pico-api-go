@@ -211,4 +211,3 @@ func RateLimit(cfg config.RateLimitConfig) func(http.Handler) http.Handler {
 		})
 	}
 }
-

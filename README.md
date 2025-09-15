@@ -26,24 +26,29 @@ A Go backend service that provides REST API endpoints for COVID-19 data in Sulaw
 ## 📚 API Documentation
 
 ### Interactive Swagger UI
-- **Local development**: http://localhost:8080/swagger/index.html
-- **Production**: https://pico-api.banuacoder.com/swagger/index.html
+
+- **Local development**: <http://localhost:8080/swagger/index.html>
+- **Production**: <https://pico-api.banuacoder.com/swagger/index.html>
 
 ### OpenAPI Specification
+
 - YAML: [`docs/swagger.yaml`](docs/swagger.yaml)
 - JSON: [`docs/swagger.json`](docs/swagger.json)
 
 ## API Endpoints
 
 ### Health Check
+
 - `GET /api/v1/health` - Service health status and database connectivity
 
 ### National Data
+
 - `GET /api/v1/national` - Get all national cases
 - `GET /api/v1/national?start_date=2020-03-01&end_date=2020-12-31` - Get national cases by date range
 - `GET /api/v1/national/latest` - Get latest national case data
 
 ### Province Data
+
 - `GET /api/v1/provinces` - Get all provinces with latest case data (default)
 - `GET /api/v1/provinces?exclude_latest_case=true` - Get basic province list without case data
 - `GET /api/v1/provinces/cases` - Get all province cases (paginated by default)
@@ -55,15 +60,18 @@ A Go backend service that provides REST API endpoints for COVID-19 data in Sulaw
 ### 🆕 Enhanced Query Parameters
 
 **Pagination (All province endpoints):**
+
 - `limit` (int): Records per page (default: 50, max: 1000)
 - `offset` (int): Records to skip (default: 0)
 - `all` (boolean): Return complete dataset without pagination
 
 **Date Filtering:**
+
 - `start_date` (YYYY-MM-DD): Filter from date
 - `end_date` (YYYY-MM-DD): Filter to date
 
 **Province Enhancement:**
+
 - `exclude_latest_case` (boolean): Return basic province list without case data (default includes latest case data)
 
 ### 📄 Response Types
@@ -211,10 +219,39 @@ The API will be available at `http://localhost:8080`
 
 ### Building for Production
 
+For production builds with optimized binary size:
+
 ```bash
-go build -o pico-api-go cmd/main.go
+# Minimal production build (6.1MB) - used by deploy workflow
+# Docs import is already disabled in cmd/main.go for production
+CGO_ENABLED=0 go build -ldflags="-w -s" -o pico-api-go cmd/main.go
+
+# Set production environment (disables Swagger UI routes)
+export ENV=production
 ./pico-api-go
 ```
+
+**Note:** The automated deploy workflow builds this minimal version since Swagger documentation is served from a separate static website.
+
+For development builds with Swagger UI:
+
+```bash
+# Ensure docs import is enabled in cmd/main.go:
+# _ "github.com/banua-coder/pico-api-go/docs"
+
+# Development build (includes Swagger UI)
+go build -o pico-api-go cmd/main.go
+
+# Run in development mode (enables Swagger UI)
+export ENV=development  # or leave unset
+./pico-api-go
+```
+
+**Binary Size Comparison:**
+
+- Development build (with Swagger): ~23MB
+- Production build (optimized, no Swagger): ~6.1MB (73% smaller)
+- Production build (with Swagger, optimized): ~17MB (26% smaller)
 
 ### Regenerating API Documentation
 

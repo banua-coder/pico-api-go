@@ -388,4 +388,3 @@ func BenchmarkRateLimit_Reject(b *testing.B) {
 		}
 	})
 }
-

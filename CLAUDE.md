@@ -9,7 +9,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Development mode
 go run cmd/main.go
 
-# Build for production
+# Build for production (optimized)
+CGO_ENABLED=0 go build -ldflags="-w -s" -o pico-api-go cmd/main.go
+
+# Build for development (includes Swagger)
 go build -o pico-api-go cmd/main.go
 
 # Install dependencies
