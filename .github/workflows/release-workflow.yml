@@ -368,16 +368,14 @@ jobs:
           
           echo "✅ Branch cleanup completed"
 
-      # STEP 4: WAIT FOR DEPLOYMENT
-      - name: Wait for deployment workflow
+      # STEP 4: LOG DEPLOYMENT TRIGGER
+      - name: Log deployment trigger
         if: steps.check_tag.outputs.tag_exists == 'false'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          
-          echo "⏳ Waiting for deployment workflow to start..."
-          sleep 10
-          
-          echo "🚀 Deployment workflow should now be running for tag $VERSION"
+
+          echo "✅ Tag $VERSION created successfully"
+          echo "🚀 Deployment workflow will be automatically triggered by tag creation"
           echo "Monitor progress at: ${{ github.server_url }}/${{ github.repository }}/actions"
 
       # STEP 5: UPDATE ORIGINAL PR WITH STATUS
@@ -419,14 +417,14 @@ jobs:
             - **Deployment**: 🚀 [View Progress](${{ github.server_url }}/${{ github.repository }}/actions)
             
             ## 🔄 Deployment Pipeline
-            The deployment workflow is now running and will:
+            The deployment workflow will be automatically triggered and will:
             1. Build the application
-            2. Deploy to production  
+            2. Deploy to production
             3. Run health checks
             4. Create GitHub release
             
             ## 🎉 Git Flow Complete
-            Your release is now deployed! Monitor the deployment progress and merge the back-merge PR when ready."
+            Your release tag has been created and deployment triggered! Monitor the deployment progress and merge the back-merge PR when ready."
           fi
 
       - name: Comment on original PR about back-merge
@@ -469,10 +467,10 @@ jobs:
           echo "### ✅ Completed Actions" >> $GITHUB_STEP_SUMMARY
           
           if [[ "${{ steps.check_tag.outputs.tag_exists }}" == "true" ]]; then
-            echo "- ⚠️  Tag \`$VERSION\` already existed (no new deployment)" >> $GITHUB_STEP_SUMMARY
+            echo "- ⚠️  Tag \`$VERSION\` already existed (no deployment trigger)" >> $GITHUB_STEP_SUMMARY
           else
             echo "- 🏷️ Created and pushed tag \`$VERSION\`" >> $GITHUB_STEP_SUMMARY
-            echo "- 🚀 Triggered deployment workflow" >> $GITHUB_STEP_SUMMARY
+            echo "- 🚀 Deployment workflow will be triggered automatically by tag" >> $GITHUB_STEP_SUMMARY
           fi
           
           if [[ "$BASE_BRANCH_EXISTS" == "true" ]]; then

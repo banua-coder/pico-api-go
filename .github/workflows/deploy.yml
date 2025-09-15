@@ -269,7 +269,7 @@ jobs:
   create-release:
     runs-on: ubuntu-latest
     needs: build-and-deploy
-    if: needs.build-and-deploy.result == 'success'
+    if: needs.build-and-deploy.result == 'success' && github.event_name == 'push'
     permissions:
       contents: write
     
@@ -282,7 +282,11 @@ jobs:
     - name: Get version and release info
       id: release_info
       run: |
-        VERSION=${GITHUB_REF#refs/tags/}
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.tag }}" ]; then
+          VERSION="${{ github.event.inputs.tag }}"
+        else
+          VERSION=${GITHUB_REF#refs/tags/}
+        fi
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         
         # Check if this is a hotfix or regular release
