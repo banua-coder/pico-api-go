@@ -456,6 +456,139 @@ func TestTransformProvinceCaseSliceToResponse_EmptySlice(t *testing.T) {
 	assert.Empty(t, result)
 }
 
+func TestProvinceCase_TransformToResponseWithoutProvince(t *testing.T) {
+	testDate := time.Date(2023, 10, 15, 0, 0, 0, 0, time.UTC)
+	rt := 1.5
+	rtUpper := 1.8
+	rtLower := 1.2
+
+	provinceCase := ProvinceCase{
+		ID:                                       1,
+		Day:                                      100,
+		ProvinceID:                               "ID-JK",
+		Positive:                                 150,
+		Recovered:                                120,
+		Deceased:                                 10,
+		PersonUnderObservation:                   25,
+		FinishedPersonUnderObservation:           20,
+		PersonUnderSupervision:                   30,
+		FinishedPersonUnderSupervision:           25,
+		CumulativePositive:                       5000,
+		CumulativeRecovered:                      4500,
+		CumulativeDeceased:                       300,
+		CumulativePersonUnderObservation:         800,
+		CumulativeFinishedPersonUnderObservation: 750,
+		CumulativePersonUnderSupervision:         600,
+		CumulativeFinishedPersonUnderSupervision: 580,
+		Rt:                                       &rt,
+		RtUpper:                                  &rtUpper,
+		RtLower:                                  &rtLower,
+		Province: &Province{
+			ID:   "ID-JK",
+			Name: "DKI Jakarta",
+		},
+	}
+
+	result := provinceCase.TransformToResponseWithoutProvince(testDate)
+
+	expectedResult := ProvinceCaseResponse{
+		Day:  100,
+		Date: testDate,
+		Daily: ProvinceDailyCases{
+			Positive:  150,
+			Recovered: 120,
+			Deceased:  10,
+			Active:    20, // 150 - 120 - 10
+			ODP: DailyObservationData{
+				Active:   5, // 25 - 20
+				Finished: 20,
+			},
+			PDP: DailySupervisionData{
+				Active:   5, // 30 - 25
+				Finished: 25,
+			},
+		},
+		Cumulative: ProvinceCumulativeCases{
+			Positive:  5000,
+			Recovered: 4500,
+			Deceased:  300,
+			Active:    200, // 5000 - 4500 - 300
+			ODP: ObservationData{
+				Active:   50, // 800 - 750
+				Finished: 750,
+				Total:    800,
+			},
+			PDP: SupervisionData{
+				Active:   20, // 600 - 580
+				Finished: 580,
+				Total:    600,
+			},
+		},
+		Statistics: ProvinceCaseStatistics{
+			Percentages: CasePercentages{
+				Active:    4.0,  // (200 / 5000) * 100
+				Recovered: 90.0, // (4500 / 5000) * 100
+				Deceased:  6.0,  // (300 / 5000) * 100
+			},
+			ReproductionRate: &ReproductionRate{
+				Value:      &[]float64{1.5}[0],
+				UpperBound: &[]float64{1.8}[0],
+				LowerBound: &[]float64{1.2}[0],
+			},
+		},
+		// Province should be nil in this case
+		Province: nil,
+	}
+
+	assert.Equal(t, expectedResult, result)
+	assert.Nil(t, result.Province, "Province should be nil when using TransformToResponseWithoutProvince")
+}
+
+func TestProvinceCaseWithDate_TransformToResponseWithoutProvince(t *testing.T) {
+	testDate := time.Date(2023, 10, 15, 0, 0, 0, 0, time.UTC)
+	rt := 1.2
+
+	provinceCaseWithDate := ProvinceCaseWithDate{
+		ProvinceCase: ProvinceCase{
+			ID:                                       1,
+			Day:                                      200,
+			ProvinceID:                               "ID-JT",
+			Positive:                                 50,
+			Recovered:                                40,
+			Deceased:                                 2,
+			PersonUnderObservation:                   10,
+			FinishedPersonUnderObservation:           8,
+			PersonUnderSupervision:                   12,
+			FinishedPersonUnderSupervision:           10,
+			CumulativePositive:                       3000,
+			CumulativeRecovered:                      2700,
+			CumulativeDeceased:                       200,
+			CumulativePersonUnderObservation:         500,
+			CumulativeFinishedPersonUnderObservation: 450,
+			CumulativePersonUnderSupervision:         350,
+			CumulativeFinishedPersonUnderSupervision: 320,
+			Rt:                                       &rt,
+			RtUpper:                                  nil,
+			RtLower:                                  nil,
+			Province: &Province{
+				ID:   "ID-JT",
+				Name: "Jawa Tengah",
+			},
+		},
+		Date: testDate,
+	}
+
+	result := provinceCaseWithDate.TransformToResponseWithoutProvince()
+
+	assert.Equal(t, int64(200), result.Day)
+	assert.Equal(t, testDate, result.Date)
+	assert.Equal(t, int64(50), result.Daily.Positive)
+	assert.Equal(t, int64(8), result.Daily.Active) // 50 - 40 - 2
+	assert.Equal(t, int64(3000), result.Cumulative.Positive)
+	assert.Equal(t, int64(100), result.Cumulative.Active) // 3000 - 2700 - 200
+	assert.Nil(t, result.Province, "Province should be nil when using TransformToResponseWithoutProvince")
+}
+
 func TestProvinceCaseResponse_JSONStructure(t *testing.T) {
 	// This test verifies that the JSON structure matches the expected format
 	testDate := time.Date(2023, 10, 15, 0, 0, 0, 0, time.UTC)

@@ -142,8 +142,8 @@ func (s *covidService) GetProvincesWithLatestCase() ([]models.ProvinceWithLatest
 		}
 
 		if latestCase != nil {
-			// Transform to response format
-			caseResponse := latestCase.TransformToResponse()
+			// Transform to response format without province information to avoid redundancy
+			caseResponse := latestCase.TransformToResponseWithoutProvince()
 			result[i].LatestCase = &caseResponse
 		}
 	}
