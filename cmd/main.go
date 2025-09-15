@@ -2,7 +2,7 @@
 //
 //	@title			Sulawesi Tengah COVID-19 Data API
 //	@version		2.4.0
-//	@description	A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central Sulawesi), with additional national and provincial data for context. Features enhanced ODP/PDP grouping, hybrid pagination, and rate limiting protection. Rate limiting:		2.4.0 requests per minute per IP address by default, with appropriate HTTP headers for client guidance.
+//	@description	A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central Sulawesi), with additional national and provincial data for context. Features enhanced ODP/PDP grouping, hybrid pagination, and rate limiting protection. Rate limiting: 100 requests per minute per IP address by default, with appropriate HTTP headers for client guidance.
 //	@termsOfService	http://swagger.io/terms/
 //
 //	@contact.name	API Support
@@ -54,7 +54,7 @@ func main() {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	defer func() {
-		if err := db.Close(); err != nil {
+		if err := db.DB.Close(); err != nil {
 			log.Printf("Error closing database connection: %v", err)
 		}
 	}()
