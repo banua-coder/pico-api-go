@@ -71,6 +71,16 @@ version_files:
     description: "Go module version (major only)"
     when: "major_version_only"
 
+  - path: "internal/handler/covid_handler_test.go"
+    pattern: 'assert\.Equal\(t, "[0-9]+\.[0-9]+\.[0-9]+", [^)]*\["version"\]\)'
+    replacement: 'assert.Equal(t, "{version}", $1["version"])'
+    description: "Test version assertions"
+
+  - path: "internal/handler/covid_handler_test.go"
+    pattern: 'assert\.Equal\(t, "[0-9]+\.[0-9]+\.[0-9]+", data\["version"\]\)'
+    replacement: 'assert.Equal(t, "{version}", data["version"])'
+    description: "Health check test version assertion"
+
 # Examples of usage:
 #
 # For planning a major version:
