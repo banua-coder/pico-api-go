@@ -66,6 +66,17 @@ type ProvinceCaseStatistics struct {
 
 // TransformToResponse converts a ProvinceCase model to the response format
 func (pc *ProvinceCase) TransformToResponse(date time.Time) ProvinceCaseResponse {
+	return pc.transformToResponseWithOptions(date, true)
+}
+
+// TransformToResponseWithoutProvince converts a ProvinceCase model to the response format without province information
+func (pc *ProvinceCase) TransformToResponseWithoutProvince(date time.Time) ProvinceCaseResponse {
+	return pc.transformToResponseWithOptions(date, false)
+}
+
+// transformToResponseWithOptions is a helper method that converts a ProvinceCase model to the response format
+// with the option to include or exclude province information
+func (pc *ProvinceCase) transformToResponseWithOptions(date time.Time, includeProvince bool) ProvinceCaseResponse {
 	// Calculate active cases
 	dailyActive := pc.Positive - pc.Recovered - pc.Deceased
 	cumulativeActive := pc.CumulativePositive - pc.CumulativeRecovered - pc.CumulativeDeceased
@@ -111,7 +122,11 @@ func (pc *ProvinceCase) TransformToResponse(date time.Time) ProvinceCaseResponse
 		Statistics: ProvinceCaseStatistics{
 			Percentages: calculatePercentages(pc.CumulativePositive, pc.CumulativeRecovered, pc.CumulativeDeceased, cumulativeActive),
 		},
-		Province: pc.Province,
+	}
+
+	// Include province information only if requested
+	if includeProvince {
+		response.Province = pc.Province
 	}
 
 	// Always include reproduction rate structure, even when values are null
@@ -127,6 +142,11 @@ func (pc *ProvinceCase) TransformToResponse(date time.Time) ProvinceCaseResponse
 // TransformProvinceCaseWithDateToResponse converts a ProvinceCaseWithDate model to the response format
 func (pcd *ProvinceCaseWithDate) TransformToResponse() ProvinceCaseResponse {
 	return pcd.ProvinceCase.TransformToResponse(pcd.Date)
+}
+
+// TransformToResponseWithoutProvince converts a ProvinceCaseWithDate model to the response format without province information
+func (pcd *ProvinceCaseWithDate) TransformToResponseWithoutProvince() ProvinceCaseResponse {
+	return pcd.ProvinceCase.TransformToResponseWithoutProvince(pcd.Date)
 }
 
 // TransformProvinceCaseSliceToResponse converts a slice of ProvinceCaseWithDate models to response format
