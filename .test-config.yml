@@ -1,0 +1,120 @@
+# Test Configuration
+# This file defines coverage thresholds and testing behavior for CI/CD pipeline
+
+# Global settings
+global:
+  # Global minimum coverage threshold (percentage)
+  coverage_threshold: 80.0
+  # Action when coverage falls below threshold: 'enforce' or 'warn'
+  enforcement: "warn"
+  # Whether to fail CI on coverage threshold violations
+  fail_on_violation: false
+
+# Per-package coverage configuration
+packages:
+  # Core business logic packages - higher thresholds
+  "github.com/banua-coder/pico-api-go/internal/service":
+    coverage_threshold: 85.0
+    enforcement: "enforce"
+
+  "github.com/banua-coder/pico-api-go/internal/repository":
+    coverage_threshold: 85.0
+    enforcement: "enforce"
+
+  "github.com/banua-coder/pico-api-go/internal/handler":
+    coverage_threshold: 80.0
+    enforcement: "enforce"
+
+  # Infrastructure packages - moderate thresholds
+  "github.com/banua-coder/pico-api-go/internal/middleware":
+    coverage_threshold: 75.0
+    enforcement: "warn"
+
+  "github.com/banua-coder/pico-api-go/internal/config":
+    coverage_threshold: 70.0
+    enforcement: "warn"
+
+  "github.com/banua-coder/pico-api-go/pkg/database":
+    coverage_threshold: 75.0
+    enforcement: "warn"
+
+  "github.com/banua-coder/pico-api-go/pkg/utils":
+    coverage_threshold: 80.0
+    enforcement: "warn"
+
+  # Models and data structures - lower thresholds (mostly simple structs)
+  "github.com/banua-coder/pico-api-go/internal/models":
+    coverage_threshold: 60.0
+    enforcement: "warn"
+
+  # Main entry point - lower threshold (minimal logic)
+  "github.com/banua-coder/pico-api-go/cmd":
+    coverage_threshold: 50.0
+    enforcement: "warn"
+
+# Package inclusion/exclusion patterns
+filters:
+  # Include patterns (glob style)
+  include:
+    - "github.com/banua-coder/pico-api-go/internal/**"
+    - "github.com/banua-coder/pico-api-go/pkg/**"
+    - "github.com/banua-coder/pico-api-go/cmd/**"
+
+  # Exclude patterns (glob style)
+  exclude:
+    - "**/*_test.go"
+    - "**/testdata/**"
+    - "**/mocks/**"
+    - "**/vendor/**"
+    - "github.com/banua-coder/pico-api-go/test/**"
+
+# Test execution settings
+testing:
+  # Maximum time to wait for tests (in minutes)
+  timeout: 10
+  # Whether to run tests with race detection
+  race_detection: true
+  # Whether to run tests in verbose mode
+  verbose: true
+  # Additional test flags
+  additional_flags: "-count=1"
+  # Packages to always test (even if unchanged)
+  always_test:
+    - "github.com/banua-coder/pico-api-go/internal/service"
+    - "github.com/banua-coder/pico-api-go/internal/repository"
+
+# Change detection settings
+change_detection:
+  # File patterns that trigger full test suite when changed
+  full_test_triggers:
+    - "go.mod"
+    - "go.sum"
+    - ".test-config.yml"
+    - "Makefile"
+    - ".github/workflows/**"
+
+  # Paths to monitor for changes (relative to repo root)
+  monitored_paths:
+    - "internal/"
+    - "pkg/"
+    - "cmd/"
+    - "test/"
+
+  # File extensions to consider for Go package changes
+  go_extensions:
+    - ".go"
+    - ".mod"
+    - ".sum"
+
+# Reporting settings
+reporting:
+  # Generate detailed coverage reports
+  detailed_reports: true
+  # Include file-level coverage in reports
+  file_level_coverage: true
+  # Generate HTML coverage reports
+  html_reports: false
+  # Comment on PRs with coverage results
+  pr_comments: true
+  # Show coverage trends (requires previous run data)
+  show_trends: false

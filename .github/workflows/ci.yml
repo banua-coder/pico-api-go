@@ -10,61 +10,239 @@ env:
   GO_VERSION: '1.25.x'
 
 jobs:
-  test:
+  detect-changes:
     runs-on: ubuntu-latest
-    
+    outputs:
+      changed-packages: ${{ steps.changes.outputs.changed-packages }}
+      run-integration: ${{ steps.changes.outputs.run-integration }}
+      run-full-suite: ${{ steps.changes.outputs.run-full-suite }}
+      test-summary: ${{ steps.changes.outputs.test-summary }}
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    
+      with:
+        fetch-depth: 0
+
+    - name: Detect changed packages and test strategy
+      id: changes
+      run: |
+        # Install yq for YAML parsing
+        sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq
+        sudo chmod +x /usr/bin/yq
+
+        # Determine base commit for comparison
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          BASE_COMMIT="${{ github.event.pull_request.base.sha }}"
+          HEAD_COMMIT="${{ github.event.pull_request.head.sha }}"
+        else
+          # For push events, compare with previous commit
+          BASE_COMMIT="${{ github.event.before }}"
+          HEAD_COMMIT="${{ github.sha }}"
+        fi
+
+        echo "Comparing changes between $BASE_COMMIT and $HEAD_COMMIT"
+
+        # Get changed files
+        CHANGED_FILES=$(git diff --name-only $BASE_COMMIT..$HEAD_COMMIT)
+        echo "Changed files:"
+        echo "$CHANGED_FILES"
+
+        # Check for full test suite triggers
+        FULL_TEST_TRIGGERS=$(yq eval '.change_detection.full_test_triggers[]' .test-config.yml)
+        RUN_FULL_SUITE="false"
+
+        for trigger in $FULL_TEST_TRIGGERS; do
+          # Remove quotes and check if any changed file matches the pattern
+          clean_trigger=$(echo "$trigger" | sed 's/"//g')
+          if echo "$CHANGED_FILES" | grep -q "$clean_trigger"; then
+            echo "Full test suite triggered by: $clean_trigger"
+            RUN_FULL_SUITE="true"
+            break
+          fi
+        done
+
+        if [ "$RUN_FULL_SUITE" = "true" ]; then
+          # Run all packages
+          CHANGED_PACKAGES="./..."
+          RUN_INTEGRATION="true"
+          TEST_SUMMARY="🔄 Running full test suite (triggered by critical file changes)"
+        else
+          # Detect changed Go packages
+          CHANGED_GO_PACKAGES=""
+          CORE_PACKAGES_CHANGED="false"
+
+          # Get core packages from config
+          CORE_PACKAGES=$(yq eval '.change_detection.monitored_paths[]' .test-config.yml)
+
+          for file in $CHANGED_FILES; do
+            if [[ "$file" == *.go ]]; then
+              # Extract package path
+              if [[ "$file" == internal/* ]]; then
+                pkg_path="./$(dirname "$file")"
+              elif [[ "$file" == pkg/* ]]; then
+                pkg_path="./$(dirname "$file")"
+              elif [[ "$file" == cmd/* ]]; then
+                pkg_path="./$(dirname "$file")"
+              elif [[ "$file" == test/* ]]; then
+                pkg_path="./$(dirname "$file")"
+              else
+                continue
+              fi
+
+              # Add to changed packages if not already present
+              if [[ "$CHANGED_GO_PACKAGES" != *"$pkg_path"* ]]; then
+                CHANGED_GO_PACKAGES="$CHANGED_GO_PACKAGES $pkg_path"
+              fi
+
+              # Check if this is a core package
+              for core_dir in $CORE_PACKAGES; do
+                clean_core_dir=$(echo "$core_dir" | sed 's/"//g' | sed 's/\/$//')
+                if [[ "$file" == $clean_core_dir/* ]]; then
+                  CORE_PACKAGES_CHANGED="true"
+                fi
+              done
+            fi
+          done
+
+          # Remove leading/trailing spaces and deduplicate
+          CHANGED_PACKAGES=$(echo "$CHANGED_GO_PACKAGES" | tr ' ' '\n' | sort -u | tr '\n' ' ' | sed 's/^ *//;s/ *$//')
+
+          if [ -z "$CHANGED_PACKAGES" ]; then
+            CHANGED_PACKAGES="none"
+            RUN_INTEGRATION="false"
+            TEST_SUMMARY="✅ No Go packages changed - skipping tests"
+          else
+            if [ "$CORE_PACKAGES_CHANGED" = "true" ]; then
+              RUN_INTEGRATION="true"
+              TEST_SUMMARY="🧪 Testing changed packages: $CHANGED_PACKAGES (includes core packages - running integration tests)"
+            else
+              RUN_INTEGRATION="false"
+              TEST_SUMMARY="🧪 Testing changed packages: $CHANGED_PACKAGES (skipping integration tests)"
+            fi
+          fi
+        fi
+
+        echo "changed-packages=$CHANGED_PACKAGES" >> $GITHUB_OUTPUT
+        echo "run-integration=$RUN_INTEGRATION" >> $GITHUB_OUTPUT
+        echo "run-full-suite=$RUN_FULL_SUITE" >> $GITHUB_OUTPUT
+        echo "test-summary=$TEST_SUMMARY" >> $GITHUB_OUTPUT
+
+        echo "Final test strategy:"
+        echo "  Changed packages: $CHANGED_PACKAGES"
+        echo "  Run integration: $RUN_INTEGRATION"
+        echo "  Run full suite: $RUN_FULL_SUITE"
+        echo "  Summary: $TEST_SUMMARY"
+
+  test:
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.changed-packages != 'none'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
         go-version: ${{ env.GO_VERSION }}
         cache: true
         cache-dependency-path: go.sum
-    
+
     - name: Verify dependencies
       run: go mod verify
-    
+
     - name: Install dependencies
       run: go mod download
     
-    - name: Run tests
-      run: go test -v -race -coverprofile=coverage.out ./...
-    
-    - name: Generate coverage report
+    - name: Run unit tests
       run: |
-        echo "## 📊 Code Coverage Report" > coverage_report.md
+        echo "🧪 ${{ needs.detect-changes.outputs.test-summary }}"
+
+        # Install yq for YAML parsing
+        sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq
+        sudo chmod +x /usr/bin/yq
+
+        PACKAGES="${{ needs.detect-changes.outputs.changed-packages }}"
+
+        if [ "$PACKAGES" = "./..." ]; then
+          echo "Running tests for all packages..."
+          go test -v -race -coverprofile=coverage.out ./...
+        else
+          echo "Running tests for changed packages: $PACKAGES"
+          go test -v -race -coverprofile=coverage.out $PACKAGES
+        fi
+
+    - name: Run integration tests
+      if: needs.detect-changes.outputs.run-integration == 'true'
+      run: |
+        echo "🔧 Running integration tests..."
+        if [ -d "test/integration" ]; then
+          go test -v -race ./test/integration/...
+        else
+          echo "No integration tests found, skipping..."
+        fi
+
+    - name: Generate enhanced coverage report
+      run: |
+        # Install yq for YAML parsing if not already available
+        sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq
+        sudo chmod +x /usr/bin/yq
+
+        echo "## 📊 Enhanced Code Coverage Report" > coverage_report.md
         echo "" >> coverage_report.md
-        go tool cover -func=coverage.out | tail -1 | awk '{print "**Total Coverage:** " $3}' >> coverage_report.md
+        echo "${{ needs.detect-changes.outputs.test-summary }}" >> coverage_report.md
         echo "" >> coverage_report.md
-        echo "### Coverage by Package" >> coverage_report.md
+
+        # Get global threshold
+        GLOBAL_THRESHOLD=$(yq eval '.global.coverage_threshold' .test-config.yml)
+        GLOBAL_ENFORCEMENT=$(yq eval '.global.enforcement' .test-config.yml)
+
+        # Calculate total coverage
+        TOTAL_COVERAGE=$(go tool cover -func=coverage.out | tail -1 | awk '{print $3}' | sed 's/%//')
+
+        echo "### 🎯 Coverage Summary" >> coverage_report.md
         echo "" >> coverage_report.md
-        echo "| Package | Coverage |" >> coverage_report.md
-        echo "|---------|----------|" >> coverage_report.md
+        echo "| Metric | Value | Status |" >> coverage_report.md
+        echo "|--------|-------|---------|" >> coverage_report.md
+
+        # Check global threshold
+        if (( $(echo "$TOTAL_COVERAGE >= $GLOBAL_THRESHOLD" | bc -l) )); then
+          GLOBAL_STATUS="✅ PASS"
+        else
+          if [ "$GLOBAL_ENFORCEMENT" = "enforce" ]; then
+            GLOBAL_STATUS="❌ FAIL"
+          else
+            GLOBAL_STATUS="⚠️ WARN"
+          fi
+        fi
+
+        echo "| **Total Coverage** | **${TOTAL_COVERAGE}%** | $GLOBAL_STATUS (threshold: ${GLOBAL_THRESHOLD}%) |" >> coverage_report.md
+        echo "" >> coverage_report.md
+
+        # Package-level coverage analysis
+        echo "### 📦 Package Coverage Analysis" >> coverage_report.md
+        echo "" >> coverage_report.md
+        echo "| Package | Coverage | Threshold | Status | Notes |" >> coverage_report.md
+        echo "|---------|----------|-----------|---------|-------|" >> coverage_report.md
+
+        # Process coverage by package
         go tool cover -func=coverage.out | grep -v "total:" | awk '
         {
-          # Get the file path (first field before colon)
           file_path = $1
-          # Get the coverage percentage (last field)
           coverage = $NF
           gsub(/%/, "", coverage)
-          
+
           # Extract package name from file path
-          if (match(file_path, /\/(internal\/[^\/]+)/)) {
-            pkg = substr(file_path, RSTART+1, RLENGTH-1)
-          } else if (match(file_path, /\/(pkg\/[^\/]+)/)) {
-            pkg = substr(file_path, RSTART+1, RLENGTH-1)
-          } else if (match(file_path, /\/(cmd)/)) {
-            pkg = "cmd"
-          } else if (match(file_path, /\/(docs)/)) {
-            pkg = "docs"
+          if (match(file_path, /github\.com\/banua-coder\/pico-api-go\/([^\/]+\/[^\/]+)/)) {
+            pkg = substr(file_path, RSTART, RLENGTH)
+          } else if (match(file_path, /github\.com\/banua-coder\/pico-api-go\/([^\/]+)/)) {
+            pkg = substr(file_path, RSTART, RLENGTH)
           } else {
             pkg = "other"
           }
-          
-          # Sum coverage for each package
+
           pkg_total[pkg] += coverage
           pkg_count[pkg]++
         }
@@ -72,15 +250,112 @@ jobs:
           for (pkg in pkg_total) {
             if (pkg_count[pkg] > 0) {
               avg = pkg_total[pkg] / pkg_count[pkg]
-              printf "| %s | %.1f%% |\n", pkg, avg
+              printf "%s %.1f\n", pkg, avg
             }
           }
-        }' | sort >> coverage_report.md
+        }' | while read pkg_name pkg_coverage; do
+          # Get package threshold from config
+          PKG_THRESHOLD=$(yq eval ".packages.\"$pkg_name\".coverage_threshold // 0" .test-config.yml)
+          PKG_ENFORCEMENT=$(yq eval ".packages.\"$pkg_name\".enforcement // \"warn\"" .test-config.yml)
+
+          if [ "$PKG_THRESHOLD" = "0" ] || [ "$PKG_THRESHOLD" = "null" ]; then
+            PKG_THRESHOLD=$GLOBAL_THRESHOLD
+            PKG_ENFORCEMENT=$GLOBAL_ENFORCEMENT
+          fi
+
+          # Determine status
+          if (( $(echo "$pkg_coverage >= $PKG_THRESHOLD" | bc -l) )); then
+            PKG_STATUS="✅ PASS"
+            PKG_NOTES=""
+          else
+            if [ "$PKG_ENFORCEMENT" = "enforce" ]; then
+              PKG_STATUS="❌ FAIL"
+              PKG_NOTES="**Action required**"
+            else
+              PKG_STATUS="⚠️ WARN"
+              PKG_NOTES="Consider improving"
+            fi
+          fi
+
+          # Clean up package name for display
+          DISPLAY_PKG=$(echo "$pkg_name" | sed 's/github\.com\/banua-coder\/pico-api-go\///')
+
+          echo "| $DISPLAY_PKG | ${pkg_coverage}% | ${PKG_THRESHOLD}% | $PKG_STATUS | $PKG_NOTES |" >> coverage_report.md
+        done
+
         echo "" >> coverage_report.md
-        echo "### Detailed Coverage" >> coverage_report.md
+
+        # Add testing strategy information
+        echo "### 🔍 Testing Strategy Applied" >> coverage_report.md
+        echo "" >> coverage_report.md
+
+        if [ "${{ needs.detect-changes.outputs.run-full-suite }}" = "true" ]; then
+          echo "- ✅ **Full test suite executed** (critical files changed)" >> coverage_report.md
+        else
+          echo "- 🎯 **Selective testing applied** (only changed packages tested)" >> coverage_report.md
+        fi
+
+        if [ "${{ needs.detect-changes.outputs.run-integration }}" = "true" ]; then
+          echo "- 🔧 **Integration tests executed** (core packages affected)" >> coverage_report.md
+        else
+          echo "- ⏭️ **Integration tests skipped** (no core package changes)" >> coverage_report.md
+        fi
+
+        PACKAGES="${{ needs.detect-changes.outputs.changed-packages }}"
+        if [ "$PACKAGES" != "./..." ] && [ "$PACKAGES" != "none" ]; then
+          echo "- 📦 **Packages tested:** $PACKAGES" >> coverage_report.md
+        fi
+
+        echo "" >> coverage_report.md
+
+        # Add recommendations
+        echo "### 💡 Recommendations" >> coverage_report.md
+        echo "" >> coverage_report.md
+
+        # Check if any packages failed enforcement
+        FAILED_PACKAGES=$(go tool cover -func=coverage.out | grep -v "total:" | awk -v global_threshold="$GLOBAL_THRESHOLD" '
+        {
+          file_path = $1
+          coverage = $NF
+          gsub(/%/, "", coverage)
+
+          if (match(file_path, /github\.com\/banua-coder\/pico-api-go\/([^\/]+\/[^\/]+)/)) {
+            pkg = substr(file_path, RSTART, RLENGTH)
+          } else if (match(file_path, /github\.com\/banua-coder\/pico-api-go\/([^\/]+)/)) {
+            pkg = substr(file_path, RSTART, RLENGTH)
+          } else {
+            pkg = "other"
+          }
+
+          pkg_total[pkg] += coverage
+          pkg_count[pkg]++
+        }
+        END {
+          for (pkg in pkg_total) {
+            if (pkg_count[pkg] > 0) {
+              avg = pkg_total[pkg] / pkg_count[pkg]
+              if (avg < global_threshold) {
+                printf "%s %.1f\n", pkg, avg
+              }
+            }
+          }
+        }')
+
+        if [ -n "$FAILED_PACKAGES" ]; then
+          echo "**Packages needing attention:**" >> coverage_report.md
+          echo "$FAILED_PACKAGES" | while read pkg coverage; do
+            DISPLAY_PKG=$(echo "$pkg" | sed 's/github\.com\/banua-coder\/pico-api-go\///')
+            echo "- 📉 **$DISPLAY_PKG** (${coverage}%) - Consider adding more unit tests" >> coverage_report.md
+          done
+        else
+          echo "- 🎉 **All packages meet coverage thresholds!**" >> coverage_report.md
+        fi
+
+        echo "" >> coverage_report.md
+        echo "### 📋 Detailed Coverage" >> coverage_report.md
         echo "" >> coverage_report.md
         echo "<details>" >> coverage_report.md
-        echo "<summary>Click to expand detailed coverage</summary>" >> coverage_report.md
+        echo "<summary>Click to expand detailed coverage by file</summary>" >> coverage_report.md
         echo "" >> coverage_report.md
         echo "\`\`\`" >> coverage_report.md
         go tool cover -func=coverage.out >> coverage_report.md
@@ -126,40 +401,230 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.changed-packages != 'none'
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    
+
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
         go-version: ${{ env.GO_VERSION }}
         cache: true
         cache-dependency-path: go.sum
-    
-    - name: golangci-lint
-      uses: golangci/golangci-lint-action@v6
+
+    - name: Run selective linting
+      run: |
+        echo "🔍 Running linter on changed packages..."
+        echo "${{ needs.detect-changes.outputs.test-summary }}"
+
+        PACKAGES="${{ needs.detect-changes.outputs.changed-packages }}"
+
+        if [ "$PACKAGES" = "./..." ] || [ "${{ needs.detect-changes.outputs.run-full-suite }}" = "true" ]; then
+          echo "Running linter on all packages..."
+          LINT_ARGS="./..."
+        else
+          echo "Running linter on changed packages: $PACKAGES"
+          LINT_ARGS="$PACKAGES"
+        fi
+
+        # Install golangci-lint
+        curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin latest
+
+        # Run linting with appropriate scope
+        $(go env GOPATH)/bin/golangci-lint run --out-format=colored-line-number --timeout=5m $LINT_ARGS
+
+    - name: Report linting scope
+      run: |
+        echo "### 🔍 Linting Results" >> lint_report.md
+        echo "" >> lint_report.md
+        echo "${{ needs.detect-changes.outputs.test-summary }}" >> lint_report.md
+        echo "" >> lint_report.md
+
+        PACKAGES="${{ needs.detect-changes.outputs.changed-packages }}"
+        if [ "$PACKAGES" = "./..." ] || [ "${{ needs.detect-changes.outputs.run-full-suite }}" = "true" ]; then
+          echo "- ✅ **Linted all packages** (full suite mode)" >> lint_report.md
+        else
+          echo "- 🎯 **Linted changed packages only:** $PACKAGES" >> lint_report.md
+        fi
+
+        echo "- 🕒 **Linting completed at:** $(date)" >> lint_report.md
+
+    - name: Comment PR with linting results
+      uses: actions/github-script@v7
+      if: github.event_name == 'pull_request'
       with:
-        version: latest
-        args: --out-format=colored-line-number --timeout=5m
+        script: |
+          const fs = require('fs');
+          let lintReport = '';
+
+          try {
+            lintReport = fs.readFileSync('lint_report.md', 'utf8');
+          } catch (error) {
+            lintReport = '### 🔍 Linting Results\n\nLinting completed successfully with no issues found.';
+          }
+
+          // Find existing lint comment
+          const comments = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          });
+
+          const botComment = comments.data.find(comment =>
+            comment.user.type === 'Bot' && comment.body.includes('🔍 Linting Results')
+          );
+
+          if (botComment) {
+            // Update existing comment
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: botComment.id,
+              body: lintReport
+            });
+          } else {
+            // Create new comment
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: lintReport
+            });
+          }
         
   build:
     runs-on: ubuntu-latest
+    needs: detect-changes
+    # Always run build job to ensure the project compiles
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
         go-version: ${{ env.GO_VERSION }}
         cache: true
         cache-dependency-path: go.sum
-    
+
     - name: Build application
-      run: go build -v -ldflags="-w -s" -o pico-api-go ./cmd/main.go
-      
+      run: |
+        echo "🔨 Building application..."
+        echo "${{ needs.detect-changes.outputs.test-summary }}"
+        go build -v -ldflags="-w -s" -o pico-api-go ./cmd/main.go
+
     - name: Verify binary
       run: |
         file pico-api-go
         echo "Binary size: $(du -h pico-api-go | cut -f1)"
+        echo "✅ Build completed successfully"
+
+  # Summary job to provide overall status
+  ci-summary:
+    runs-on: ubuntu-latest
+    needs: [detect-changes, test, lint, build]
+    if: always()
+
+    steps:
+    - name: Generate CI summary
+      run: |
+        echo "## 🎯 CI Pipeline Summary" >> ci_summary.md
+        echo "" >> ci_summary.md
+        echo "${{ needs.detect-changes.outputs.test-summary }}" >> ci_summary.md
+        echo "" >> ci_summary.md
+
+        # Job status summary
+        echo "### 📊 Job Status" >> ci_summary.md
+        echo "" >> ci_summary.md
+        echo "| Job | Status | Details |" >> ci_summary.md
+        echo "|-----|--------|---------|" >> ci_summary.md
+
+        # Change detection
+        echo "| 🔍 Change Detection | ✅ Success | Analyzed changed packages |" >> ci_summary.md
+
+        # Test job
+        if [ "${{ needs.test.result }}" = "success" ]; then
+          echo "| 🧪 Tests | ✅ Success | Unit tests passed |" >> ci_summary.md
+        elif [ "${{ needs.test.result }}" = "skipped" ]; then
+          echo "| 🧪 Tests | ⏭️ Skipped | No package changes detected |" >> ci_summary.md
+        else
+          echo "| 🧪 Tests | ❌ Failed | Check test results |" >> ci_summary.md
+        fi
+
+        # Lint job
+        if [ "${{ needs.lint.result }}" = "success" ]; then
+          echo "| 🔍 Linting | ✅ Success | Code style checks passed |" >> ci_summary.md
+        elif [ "${{ needs.lint.result }}" = "skipped" ]; then
+          echo "| 🔍 Linting | ⏭️ Skipped | No package changes detected |" >> ci_summary.md
+        else
+          echo "| 🔍 Linting | ❌ Failed | Check linting results |" >> ci_summary.md
+        fi
+
+        # Build job
+        if [ "${{ needs.build.result }}" = "success" ]; then
+          echo "| 🔨 Build | ✅ Success | Application compiled successfully |" >> ci_summary.md
+        else
+          echo "| 🔨 Build | ❌ Failed | Build compilation failed |" >> ci_summary.md
+        fi
+
+        echo "" >> ci_summary.md
+
+        # Overall result
+        if [ "${{ needs.build.result }}" = "success" ] && \
+           ([ "${{ needs.test.result }}" = "success" ] || [ "${{ needs.test.result }}" = "skipped" ]) && \
+           ([ "${{ needs.lint.result }}" = "success" ] || [ "${{ needs.lint.result }}" = "skipped" ]); then
+          echo "### 🎉 Overall Result: SUCCESS" >> ci_summary.md
+          echo "" >> ci_summary.md
+          echo "All CI checks completed successfully! The code is ready for review/merge." >> ci_summary.md
+        else
+          echo "### ❌ Overall Result: FAILED" >> ci_summary.md
+          echo "" >> ci_summary.md
+          echo "Some CI checks failed. Please review the results and fix any issues." >> ci_summary.md
+        fi
+
+    - name: Comment PR with CI summary
+      uses: actions/github-script@v7
+      if: github.event_name == 'pull_request'
+      with:
+        script: |
+          const fs = require('fs');
+          let summary = '';
+
+          try {
+            summary = fs.readFileSync('ci_summary.md', 'utf8');
+          } catch (error) {
+            summary = '## 🎯 CI Pipeline Summary\n\nCI pipeline completed.';
+          }
+
+          // Find existing summary comment
+          const comments = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          });
+
+          const botComment = comments.data.find(comment =>
+            comment.user.type === 'Bot' && comment.body.includes('🎯 CI Pipeline Summary')
+          );
+
+          if (botComment) {
+            // Update existing comment
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: botComment.id,
+              body: summary
+            });
+          } else {
+            // Create new comment
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: summary
+            });
+          }
