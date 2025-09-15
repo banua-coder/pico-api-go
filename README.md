@@ -18,6 +18,10 @@ A Go backend service that provides REST API endpoints for COVID-19 data in Sulaw
 - 📝 Structured logging and error handling
 - 💾 Environment-based configuration
 - 🚀 **Automatic deployment** with GitHub Actions
+- 🧪 **Intelligent CI/CD** with selective testing and coverage thresholds
+- 📊 **Centralized test configuration** with per-package coverage management
+- 🎯 **Git Flow automation** with automated changelog generation
+- 🔧 **Version management** with automated file updates and Swagger regeneration
 
 ## 📚 API Documentation
 
@@ -265,11 +269,73 @@ git flow feature start feature-name
 git flow feature finish feature-name
 ```
 
+### 🧪 Testing & Coverage
+
+The project includes comprehensive testing with intelligent CI/CD:
+
+#### **Running Tests Locally**
+```bash
+# Run all tests
+make test
+
+# Run unit tests only
+make test-unit
+
+# Run integration tests only
+make test-integration
+
+# Run tests with coverage
+make test-coverage
+
+# Run tests with race detection
+make test-race
+```
+
+#### **Test Configuration**
+The project uses `.test-config.yml` for centralized test management:
+
+```yaml
+# Global coverage threshold
+global:
+  coverage_threshold: 80.0
+  enforcement: "warn"          # warn|enforce
+  fail_on_violation: false
+
+# Per-package thresholds
+packages:
+  "internal/service":
+    coverage_threshold: 85.0   # Higher for core logic
+    enforcement: "enforce"
+
+  "internal/models":
+    coverage_threshold: 60.0   # Lower for simple structs
+    enforcement: "warn"
+```
+
+#### **Intelligent CI/CD Features**
+- 🎯 **Selective Testing**: Only tests changed packages in PRs
+- 📊 **Coverage Validation**: Per-package threshold enforcement
+- ⚡ **Performance Optimized**: Faster CI feedback loop
+- 🔄 **Auto-deployment**: Git Flow releases trigger automatic deployment
+- 📝 **Coverage Reports**: Detailed PR comments with recommendations
+
+### 🔧 Version Management
+
+Automated version management with:
+- **Configuration-driven**: `.version-config.yml` defines which files to update
+- **Automatic updates**: Version bumps update multiple files consistently
+- **Swagger regeneration**: API docs reflect version changes automatically
+
+```bash
+# Update version across configured files
+./scripts/update-version.sh "2.1.0"
+```
+
 ### Project Structure
 ```
 ├── cmd/                    # Application entry points
 │   └── main.go            # Main application entry point
-├── docs/                   # Auto-generated API documentation  
+├── docs/                   # Auto-generated API documentation
 │   ├── docs.go            # Generated Go documentation
 │   ├── swagger.json       # OpenAPI specification (JSON)
 │   ├── swagger.yaml       # OpenAPI specification (YAML)
@@ -284,10 +350,16 @@ git flow feature finish feature-name
 ├── pkg/                  # Public packages
 │   ├── database/        # Database connection utilities
 │   └── utils/           # Query parameter parsing utilities
+├── scripts/              # Development and automation scripts
+│   ├── generate-changelog.rb  # Automated changelog generation
+│   └── update-version.sh     # Version management script
 ├── test/                 # Test files
 │   └── integration/     # Integration tests
 ├── .env.example         # Environment configuration template
-├── .github/             # GitHub Actions workflows
+├── .github/             # GitHub Actions workflows and CI/CD
+│   └── workflows/       # CI/CD workflow definitions
+├── .test-config.yml     # Test coverage configuration and thresholds
+├── .version-config.yml  # Version management configuration
 ├── CHANGELOG.md         # Version history and changes
 ├── CLAUDE.md           # AI assistant configuration
 ├── LICENSE             # MIT License
