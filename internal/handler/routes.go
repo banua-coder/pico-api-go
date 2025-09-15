@@ -9,7 +9,7 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-func SetupRoutes(covidService service.CovidService, db *database.DB) *mux.Router {
+func SetupRoutes(covidService service.CovidService, db *database.DB, enableSwagger bool) *mux.Router {
 	router := mux.NewRouter()
 
 	covidHandler := NewCovidHandler(covidService, db)
@@ -28,13 +28,21 @@ func SetupRoutes(covidService service.CovidService, db *database.DB) *mux.Router
 	api.HandleFunc("/provinces/cases", covidHandler.GetProvinceCases).Methods("GET", "OPTIONS")
 	api.HandleFunc("/provinces/{provinceId}/cases", covidHandler.GetProvinceCases).Methods("GET", "OPTIONS")
 
-	// Swagger documentation
-	router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler).Methods("GET")
+	// Conditionally add Swagger documentation based on environment
+	if enableSwagger {
+		// Development: Add Swagger documentation
+		router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler).Methods("GET")
 
-	// Redirect root to swagger docs for convenience
-	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/swagger/index.html", http.StatusFound)
-	}).Methods("GET")
+		// Redirect root to swagger docs for convenience in development
+		router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			http.Redirect(w, r, "/swagger/index.html", http.StatusFound)
+		}).Methods("GET")
+	} else {
+		// Production: Redirect root to API index
+		router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			http.Redirect(w, r, "/api/v1", http.StatusFound)
+		}).Methods("GET")
+	}
 
 	return router
 }
