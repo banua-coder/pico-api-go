@@ -56,7 +56,7 @@ release_process:
 # Specify which files contain version information that should be updated
 version_files:
   - path: "cmd/main.go"
-    pattern: '@version\s+[\d\.]+'
+    pattern: '@version\s+[0-9]+\.[0-9]+\.[0-9]+'
     replacement: '@version\t\t{version}'
     description: "Swagger API version annotation"
 
@@ -70,6 +70,16 @@ version_files:
     replacement: 'module pico-api-go/v{major}'
     description: "Go module version (major only)"
     when: "major_version_only"
+
+  - path: "internal/handler/covid_handler_test.go"
+    pattern: 'assert\.Equal\(t, "[0-9]+\.[0-9]+\.[0-9]+", [^)]*\["version"\]\)'
+    replacement: 'assert.Equal(t, "{version}", $1["version"])'
+    description: "Test version assertions"
+
+  - path: "internal/handler/covid_handler_test.go"
+    pattern: 'assert\.Equal\(t, "[0-9]+\.[0-9]+\.[0-9]+", data\["version"\]\)'
+    replacement: 'assert.Equal(t, "{version}", data["version"])'
+    description: "Health check test version assertion"
 
 # Examples of usage:
 #

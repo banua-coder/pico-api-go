@@ -66,7 +66,7 @@ if [ ! -f "$CONFIG_FILE" ]; then
 
     # Fallback to hardcoded updates if config doesn't exist
     if [ -f "cmd/main.go" ]; then
-        sed -i "s/@version.*/@version\t\t$CLEAN_VERSION/" cmd/main.go
+        sed -i "s/@version\s\+[0-9]\+\.[0-9]\+\.[0-9]\+/@version\t\t$CLEAN_VERSION/" cmd/main.go
         echo "✅ Updated cmd/main.go"
     fi
 

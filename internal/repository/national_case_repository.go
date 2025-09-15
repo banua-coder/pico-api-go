@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/banua-coder/pico-api-go/internal/models"
@@ -48,7 +49,7 @@ func (r *nationalCaseRepository) GetAllSorted(sortParams utils.SortParams) ([]mo
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			fmt.Printf("Error closing rows: %v\n", err)
+			log.Printf("Error closing rows: %v", err)
 		}
 	}()
 
@@ -90,7 +91,7 @@ func (r *nationalCaseRepository) GetByDateRangeSorted(startDate, endDate time.Ti
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			fmt.Printf("Error closing rows: %v\n", err)
+			log.Printf("Error closing rows: %v", err)
 		}
 	}()
 
@@ -135,10 +136,10 @@ func (r *nationalCaseRepository) GetLatest() (*models.NationalCase, error) {
 }
 
 func (r *nationalCaseRepository) GetByDay(day int64) (*models.NationalCase, error) {
-	query := `SELECT id, day, date, positive, recovered, deceased, 
+	query := `SELECT id, day, date, positive, recovered, deceased,
 			  cumulative_positive, cumulative_recovered, cumulative_deceased,
-			  rt, rt_upper, rt_lower 
-			  FROM national_cases 
+			  rt, rt_upper, rt_lower
+			  FROM national_cases
 			  WHERE day = ?`
 
 	var c models.NationalCase
@@ -183,7 +184,7 @@ func (r *nationalCaseRepository) GetAllPaginatedSorted(limit, offset int, sortPa
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			fmt.Printf("Error closing rows: %v\n", err)
+			log.Printf("Error closing rows: %v", err)
 		}
 	}()
 
@@ -235,7 +236,7 @@ func (r *nationalCaseRepository) GetByDateRangePaginatedSorted(startDate, endDat
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			fmt.Printf("Error closing rows: %v\n", err)
+			log.Printf("Error closing rows: %v", err)
 		}
 	}()
 
