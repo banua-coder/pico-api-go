@@ -174,7 +174,7 @@ func setupTestServer() (*httptest.Server, *MockNationalCaseRepo, *MockProvinceRe
 	mockProvinceCaseRepo := new(MockProvinceCaseRepo)
 
 	covidService := service.NewCovidService(mockNationalRepo, mockProvinceRepo, mockProvinceCaseRepo)
-	router := handler.SetupRoutes(covidService, nil)
+	router := handler.SetupRoutes(covidService, nil, true) // Enable Swagger for tests
 
 	router.Use(middleware.Recovery)
 	router.Use(middleware.CORS)
