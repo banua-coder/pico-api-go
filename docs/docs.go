@@ -117,7 +117,7 @@ const docTemplate = `{
         },
         "/national": {
             "get": {
-                "description": "Retrieve national COVID-19 cases data with optional date range filtering, sorting, and pagination",
+                "description": "Retrieve national COVID-19 cases data with optional date range filtering and sorting",
                 "consumes": [
                     "application/json"
                 ],
@@ -129,30 +129,6 @@ const docTemplate = `{
                 ],
                 "summary": "Get national COVID-19 cases",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Records per page (default: 50, max: 1000)",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Records to skip (default: 0)",
-                        "name": "offset",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Page number (1-based, alternative to offset)",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "boolean",
-                        "description": "Return all data without pagination",
-                        "name": "all",
-                        "in": "query"
-                    },
                     {
                         "type": "string",
                         "description": "Start date (YYYY-MM-DD)",
@@ -174,7 +150,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "All data response when all=true",
+                        "description": "OK",
                         "schema": {
                             "allOf": [
                                 {
@@ -361,12 +337,6 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "integer",
-                        "description": "Page number (1-based, alternative to offset)",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
                         "type": "boolean",
                         "description": "Return all data without pagination",
                         "name": "all",
@@ -458,12 +428,6 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "Records to skip (default: 0)",
                         "name": "offset",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Page number (1-based, alternative to offset)",
-                        "name": "page",
                         "in": "query"
                     },
                     {
@@ -856,7 +820,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/api/v1",
 	Schemes:          []string{"https", "http"},
 	Title:            "Sulawesi Tengah COVID-19 Data API",
-	Description:      "A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central Sulawesi), with additional national and provincial data for context. Features enhanced ODP/PDP grouping, hybrid pagination, and rate limiting protection. Rate limiting: 100 requests per minute per IP address by default, with appropriate HTTP headers for client guidance.",
+	Description:      "A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central Sulawesi), with additional national and provincial data for context. Features enhanced ODP/PDP grouping, hybrid pagination, and rate limiting protection. Rate limiting:\t\t2.4.0 requests per minute per IP address by default, with appropriate HTTP headers for client guidance.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
