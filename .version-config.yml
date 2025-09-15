@@ -41,16 +41,35 @@ develop_branch:
   # If manual strategy, specify next target version
   manual_next_version: ""
 
-# Release Process Configuration  
+# Release Process Configuration
 release_process:
   # Automatically create changelog when release branch is created
   auto_changelog: true
-  
+
   # Include breaking change detection in changelog
   detect_breaking_changes: true
-  
+
   # Require confirmation for major version releases
   require_major_confirmation: true
+
+# Version File Management
+# Specify which files contain version information that should be updated
+version_files:
+  - path: "cmd/main.go"
+    pattern: '@version\s+[\d\.]+'
+    replacement: '@version\t\t{version}'
+    description: "Swagger API version annotation"
+
+  - path: "internal/handler/covid_handler.go"
+    pattern: '"version":\s*"[^"]*"'
+    replacement: '"version": "{version}"'
+    description: "Health endpoint version"
+
+  - path: "go.mod"
+    pattern: '^module\s+.*/v\d+'
+    replacement: 'module pico-api-go/v{major}'
+    description: "Go module version (major only)"
+    when: "major_version_only"
 
 # Examples of usage:
 #

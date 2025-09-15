@@ -7,6 +7,9 @@ on:
       - "release/**"
       - "hotfix/**"
 
+env:
+  GO_VERSION: '1.25.x'
+
 jobs:
   release-branch-setup:
     if: github.event_name == 'create' && github.event.ref_type == 'branch' && (startsWith(github.event.ref, 'release/') || startsWith(github.event.ref, 'hotfix/'))
@@ -60,7 +63,7 @@ jobs:
       - name: Setup Go for changelog generation
         uses: actions/setup-go@v4
         with:
-          go-version: '1.21'
+          go-version: ${{ env.GO_VERSION }}
 
       - name: Generate changelog using Go script
         id: changelog
@@ -96,33 +99,13 @@ jobs:
 
           echo "changelog_updated=$CHANGELOG_STATUS" >> $GITHUB_OUTPUT
 
-      - name: Update version in go.mod and other files
+      - name: Update version in project files
         run: |
           VERSION="${{ steps.version_info.outputs.clean_version }}"
-          echo "📝 Updating version to $VERSION in project files..."
+          echo "📝 Updating version to $VERSION using configuration..."
 
-          # Update version in go.mod if needed (for version comments)
-          if [ -f "go.mod" ]; then
-            # Add version comment to go.mod if not already present
-            if ! grep -q "// Version: " go.mod; then
-              sed -i '1 a\// Version: '"$VERSION" go.mod
-            else
-              sed -i 's|// Version: .*|// Version: '"$VERSION"'|' go.mod
-            fi
-            echo "✅ Updated version comment in go.mod"
-          fi
-
-          # Update version.go file if it exists
-          if [ -f "internal/version/version.go" ]; then
-            sed -i 's|const Version = ".*"|const Version = "'"$VERSION"'"|' internal/version/version.go
-            echo "✅ Updated version.go"
-          fi
-
-          # Update Dockerfile if it exists
-          if [ -f "Dockerfile" ]; then
-            sed -i 's|LABEL version=".*"|LABEL version="'"$VERSION"'"|' Dockerfile
-            echo "✅ Updated Dockerfile version label"
-          fi
+          # Use the update-version script to update files based on .version-config.yml
+          ./scripts/update-version.sh "$VERSION"
 
       - name: Create preparation PR branch
         id: pr_branch
