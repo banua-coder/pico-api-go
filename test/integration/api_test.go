@@ -54,6 +54,26 @@ func (m *MockNationalCaseRepo) GetByDateRangeSorted(startDate, endDate time.Time
 	return args.Get(0).([]models.NationalCase), args.Error(1)
 }
 
+func (m *MockNationalCaseRepo) GetAllPaginated(limit, offset int) ([]models.NationalCase, int, error) {
+	args := m.Called(limit, offset)
+	return args.Get(0).([]models.NationalCase), args.Int(1), args.Error(2)
+}
+
+func (m *MockNationalCaseRepo) GetAllPaginatedSorted(limit, offset int, sortParams utils.SortParams) ([]models.NationalCase, int, error) {
+	args := m.Called(limit, offset, sortParams)
+	return args.Get(0).([]models.NationalCase), args.Int(1), args.Error(2)
+}
+
+func (m *MockNationalCaseRepo) GetByDateRangePaginated(startDate, endDate time.Time, limit, offset int) ([]models.NationalCase, int, error) {
+	args := m.Called(startDate, endDate, limit, offset)
+	return args.Get(0).([]models.NationalCase), args.Int(1), args.Error(2)
+}
+
+func (m *MockNationalCaseRepo) GetByDateRangePaginatedSorted(startDate, endDate time.Time, limit, offset int, sortParams utils.SortParams) ([]models.NationalCase, int, error) {
+	args := m.Called(startDate, endDate, limit, offset, sortParams)
+	return args.Get(0).([]models.NationalCase), args.Int(1), args.Error(2)
+}
+
 type MockProvinceRepo struct {
 	mock.Mock
 }
@@ -227,7 +247,7 @@ func TestAPI_GetNationalCases(t *testing.T) {
 		},
 	}
 
-	mockNationalRepo.On("GetAllSorted", utils.SortParams{Field: "date", Order: "asc"}).Return(expectedCases, nil)
+	mockNationalRepo.On("GetAllPaginatedSorted", 50, 0, utils.SortParams{Field: "date", Order: "asc"}).Return(expectedCases, len(expectedCases), nil)
 
 	resp, err := http.Get(server.URL + "/api/v1/national")
 	assert.NoError(t, err)
@@ -258,7 +278,7 @@ func TestAPI_GetNationalCasesWithDateRange(t *testing.T) {
 		{ID: 1, Date: startDate, Positive: 100},
 	}
 
-	mockNationalRepo.On("GetByDateRangeSorted", startDate, endDate, utils.SortParams{Field: "date", Order: "asc"}).Return(expectedCases, nil)
+	mockNationalRepo.On("GetByDateRangePaginatedSorted", startDate, endDate, 50, 0, utils.SortParams{Field: "date", Order: "asc"}).Return(expectedCases, len(expectedCases), nil)
 
 	resp, err := http.Get(server.URL + "/api/v1/national?start_date=2020-03-01&end_date=2020-03-31")
 	assert.NoError(t, err)
