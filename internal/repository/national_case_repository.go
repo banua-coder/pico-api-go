@@ -135,10 +135,10 @@ func (r *nationalCaseRepository) GetLatest() (*models.NationalCase, error) {
 }
 
 func (r *nationalCaseRepository) GetByDay(day int64) (*models.NationalCase, error) {
-	query := `SELECT id, day, date, positive, recovered, deceased, 
+	query := `SELECT id, day, date, positive, recovered, deceased,
 			  cumulative_positive, cumulative_recovered, cumulative_deceased,
-			  rt, rt_upper, rt_lower 
-			  FROM national_cases 
+			  rt, rt_upper, rt_lower
+			  FROM national_cases
 			  WHERE day = ?`
 
 	var c models.NationalCase

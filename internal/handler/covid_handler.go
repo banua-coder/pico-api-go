@@ -206,12 +206,18 @@ func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) 
 	// Parse query parameters
 	limit := utils.ParseIntQueryParam(r, "limit", 50)
 	offset := utils.ParseIntQueryParam(r, "offset", 0)
+	page := utils.ParseIntQueryParam(r, "page", 0)
 	all := utils.ParseBoolQueryParam(r, "all")
 	startDate := r.URL.Query().Get("start_date")
 	endDate := r.URL.Query().Get("end_date")
 
 	// Parse sort parameters (default: date ascending)
 	sortParams := utils.ParseSortParam(r, "date")
+
+	// Convert page to offset if page is specified (page-based pagination)
+	if page > 0 {
+		offset = (page - 1) * limit
+	}
 
 	// Validate pagination params
 	limit, offset = utils.ValidatePaginationParams(limit, offset)
@@ -342,7 +348,7 @@ func (h *CovidHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	health := map[string]interface{}{
 		"status":    "healthy",
 		"service":   "COVID-19 API",
-		"version":   "2.5.0",
+		"version":   "2.4.0",
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
 	}
 
@@ -399,7 +405,7 @@ func (h *CovidHandler) GetAPIIndex(w http.ResponseWriter, r *http.Request) {
 	endpoints := map[string]interface{}{
 		"api": map[string]interface{}{
 			"title":       "Sulawesi Tengah COVID-19 Data API",
-			"version":     "2.5.0",
+			"version":     "2.4.0",
 			"description": "A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central Sulawesi)",
 		},
 		"documentation": map[string]interface{}{
