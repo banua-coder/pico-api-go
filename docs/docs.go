@@ -117,7 +117,7 @@ const docTemplate = `{
         },
         "/national": {
             "get": {
-                "description": "Retrieve national COVID-19 cases data with optional date range filtering and sorting",
+                "description": "Retrieve national COVID-19 cases data with optional date range filtering and sorting. Note: This endpoint does not support pagination and returns all data.",
                 "consumes": [
                     "application/json"
                 ],
@@ -337,6 +337,12 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "integer",
+                        "description": "Page number (1-based, alternative to offset)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
                         "type": "boolean",
                         "description": "Return all data without pagination",
                         "name": "all",
@@ -428,6 +434,12 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "Records to skip (default: 0)",
                         "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number (1-based, alternative to offset)",
+                        "name": "page",
                         "in": "query"
                     },
                     {

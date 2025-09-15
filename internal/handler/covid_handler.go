@@ -26,7 +26,7 @@ func NewCovidHandler(covidService service.CovidService, db *database.DB) *CovidH
 // GetNationalCases godoc
 //
 //	@Summary		Get national COVID-19 cases
-//	@Description	Retrieve national COVID-19 cases data with optional date range filtering and sorting
+//	@Description	Retrieve national COVID-19 cases data with optional date range filtering and sorting. Note: This endpoint does not support pagination and returns all data.
 //	@Tags			national
 //	@Accept			json
 //	@Produce		json
@@ -145,6 +145,7 @@ func (h *CovidHandler) GetProvinces(w http.ResponseWriter, r *http.Request) {
 //	@Param			provinceId	path		string	false	"Province ID (e.g., '31' for Jakarta)"
 //	@Param			limit		query		integer	false	"Records per page (default: 50, max: 1000)"
 //	@Param			offset		query		integer	false	"Records to skip (default: 0)"
+//	@Param			page		query		integer	false	"Page number (1-based, alternative to offset)"
 //	@Param			all			query		boolean	false	"Return all data without pagination"
 //	@Param			start_date	query		string	false	"Start date (YYYY-MM-DD)"
 //	@Param			end_date	query		string	false	"End date (YYYY-MM-DD)"
@@ -162,12 +163,18 @@ func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) 
 	// Parse query parameters
 	limit := utils.ParseIntQueryParam(r, "limit", 50)
 	offset := utils.ParseIntQueryParam(r, "offset", 0)
+	page := utils.ParseIntQueryParam(r, "page", 0)
 	all := utils.ParseBoolQueryParam(r, "all")
 	startDate := r.URL.Query().Get("start_date")
 	endDate := r.URL.Query().Get("end_date")
 
 	// Parse sort parameters (default: date ascending)
 	sortParams := utils.ParseSortParam(r, "date")
+
+	// Convert page to offset if page is specified (page-based pagination)
+	if page > 0 {
+		offset = (page - 1) * limit
+	}
 
 	// Validate pagination params
 	limit, offset = utils.ValidatePaginationParams(limit, offset)
