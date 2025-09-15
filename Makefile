@@ -1,8 +1,14 @@
-.PHONY: build run test test-unit test-integration clean help
+.PHONY: build build-production run test test-unit test-integration clean help
 
-# Build the application
+# Build the application (development with Swagger)
 build:
 	go build -o bin/pico-api-go cmd/main.go
+
+# Build optimized production binary (no Swagger, smaller size)
+build-production:
+	mkdir -p bin
+	go build -tags=production -ldflags="-s -w" -o bin/pico-api-go-production cmd/main_production.go
+	@ls -lh bin/pico-api-go-production
 
 # Run the application
 run:
@@ -66,7 +72,8 @@ security:
 
 help:
 	@echo "Available commands:"
-	@echo "  build            - Build the application"
+	@echo "  build            - Build the application (development with Swagger)"
+	@echo "  build-production - Build optimized production binary (no Swagger, smaller size)"
 	@echo "  run              - Run the application"
 	@echo "  test             - Run all tests"
 	@echo "  test-unit        - Run unit tests only"

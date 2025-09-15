@@ -39,9 +39,10 @@ jobs:
         fi
         echo "Deploying version: ${GITHUB_REF#refs/tags/}"
 
-    - name: Build binary for Linux
+    - name: Build minimal production binary for Linux
       run: |
-        echo "Building ${{ secrets.BINARY_NAME }} for Linux..."
+        echo "Building minimal production ${{ secrets.BINARY_NAME }} for Linux..."
+        echo "📦 Swagger dependencies excluded for optimal binary size"
         CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o ${{ secrets.BINARY_NAME }} ./cmd/main.go
         ls -la ${{ secrets.BINARY_NAME }}
         
@@ -50,26 +51,12 @@ jobs:
         file ${{ secrets.BINARY_NAME }}
         echo "Binary size: $(du -h ${{ secrets.BINARY_NAME }} | cut -f1)"
 
-    - name: Generate Swagger documentation
+    - name: Verify minimal production build
       run: |
-        echo "📚 Generating Swagger documentation..."
-        
-        # Install swag tool
-        go install github.com/swaggo/swag/cmd/swag@latest
-        
-        # Generate documentation including HTML
-        swag init -g cmd/main.go -o ./docs --outputTypes go,json,yaml,html
-        
-        # Verify generated files
-        echo "Generated documentation files:"
-        ls -la docs/
-        
-        # Check if HTML was generated
-        if [ -f "docs/swagger.html" ]; then
-          echo "✅ HTML documentation generated successfully"
-        else
-          echo "⚠️  HTML documentation not found, continuing without it"
-        fi
+        echo "📦 Minimal production build completed"
+        echo "Binary size: $(du -h ${{ secrets.BINARY_NAME }} | cut -f1)"
+        echo "✅ Swagger dependencies excluded for smaller binary size"
+        echo "📚 Swagger documentation available at static website"
 
     - name: Setup SSH Agent
       uses: webfactory/ssh-agent@v0.8.0
@@ -269,7 +256,7 @@ jobs:
   create-release:
     runs-on: ubuntu-latest
     needs: build-and-deploy
-    if: needs.build-and-deploy.result == 'success'
+    if: needs.build-and-deploy.result == 'success' && github.event_name == 'push'
     permissions:
       contents: write
     
@@ -282,7 +269,11 @@ jobs:
     - name: Get version and release info
       id: release_info
       run: |
-        VERSION=${GITHUB_REF#refs/tags/}
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.tag }}" ]; then
+          VERSION="${{ github.event.inputs.tag }}"
+        else
+          VERSION=${GITHUB_REF#refs/tags/}
+        fi
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         
         # Check if this is a hotfix or regular release

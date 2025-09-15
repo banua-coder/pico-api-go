@@ -34,14 +34,16 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
-	_ "github.com/banua-coder/pico-api-go/docs" // Import generated docs
 	"github.com/banua-coder/pico-api-go/internal/config"
 	"github.com/banua-coder/pico-api-go/internal/handler"
 	"github.com/banua-coder/pico-api-go/internal/middleware"
 	"github.com/banua-coder/pico-api-go/internal/repository"
 	"github.com/banua-coder/pico-api-go/internal/service"
 	"github.com/banua-coder/pico-api-go/pkg/database"
+	// Import docs for Swagger (disabled for production deployment)
+	// _ "github.com/banua-coder/pico-api-go/docs"
 )
 
 func main() {
@@ -52,7 +54,7 @@ func main() {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	defer func() {
-		if err := db.Close(); err != nil {
+		if err := db.DB.Close(); err != nil {
 			log.Printf("Error closing database connection: %v", err)
 		}
 	}()
@@ -65,7 +67,9 @@ func main() {
 
 	covidService := service.NewCovidService(nationalCaseRepo, provinceRepo, provinceCaseRepo)
 
-	router := handler.SetupRoutes(covidService, db)
+	// Check if we should enable Swagger (disabled in production)
+	enableSwagger := os.Getenv("ENV") != "production"
+	router := handler.SetupRoutes(covidService, db, enableSwagger)
 
 	router.Use(middleware.Recovery)
 	router.Use(middleware.Logging)

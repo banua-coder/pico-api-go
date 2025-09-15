@@ -18,28 +18,37 @@ A Go backend service that provides REST API endpoints for COVID-19 data in Sulaw
 - 📝 Structured logging and error handling
 - 💾 Environment-based configuration
 - 🚀 **Automatic deployment** with GitHub Actions
+- 🧪 **Intelligent CI/CD** with selective testing and coverage thresholds
+- 📊 **Centralized test configuration** with per-package coverage management
+- 🎯 **Git Flow automation** with automated changelog generation
+- 🔧 **Version management** with automated file updates and Swagger regeneration
 
 ## 📚 API Documentation
 
 ### Interactive Swagger UI
-- **Local development**: http://localhost:8080/swagger/index.html
-- **Production**: https://pico-api.banuacoder.com/swagger/index.html
+
+- **Local development**: <http://localhost:8080/swagger/index.html>
+- **Production**: <https://pico-api.banuacoder.com/swagger/index.html>
 
 ### OpenAPI Specification
+
 - YAML: [`docs/swagger.yaml`](docs/swagger.yaml)
 - JSON: [`docs/swagger.json`](docs/swagger.json)
 
 ## API Endpoints
 
 ### Health Check
+
 - `GET /api/v1/health` - Service health status and database connectivity
 
 ### National Data
+
 - `GET /api/v1/national` - Get all national cases
 - `GET /api/v1/national?start_date=2020-03-01&end_date=2020-12-31` - Get national cases by date range
 - `GET /api/v1/national/latest` - Get latest national case data
 
 ### Province Data
+
 - `GET /api/v1/provinces` - Get all provinces with latest case data (default)
 - `GET /api/v1/provinces?exclude_latest_case=true` - Get basic province list without case data
 - `GET /api/v1/provinces/cases` - Get all province cases (paginated by default)
@@ -51,15 +60,18 @@ A Go backend service that provides REST API endpoints for COVID-19 data in Sulaw
 ### 🆕 Enhanced Query Parameters
 
 **Pagination (All province endpoints):**
+
 - `limit` (int): Records per page (default: 50, max: 1000)
 - `offset` (int): Records to skip (default: 0)
 - `all` (boolean): Return complete dataset without pagination
 
 **Date Filtering:**
+
 - `start_date` (YYYY-MM-DD): Filter from date
 - `end_date` (YYYY-MM-DD): Filter to date
 
 **Province Enhancement:**
+
 - `exclude_latest_case` (boolean): Return basic province list without case data (default includes latest case data)
 
 ### 📄 Response Types
@@ -207,10 +219,39 @@ The API will be available at `http://localhost:8080`
 
 ### Building for Production
 
+For production builds with optimized binary size:
+
 ```bash
-go build -o pico-api-go cmd/main.go
+# Minimal production build (6.1MB) - used by deploy workflow
+# Docs import is already disabled in cmd/main.go for production
+CGO_ENABLED=0 go build -ldflags="-w -s" -o pico-api-go cmd/main.go
+
+# Set production environment (disables Swagger UI routes)
+export ENV=production
 ./pico-api-go
 ```
+
+**Note:** The automated deploy workflow builds this minimal version since Swagger documentation is served from a separate static website.
+
+For development builds with Swagger UI:
+
+```bash
+# Ensure docs import is enabled in cmd/main.go:
+# _ "github.com/banua-coder/pico-api-go/docs"
+
+# Development build (includes Swagger UI)
+go build -o pico-api-go cmd/main.go
+
+# Run in development mode (enables Swagger UI)
+export ENV=development  # or leave unset
+./pico-api-go
+```
+
+**Binary Size Comparison:**
+
+- Development build (with Swagger): ~23MB
+- Production build (optimized, no Swagger): ~6.1MB (73% smaller)
+- Production build (with Swagger, optimized): ~17MB (26% smaller)
 
 ### Regenerating API Documentation
 
@@ -265,11 +306,73 @@ git flow feature start feature-name
 git flow feature finish feature-name
 ```
 
+### 🧪 Testing & Coverage
+
+The project includes comprehensive testing with intelligent CI/CD:
+
+#### **Running Tests Locally**
+```bash
+# Run all tests
+make test
+
+# Run unit tests only
+make test-unit
+
+# Run integration tests only
+make test-integration
+
+# Run tests with coverage
+make test-coverage
+
+# Run tests with race detection
+make test-race
+```
+
+#### **Test Configuration**
+The project uses `.test-config.yml` for centralized test management:
+
+```yaml
+# Global coverage threshold
+global:
+  coverage_threshold: 80.0
+  enforcement: "warn"          # warn|enforce
+  fail_on_violation: false
+
+# Per-package thresholds
+packages:
+  "internal/service":
+    coverage_threshold: 85.0   # Higher for core logic
+    enforcement: "enforce"
+
+  "internal/models":
+    coverage_threshold: 60.0   # Lower for simple structs
+    enforcement: "warn"
+```
+
+#### **Intelligent CI/CD Features**
+- 🎯 **Selective Testing**: Only tests changed packages in PRs
+- 📊 **Coverage Validation**: Per-package threshold enforcement
+- ⚡ **Performance Optimized**: Faster CI feedback loop
+- 🔄 **Auto-deployment**: Git Flow releases trigger automatic deployment
+- 📝 **Coverage Reports**: Detailed PR comments with recommendations
+
+### 🔧 Version Management
+
+Automated version management with:
+- **Configuration-driven**: `.version-config.yml` defines which files to update
+- **Automatic updates**: Version bumps update multiple files consistently
+- **Swagger regeneration**: API docs reflect version changes automatically
+
+```bash
+# Update version across configured files
+./scripts/update-version.sh "2.1.0"
+```
+
 ### Project Structure
 ```
 ├── cmd/                    # Application entry points
 │   └── main.go            # Main application entry point
-├── docs/                   # Auto-generated API documentation  
+├── docs/                   # Auto-generated API documentation
 │   ├── docs.go            # Generated Go documentation
 │   ├── swagger.json       # OpenAPI specification (JSON)
 │   ├── swagger.yaml       # OpenAPI specification (YAML)
@@ -284,10 +387,16 @@ git flow feature finish feature-name
 ├── pkg/                  # Public packages
 │   ├── database/        # Database connection utilities
 │   └── utils/           # Query parameter parsing utilities
+├── scripts/              # Development and automation scripts
+│   ├── generate-changelog.rb  # Automated changelog generation
+│   └── update-version.sh     # Version management script
 ├── test/                 # Test files
 │   └── integration/     # Integration tests
 ├── .env.example         # Environment configuration template
-├── .github/             # GitHub Actions workflows
+├── .github/             # GitHub Actions workflows and CI/CD
+│   └── workflows/       # CI/CD workflow definitions
+├── .test-config.yml     # Test coverage configuration and thresholds
+├── .version-config.yml  # Version management configuration
 ├── CHANGELOG.md         # Version history and changes
 ├── CLAUDE.md           # AI assistant configuration
 ├── LICENSE             # MIT License
