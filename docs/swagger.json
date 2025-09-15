@@ -17,7 +17,7 @@
             "name": "MIT",
             "url": "https://opensource.org/licenses/MIT"
         },
-        "version": "2.5.0"
+        "version": "2.4.0"
     },
     "host": "pico-api.banuacoder.com",
     "basePath": "/api/v1",
@@ -115,7 +115,7 @@
         },
         "/national": {
             "get": {
-                "description": "Retrieve national COVID-19 cases data with optional date range filtering, sorting, and pagination support. Returns all data by default, or paginated results when pagination parameters are provided.",
+                "description": "Retrieve national COVID-19 cases data with optional date range filtering, sorting, and pagination",
                 "consumes": [
                     "application/json"
                 ],
@@ -127,24 +127,6 @@
                 ],
                 "summary": "Get national COVID-19 cases",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Start date (YYYY-MM-DD)",
-                        "name": "start_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "End date (YYYY-MM-DD)",
-                        "name": "end_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Sort by field:order (e.g., date:desc, positive:asc). Default: date:asc",
-                        "name": "sort",
-                        "in": "query"
-                    },
                     {
                         "type": "integer",
                         "description": "Records per page (default: 50, max: 1000)",
@@ -162,15 +144,39 @@
                         "description": "Page number (1-based, alternative to offset)",
                         "name": "page",
                         "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Return all data without pagination",
+                        "name": "all",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start date (YYYY-MM-DD)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date (YYYY-MM-DD)",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort by field:order (e.g., date:desc, positive:asc). Default: date:asc",
+                        "name": "sort",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Paginated data (when pagination parameters provided)",
+                        "description": "All data response when all=true",
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/models.PaginatedResponse"
+                                    "$ref": "#/definitions/handler.Response"
                                 },
                                 {
                                     "type": "object",

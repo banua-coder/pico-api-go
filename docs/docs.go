@@ -117,7 +117,7 @@ const docTemplate = `{
         },
         "/national": {
             "get": {
-                "description": "Retrieve national COVID-19 cases data with optional date range filtering, sorting, and pagination support. Returns all data by default, or paginated results when pagination parameters are provided.",
+                "description": "Retrieve national COVID-19 cases data with optional date range filtering, sorting, and pagination",
                 "consumes": [
                     "application/json"
                 ],
@@ -129,24 +129,6 @@ const docTemplate = `{
                 ],
                 "summary": "Get national COVID-19 cases",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Start date (YYYY-MM-DD)",
-                        "name": "start_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "End date (YYYY-MM-DD)",
-                        "name": "end_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Sort by field:order (e.g., date:desc, positive:asc). Default: date:asc",
-                        "name": "sort",
-                        "in": "query"
-                    },
                     {
                         "type": "integer",
                         "description": "Records per page (default: 50, max: 1000)",
@@ -164,15 +146,39 @@ const docTemplate = `{
                         "description": "Page number (1-based, alternative to offset)",
                         "name": "page",
                         "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Return all data without pagination",
+                        "name": "all",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start date (YYYY-MM-DD)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date (YYYY-MM-DD)",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort by field:order (e.g., date:desc, positive:asc). Default: date:asc",
+                        "name": "sort",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Paginated data (when pagination parameters provided)",
+                        "description": "All data response when all=true",
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/models.PaginatedResponse"
+                                    "$ref": "#/definitions/handler.Response"
                                 },
                                 {
                                     "type": "object",
@@ -845,7 +851,7 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "2.5.0",
+	Version:          "2.4.0",
 	Host:             "pico-api.banuacoder.com",
 	BasePath:         "/api/v1",
 	Schemes:          []string{"https", "http"},
