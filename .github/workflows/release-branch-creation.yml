@@ -65,23 +65,21 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
-      - name: Generate changelog using Go script
+      - name: Generate changelog using Ruby script
         id: changelog
         run: |
           VERSION="${{ steps.version_info.outputs.version }}"
           echo "🚀 Generating changelog for $VERSION..."
 
-          # Make the script executable if it exists
-          if [ -f "scripts/generate-changelog.go" ]; then
-            chmod +x scripts/generate-changelog.go
-
+          # Check if Ruby script exists
+          if [ -f "scripts/generate-changelog.rb" ]; then
             # Run changelog generation
-            if go run scripts/generate-changelog.go --version "$VERSION" --force 2>&1; then
+            if ruby scripts/generate-changelog.rb --version "$VERSION" --force 2>&1; then
               echo "✅ Changelog generation completed"
 
               # Check if CHANGELOG.md was actually updated
               if git diff --quiet CHANGELOG.md; then
-                echo "⚠️  CHANGELOG.md was not modified by Go script"
+                echo "⚠️  CHANGELOG.md was not modified by Ruby script"
                 CHANGELOG_STATUS="false"
               else
                 echo "✅ CHANGELOG.md was updated"
@@ -106,6 +104,20 @@ jobs:
 
           # Use the update-version script to update files based on .version-config.yml
           ./scripts/update-version.sh "$VERSION"
+
+      - name: Regenerate Swagger documentation
+        run: |
+          echo "📚 Regenerating Swagger documentation after version update..."
+
+          # Install swag tool
+          go install github.com/swaggo/swag/cmd/swag@latest
+
+          # Generate documentation
+          swag init -g cmd/main.go -o ./docs --outputTypes go,json,yaml
+
+          # Verify generated files
+          echo "✅ Updated Swagger documentation files:"
+          ls -la docs/
 
       - name: Create preparation PR branch
         id: pr_branch
