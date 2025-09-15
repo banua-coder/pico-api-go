@@ -50,6 +50,11 @@ pico-api-go
 # MD
 TABLE_STRUCTURE.md
 
+# Coverage and testing files
+coverage.out
+coverage.html
+coverage_report.md
+
 # Deployment files (keep locally but not in git)
 deploy.sh
 deploy/
@@ -64,3 +69,6 @@ pico-api-go-linux
 .env.production
 .env.alternative
 port-80-fix.mdDEPLOYMENT.md
+
+# Reusable tools directory
+/tools/

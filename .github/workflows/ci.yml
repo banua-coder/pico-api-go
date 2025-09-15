@@ -6,32 +6,26 @@ on:
   pull_request:
     branches: [ main, develop ]
 
+env:
+  GO_VERSION: '1.25.x'
+
 jobs:
   test:
     runs-on: ubuntu-latest
     
-    strategy:
-      matrix:
-        go-version: [1.23.x]
-    
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
     
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
-        go-version: ${{ matrix.go-version }}
+        go-version: ${{ env.GO_VERSION }}
+        cache: true
+        cache-dependency-path: go.sum
     
-    - name: Cache Go modules
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.cache/go-build
-          ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-${{ matrix.go-version }}-
-          ${{ runner.os }}-go-
+    - name: Verify dependencies
+      run: go mod verify
     
     - name: Install dependencies
       run: go mod download
@@ -129,22 +123,43 @@ jobs:
               body: coverage
             });
           }
-        
-    - name: Build
-      run: go build -v ./cmd/main.go
 
   lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
     
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
-        go-version: 1.23.x
+        go-version: ${{ env.GO_VERSION }}
+        cache: true
+        cache-dependency-path: go.sum
     
     - name: golangci-lint
       uses: golangci/golangci-lint-action@v6
       with:
         version: latest
-        args: --out-format=colored-line-number
+        args: --out-format=colored-line-number --timeout=5m
+        
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ env.GO_VERSION }}
+        cache: true
+        cache-dependency-path: go.sum
+    
+    - name: Build application
+      run: go build -v -ldflags="-w -s" -o pico-api-go ./cmd/main.go
+      
+    - name: Verify binary
+      run: |
+        file pico-api-go
+        echo "Binary size: $(du -h pico-api-go | cut -f1)"

@@ -71,57 +71,66 @@ jobs:
           echo "⚠️  HTML documentation not found, continuing without it"
         fi
 
-    - name: Setup SSH Agent
-      uses: webfactory/ssh-agent@v0.8.0
-      with:
-        ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
-        log-public-key: false
-
-    - name: Debug SSH configuration
+    - name: Setup SSH for deployment
+      id: ssh_setup
       run: |
-        echo "SSH Agent PID: $SSH_AGENT_PID"
-        echo "SSH Auth Sock: $SSH_AUTH_SOCK"
-        ssh-add -l || echo "No keys loaded in agent"
-    
-    - name: Add server to known hosts
-      run: |
+        echo "🔐 Setting up SSH connection..."
+        
+        # Create SSH directory
         mkdir -p ~/.ssh
+        chmod 700 ~/.ssh
+        
+        # Write SSH key
+        echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+        chmod 600 ~/.ssh/deploy_key
+        
+        # Add to known hosts
         echo "Adding ${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PORT }} to known hosts..."
         ssh-keyscan -H -p ${{ secrets.DEPLOY_PORT }} ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
-        echo "Known hosts file created"
-
-    - name: Test SSH connection
-      run: |
-        echo "Testing SSH connection to ${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PORT }}..."
-        ssh -p ${{ secrets.DEPLOY_PORT }} -o ConnectTimeout=10 -o BatchMode=yes ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} 'echo "SSH connection successful"'
+        
+        # Test connection
+        echo "Testing SSH connection..."
+        if ssh -i ~/.ssh/deploy_key -p ${{ secrets.DEPLOY_PORT }} -o ConnectTimeout=10 -o BatchMode=yes ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} 'echo "SSH connection successful"'; then
+          echo "✅ SSH connection verified"
+          echo "ssh_ready=true" >> $GITHUB_OUTPUT
+        else
+          echo "❌ SSH connection failed"
+          echo "ssh_ready=false" >> $GITHUB_OUTPUT
+          exit 1
+        fi
 
     - name: Deploy to production server
+      if: steps.ssh_setup.outputs.ssh_ready == 'true'
       run: |
         echo "🚀 Starting deployment of ${{ env.VERSION }} to production..."
         
+        # Use consistent SSH options
+        SSH_OPTS="-i ~/.ssh/deploy_key -p ${{ secrets.DEPLOY_PORT }} -o StrictHostKeyChecking=yes -o ConnectTimeout=30"
+        SSH_TARGET="${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}"
+        
         # Upload the binary to a temporary location first
         echo "📤 Uploading binary..."
-        scp -P ${{ secrets.DEPLOY_PORT }} ${{ secrets.BINARY_NAME }} ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/tmp/${{ secrets.BINARY_NAME }}-${{ env.VERSION }}
+        scp $SSH_OPTS ${{ secrets.BINARY_NAME }} $SSH_TARGET:/tmp/${{ secrets.BINARY_NAME }}-${{ env.VERSION }}
         
         # Upload documentation files
         echo "📚 Uploading documentation..."
         if [ -f "docs/swagger.html" ]; then
-          scp -P ${{ secrets.DEPLOY_PORT }} docs/swagger.html ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/tmp/swagger-${{ env.VERSION }}.html
+          scp $SSH_OPTS docs/swagger.html $SSH_TARGET:/tmp/swagger-${{ env.VERSION }}.html
           echo "✅ HTML documentation uploaded"
         fi
         
         if [ -f "docs/swagger.json" ]; then
-          scp -P ${{ secrets.DEPLOY_PORT }} docs/swagger.json ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/tmp/swagger-${{ env.VERSION }}.json
+          scp $SSH_OPTS docs/swagger.json $SSH_TARGET:/tmp/swagger-${{ env.VERSION }}.json
           echo "✅ JSON documentation uploaded"
         fi
         
         if [ -f "docs/swagger.yaml" ]; then
-          scp -P ${{ secrets.DEPLOY_PORT }} docs/swagger.yaml ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/tmp/swagger-${{ env.VERSION }}.yaml
+          scp $SSH_OPTS docs/swagger.yaml $SSH_TARGET:/tmp/swagger-${{ env.VERSION }}.yaml
           echo "✅ YAML documentation uploaded"
         fi
         
         # Execute deployment script on remote server
-        ssh -p ${{ secrets.DEPLOY_PORT }} ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
+        ssh $SSH_OPTS $SSH_TARGET << 'EOF'
           set -e
           
           DEPLOY_PATH="${{ secrets.DEPLOY_PATH }}"
@@ -209,7 +218,10 @@ jobs:
       run: |
         echo "🧹 Cleaning up backup files after successful deployment..."
         
-        ssh -p ${{ secrets.DEPLOY_PORT }} ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
+        SSH_OPTS="-i ~/.ssh/deploy_key -p ${{ secrets.DEPLOY_PORT }} -o StrictHostKeyChecking=yes -o ConnectTimeout=30"
+        SSH_TARGET="${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}"
+        
+        ssh $SSH_OPTS $SSH_TARGET << 'EOF'
           DEPLOY_PATH="${{ secrets.DEPLOY_PATH }}"
           BINARY_NAME="${{ secrets.BINARY_NAME }}"
           

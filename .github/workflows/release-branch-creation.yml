@@ -212,26 +212,13 @@ jobs:
         id: changelog
         run: |
           VERSION="${{ steps.version_info.outputs.version }}"
-          TYPE="${{ steps.version_info.outputs.type }}"
-          BUMP_TYPE="${{ steps.version_type.outputs.bump_type }}"
+          echo "🚀 Generating changelog for $VERSION..."
 
-          echo "🚀 Generating changelog for $VERSION using generate-changelog.rb..."
-          echo "Current branch: $(git branch --show-current)"
-          echo "Working directory: $(pwd)"
-          
           # Make the script executable
           chmod +x generate-changelog.rb
           
-          # Debug: Check if we're on the right branch format
-          CURRENT_BRANCH=$(git branch --show-current)
-          if [[ ! "$CURRENT_BRANCH" =~ ^(release|hotfix)/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "⚠️  Branch format issue: '$CURRENT_BRANCH' doesn't match required pattern"
-            echo "Expected: release/v1.2.3 or hotfix/v1.2.3"
-          fi
-          
-          # Run changelog generation with debug output
-          echo "Running: ruby generate-changelog.rb --force"
-          if ruby generate-changelog.rb --force 2>&1; then
+          # Run changelog generation (simple like pico-api-docs)
+          if ruby generate-changelog.rb --version "$VERSION" --force 2>&1; then
             echo "✅ Changelog generation completed"
             
             # Check if CHANGELOG.md was actually updated
@@ -243,17 +230,13 @@ jobs:
               git diff --stat CHANGELOG.md
               CHANGELOG_STATUS="true"
             fi
-            
+
             echo "changelog_updated=$CHANGELOG_STATUS" >> $GITHUB_OUTPUT
           else
-            RUBY_EXIT_CODE=$?
-            echo "❌ Changelog generation failed with exit code: $RUBY_EXIT_CODE"
-            echo "This might be due to:"
-            echo "- Branch naming format (needs release/vX.Y.Z or hotfix/vX.Y.Z)"
-            echo "- No commits since last tag"
-            echo "- Missing dependencies or Ruby issues"
-            
+            echo "❌ Changelog generation failed"
             echo "changelog_updated=false" >> $GITHUB_OUTPUT
+            
+            echo "changelog_updated=$CHANGELOG_STATUS" >> $GITHUB_OUTPUT
           fi
           
           # No separate release notes file needed - CHANGELOG.md is the source of truth
