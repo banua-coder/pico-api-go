@@ -117,6 +117,58 @@ func (s *covidService) GetLatestNationalCase() (*models.NationalCase, error) {
 	return nationalCase, nil
 }
 
+func (s *covidService) GetNationalCasesPaginated(limit, offset int) ([]models.NationalCase, int, error) {
+	cases, total, err := s.nationalCaseRepo.GetAllPaginated(limit, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to get paginated national cases: %w", err)
+	}
+	return cases, total, nil
+}
+
+func (s *covidService) GetNationalCasesPaginatedSorted(limit, offset int, sortParams utils.SortParams) ([]models.NationalCase, int, error) {
+	cases, total, err := s.nationalCaseRepo.GetAllPaginatedSorted(limit, offset, sortParams)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to get paginated sorted national cases: %w", err)
+	}
+	return cases, total, nil
+}
+
+func (s *covidService) GetNationalCasesByDateRangePaginated(startDate, endDate string, limit, offset int) ([]models.NationalCase, int, error) {
+	start, err := time.Parse("2006-01-02", startDate)
+	if err != nil {
+		return nil, 0, fmt.Errorf("invalid start date format: %w", err)
+	}
+
+	end, err := time.Parse("2006-01-02", endDate)
+	if err != nil {
+		return nil, 0, fmt.Errorf("invalid end date format: %w", err)
+	}
+
+	cases, total, err := s.nationalCaseRepo.GetByDateRangePaginated(start, end, limit, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to get paginated national cases by date range: %w", err)
+	}
+	return cases, total, nil
+}
+
+func (s *covidService) GetNationalCasesByDateRangePaginatedSorted(startDate, endDate string, limit, offset int, sortParams utils.SortParams) ([]models.NationalCase, int, error) {
+	start, err := time.Parse("2006-01-02", startDate)
+	if err != nil {
+		return nil, 0, fmt.Errorf("invalid start date format: %w", err)
+	}
+
+	end, err := time.Parse("2006-01-02", endDate)
+	if err != nil {
+		return nil, 0, fmt.Errorf("invalid end date format: %w", err)
+	}
+
+	cases, total, err := s.nationalCaseRepo.GetByDateRangePaginatedSorted(start, end, limit, offset, sortParams)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to get paginated sorted national cases by date range: %w", err)
+	}
+	return cases, total, nil
+}
+
 func (s *covidService) GetProvinces() ([]models.Province, error) {
 	provinces, err := s.provinceRepo.GetAll()
 	if err != nil {
