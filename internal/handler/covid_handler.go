@@ -26,14 +26,18 @@ func NewCovidHandler(covidService service.CovidService, db *database.DB) *CovidH
 // GetNationalCases godoc
 //
 //	@Summary		Get national COVID-19 cases
-//	@Description	Retrieve national COVID-19 cases data with optional date range filtering and sorting. Note: This endpoint does not support pagination and returns all data.
+//	@Description	Retrieve national COVID-19 cases data with optional date range filtering, sorting, and pagination support. Returns all data by default, or paginated results when pagination parameters are provided.
 //	@Tags			national
 //	@Accept			json
 //	@Produce		json
 //	@Param			start_date	query		string	false	"Start date (YYYY-MM-DD)"
 //	@Param			end_date	query		string	false	"End date (YYYY-MM-DD)"
 //	@Param			sort		query		string	false	"Sort by field:order (e.g., date:desc, positive:asc). Default: date:asc"
-//	@Success		200			{object}	Response{data=[]models.NationalCaseResponse}
+//	@Param			limit		query		integer	false	"Records per page (default: 50, max: 1000)"
+//	@Param			offset		query		integer	false	"Records to skip (default: 0)"
+//	@Param			page		query		integer	false	"Page number (1-based, alternative to offset)"
+//	@Success		200			{object}	Response{data=[]models.NationalCaseResponse}		"All data (when no pagination parameters)"
+//	@Success		200			{object}	models.PaginatedResponse{data=[]models.NationalCaseResponse}	"Paginated data (when pagination parameters provided)"
 //	@Failure		400			{object}	Response
 //	@Failure		429			{object}	Response	"Rate limit exceeded"
 //	@Failure		500			{object}	Response
@@ -49,13 +53,62 @@ func (h *CovidHandler) GetNationalCases(w http.ResponseWriter, r *http.Request) 
 	// Parse sort parameters (default: date ascending)
 	sortParams := utils.ParseSortParam(r, "date")
 
+	// Parse pagination parameters
+	limit := utils.ParseIntQueryParam(r, "limit", 50)
+	offset := utils.ParseIntQueryParam(r, "offset", 0)
+	page := utils.ParseIntQueryParam(r, "page", 0)
+
+	// Convert page to offset if page is specified (page-based pagination)
+	if page > 0 {
+		offset = (page - 1) * limit
+	}
+
+	// Validate and adjust pagination parameters
+	limit, offset = utils.ValidatePaginationParams(limit, offset)
+
+	// Check if pagination parameters are provided
+	isPaginated := r.URL.Query().Get("limit") != "" || r.URL.Query().Get("offset") != "" || r.URL.Query().Get("page") != ""
+
+	if isPaginated {
+		// Return paginated results
+		if startDate != "" && endDate != "" {
+			cases, total, err := h.covidService.GetNationalCasesByDateRangePaginatedSorted(startDate, endDate, limit, offset, sortParams)
+			if err != nil {
+				writeErrorResponse(w, http.StatusInternalServerError, err.Error())
+				return
+			}
+			responseData := models.TransformSliceToResponse(cases)
+			pagination := models.CalculatePaginationMeta(limit, offset, total)
+			paginatedResponse := models.PaginatedResponse{
+				Data:       responseData,
+				Pagination: pagination,
+			}
+			writeSuccessResponse(w, paginatedResponse)
+			return
+		}
+
+		cases, total, err := h.covidService.GetNationalCasesPaginatedSorted(limit, offset, sortParams)
+		if err != nil {
+			writeErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		responseData := models.TransformSliceToResponse(cases)
+		pagination := models.CalculatePaginationMeta(limit, offset, total)
+		paginatedResponse := models.PaginatedResponse{
+			Data:       responseData,
+			Pagination: pagination,
+		}
+		writeSuccessResponse(w, paginatedResponse)
+		return
+	}
+
+	// Return all data (no pagination)
 	if startDate != "" && endDate != "" {
 		cases, err := h.covidService.GetNationalCasesByDateRangeSorted(startDate, endDate, sortParams)
 		if err != nil {
 			writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		// Transform to new response structure
 		responseData := models.TransformSliceToResponse(cases)
 		writeSuccessResponse(w, responseData)
 		return
@@ -67,7 +120,6 @@ func (h *CovidHandler) GetNationalCases(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// Transform to new response structure
 	responseData := models.TransformSliceToResponse(cases)
 	writeSuccessResponse(w, responseData)
 }

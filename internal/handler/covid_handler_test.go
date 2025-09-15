@@ -100,6 +100,26 @@ func (m *MockCovidService) GetNationalCasesByDateRangeSorted(startDate, endDate 
 	return args.Get(0).([]models.NationalCase), args.Error(1)
 }
 
+func (m *MockCovidService) GetNationalCasesPaginated(limit, offset int) ([]models.NationalCase, int, error) {
+	args := m.Called(limit, offset)
+	return args.Get(0).([]models.NationalCase), args.Int(1), args.Error(2)
+}
+
+func (m *MockCovidService) GetNationalCasesPaginatedSorted(limit, offset int, sortParams utils.SortParams) ([]models.NationalCase, int, error) {
+	args := m.Called(limit, offset, sortParams)
+	return args.Get(0).([]models.NationalCase), args.Int(1), args.Error(2)
+}
+
+func (m *MockCovidService) GetNationalCasesByDateRangePaginated(startDate, endDate string, limit, offset int) ([]models.NationalCase, int, error) {
+	args := m.Called(startDate, endDate, limit, offset)
+	return args.Get(0).([]models.NationalCase), args.Int(1), args.Error(2)
+}
+
+func (m *MockCovidService) GetNationalCasesByDateRangePaginatedSorted(startDate, endDate string, limit, offset int, sortParams utils.SortParams) ([]models.NationalCase, int, error) {
+	args := m.Called(startDate, endDate, limit, offset, sortParams)
+	return args.Get(0).([]models.NationalCase), args.Int(1), args.Error(2)
+}
+
 func (m *MockCovidService) GetProvinceCasesSorted(provinceID string, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, error) {
 	args := m.Called(provinceID, sortParams)
 	return args.Get(0).([]models.ProvinceCaseWithDate), args.Error(1)
