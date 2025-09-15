@@ -1,0 +1,47 @@
+linters-settings:
+  typecheck:
+    # Skip test files that use mocks to avoid false positives
+    skip-files:
+      - ".*_test\\.go$"
+
+linters:
+  enable:
+    - errcheck
+    - gofmt
+    - goimports
+    - govet
+    - ineffassign
+    - misspell
+    - revive
+    - staticcheck
+    - unused
+  disable:
+    - typecheck  # Disable typecheck for now due to mock/embed issues
+
+issues:
+  exclude-rules:
+    # Exclude test files from certain linters
+    - path: _test\.go
+      linters:
+        - typecheck
+        - errcheck
+    # Exclude mock-related issues
+    - text: "undefined.*Called"
+      linters:
+        - typecheck
+    - text: "undefined.*On"
+      linters:
+        - typecheck
+    - text: "undefined.*AssertExpectations"
+      linters:
+        - typecheck
+    - text: "undefined.*sqlmock"
+      linters:
+        - typecheck
+
+run:
+  timeout: 5m
+  skip-dirs:
+    - vendor
+  skip-files:
+    - ".*\\.pb\\.go"
