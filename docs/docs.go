@@ -832,7 +832,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/api/v1",
 	Schemes:          []string{"https", "http"},
 	Title:            "Sulawesi Tengah COVID-19 Data API",
-	Description:      "A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central Sulawesi), with additional national and provincial data for context. Features enhanced ODP/PDP grouping, hybrid pagination, and rate limiting protection. Rate limiting:\t\t2.4.0 requests per minute per IP address by default, with appropriate HTTP headers for client guidance.",
+	Description:      "A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central Sulawesi), with additional national and provincial data for context. Features enhanced ODP/PDP grouping, hybrid pagination, and rate limiting protection. Rate limiting: 100 requests per minute per IP address by default, with appropriate HTTP headers for client guidance.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
