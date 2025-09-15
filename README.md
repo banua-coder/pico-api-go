@@ -222,17 +222,16 @@ The API will be available at `http://localhost:8080`
 For production builds with optimized binary size:
 
 ```bash
-# For minimal production build (6.1MB), comment out docs import in cmd/main.go:
-# Change: _ "github.com/banua-coder/pico-api-go/docs"
-# To:     // _ "github.com/banua-coder/pico-api-go/docs"
-
-# Then build with optimization flags
+# Minimal production build (6.1MB) - used by deploy workflow
+# Docs import is already disabled in cmd/main.go for production
 CGO_ENABLED=0 go build -ldflags="-w -s" -o pico-api-go cmd/main.go
 
 # Set production environment (disables Swagger UI routes)
 export ENV=production
 ./pico-api-go
 ```
+
+**Note:** The automated deploy workflow builds this minimal version since Swagger documentation is served from a separate static website.
 
 For development builds with Swagger UI:
 

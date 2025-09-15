@@ -43,8 +43,8 @@ import (
 	"github.com/banua-coder/pico-api-go/internal/service"
 	"github.com/banua-coder/pico-api-go/pkg/database"
 
-	// Import docs for Swagger (enabled for development)
-	_ "github.com/banua-coder/pico-api-go/docs"
+	// Import docs for Swagger (disabled for production deployment)
+	// _ "github.com/banua-coder/pico-api-go/docs"
 )
 
 func main() {

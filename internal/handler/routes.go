@@ -6,7 +6,7 @@ import (
 	"github.com/banua-coder/pico-api-go/internal/service"
 	"github.com/banua-coder/pico-api-go/pkg/database"
 	"github.com/gorilla/mux"
-	httpSwagger "github.com/swaggo/http-swagger"
+	// httpSwagger "github.com/swaggo/http-swagger" // Disabled for minimal production build
 )
 
 func SetupRoutes(covidService service.CovidService, db *database.DB, enableSwagger bool) *mux.Router {
@@ -31,11 +31,14 @@ func SetupRoutes(covidService service.CovidService, db *database.DB, enableSwagg
 	// Conditionally add Swagger documentation based on environment
 	if enableSwagger {
 		// Development: Add Swagger documentation
-		router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler).Methods("GET")
+		// Note: httpSwagger import is disabled for minimal production builds
+		router.HandleFunc("/swagger", func(w http.ResponseWriter, r *http.Request) {
+			http.Error(w, "Swagger UI not available in minimal build - see static documentation site", http.StatusNotFound)
+		}).Methods("GET")
 
-		// Redirect root to swagger docs for convenience in development
+		// Redirect root to API index (Swagger disabled for minimal build)
 		router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			http.Redirect(w, r, "/swagger/index.html", http.StatusFound)
+			http.Redirect(w, r, "/api/v1", http.StatusFound)
 		}).Methods("GET")
 	} else {
 		// Production: Redirect root to API index
