@@ -430,11 +430,11 @@ jobs:
           LINT_ARGS="$PACKAGES"
         fi
 
-        # Install golangci-lint
-        curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin latest
+        # Install golangci-lint (specific version for compatibility)
+        curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.54.2
 
-        # Run linting with appropriate scope
-        $(go env GOPATH)/bin/golangci-lint run --out-format=colored-line-number --timeout=5m $LINT_ARGS
+        # Run linting with appropriate scope (removed --out-format for compatibility)
+        $(go env GOPATH)/bin/golangci-lint run --timeout=5m $LINT_ARGS
 
     - name: Report linting scope
       run: |
