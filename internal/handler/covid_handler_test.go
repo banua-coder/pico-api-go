@@ -627,7 +627,7 @@ func TestCovidHandler_GetAPIIndex(t *testing.T) {
 	apiInfo, ok := data["api"].(map[string]interface{})
 	assert.True(t, ok)
 	assert.Equal(t, "Sulawesi Tengah COVID-19 Data API", apiInfo["title"])
-	assert.Equal(t, "2.5.0", apiInfo["version"])
+	assert.Equal(t, "2.4.0", apiInfo["version"])
 
 	// Verify endpoints structure
 	endpoints, ok := data["endpoints"].(map[string]interface{})
@@ -658,7 +658,7 @@ func TestCovidHandler_HealthCheck(t *testing.T) {
 	assert.True(t, ok)
 	assert.Equal(t, "degraded", data["status"])
 	assert.Equal(t, "COVID-19 API", data["service"])
-	assert.Equal(t, "2.5.0", data["version"])
+	assert.Equal(t, "2.4.0", data["version"])
 	assert.Contains(t, data, "database")
 
 	dbData, ok := data["database"].(map[string]interface{})
