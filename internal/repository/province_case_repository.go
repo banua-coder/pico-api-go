@@ -295,16 +295,38 @@ func (r *provinceCaseRepository) queryProvinceCases(query string, args ...interf
 		var c models.ProvinceCaseWithDate
 		var provinceName sql.NullString
 
+		// Use sql.NullInt64 for nullable ODP/PDP fields to handle NULL values from DB
+		var (
+			personUnderObs                   sql.NullInt64
+			finishedPersonUnderObs           sql.NullInt64
+			personUnderSup                   sql.NullInt64
+			finishedPersonUnderSup           sql.NullInt64
+			cumulativePersonUnderObs         sql.NullInt64
+			cumulativeFinishedPersonUnderObs sql.NullInt64
+			cumulativePersonUnderSup         sql.NullInt64
+			cumulativeFinishedPersonUnderSup sql.NullInt64
+		)
+
 		err := rows.Scan(&c.ID, &c.Day, &c.ProvinceID, &c.Positive, &c.Recovered, &c.Deceased,
-			&c.PersonUnderObservation, &c.FinishedPersonUnderObservation,
-			&c.PersonUnderSupervision, &c.FinishedPersonUnderSupervision,
+			&personUnderObs, &finishedPersonUnderObs,
+			&personUnderSup, &finishedPersonUnderSup,
 			&c.CumulativePositive, &c.CumulativeRecovered, &c.CumulativeDeceased,
-			&c.CumulativePersonUnderObservation, &c.CumulativeFinishedPersonUnderObservation,
-			&c.CumulativePersonUnderSupervision, &c.CumulativeFinishedPersonUnderSupervision,
+			&cumulativePersonUnderObs, &cumulativeFinishedPersonUnderObs,
+			&cumulativePersonUnderSup, &cumulativeFinishedPersonUnderSup,
 			&c.Rt, &c.RtUpper, &c.RtLower, &c.Date, &provinceName)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan province case: %w", err)
 		}
+
+		// Convert NullInt64 to int64 (NULL → 0)
+		c.PersonUnderObservation = personUnderObs.Int64
+		c.FinishedPersonUnderObservation = finishedPersonUnderObs.Int64
+		c.PersonUnderSupervision = personUnderSup.Int64
+		c.FinishedPersonUnderSupervision = finishedPersonUnderSup.Int64
+		c.CumulativePersonUnderObservation = cumulativePersonUnderObs.Int64
+		c.CumulativeFinishedPersonUnderObservation = cumulativeFinishedPersonUnderObs.Int64
+		c.CumulativePersonUnderSupervision = cumulativePersonUnderSup.Int64
+		c.CumulativeFinishedPersonUnderSupervision = cumulativeFinishedPersonUnderSup.Int64
 
 		if provinceName.Valid {
 			c.Province = &models.Province{
