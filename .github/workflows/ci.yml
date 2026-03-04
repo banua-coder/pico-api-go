@@ -2,9 +2,15 @@ name: CI
 
 on:
   push:
-    branches: [develop, 'feature/**', 'bugfix/**', 'release/**', 'hotfix/**']
+    branches:
+      - develop
+      - 'feature/**'
+      - 'bugfix/**'
+      - 'release/**'
   pull_request:
-    branches: [develop, main]
+    branches:
+      - main
+      - develop
 
 jobs:
   test:

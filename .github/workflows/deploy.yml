@@ -2,7 +2,9 @@ name: Build & Deploy
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - 'hotfix/**'
   workflow_dispatch:
 
 env:
@@ -37,7 +39,8 @@ jobs:
           images: ghcr.io/${{ env.IMAGE_NAME }}
           tags: |
             type=sha,prefix=sha-
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=hotfix,enable=${{ startsWith(github.ref, 'refs/heads/hotfix/') }}
 
       - name: Build and push
         uses: docker/build-push-action@v6
