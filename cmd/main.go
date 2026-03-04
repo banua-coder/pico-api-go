@@ -12,7 +12,7 @@
 //	@license.name	MIT
 //	@license.url	https://opensource.org/licenses/MIT
 //
-//	@host		pico-api.banuacoder.com
+//	@host		pico-api-go.banuacoder.com
 //	@BasePath	/api/v1
 //
 //	@schemes	https http
