@@ -34,7 +34,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/banua-coder/pico-api-go/internal/config"
 	"github.com/banua-coder/pico-api-go/internal/handler"
@@ -43,7 +42,7 @@ import (
 	"github.com/banua-coder/pico-api-go/internal/service"
 	"github.com/banua-coder/pico-api-go/pkg/database"
 	// Import docs for Swagger (disabled for production deployment)
-	// _ "github.com/banua-coder/pico-api-go/docs"
+	_ "github.com/banua-coder/pico-api-go/docs"
 )
 
 func main() {
@@ -68,7 +67,7 @@ func main() {
 	covidService := service.NewCovidService(nationalCaseRepo, provinceRepo, provinceCaseRepo)
 
 	// Check if we should enable Swagger (disabled in production)
-	enableSwagger := os.Getenv("ENV") != "production"
+	enableSwagger := true
 	router := handler.SetupRoutes(covidService, db, enableSwagger)
 
 	router.Use(middleware.Recovery)
