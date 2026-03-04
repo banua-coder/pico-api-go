@@ -17,7 +17,7 @@
             "name": "MIT",
             "url": "https://opensource.org/licenses/MIT"
         },
-        "version": "2.4.0"
+        "version": "fix-deploy-workflow"
     },
     "host": "pico-api-go.banuacoder.com",
     "basePath": "/api/v1",
