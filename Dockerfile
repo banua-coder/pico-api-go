@@ -3,23 +3,19 @@ FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
 
-# Install build deps
 RUN apk add --no-cache git
 
-# Copy dependency files dulu (layer caching)
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy source code
 COPY . .
 
-# Build production binary (no Swagger, smaller size)
-RUN CGO_ENABLED=0 GOOS=linux go build -tags=production \
+RUN CGO_ENABLED=0 GOOS=linux go build \
     -ldflags="-s -w" \
     -o bin/server \
-    cmd/main_production.go
+    ./cmd/
 
-# ---- Runtime image (minimal) ----
+# ---- Runtime image ----
 FROM alpine:3.21
 
 RUN apk --no-cache add ca-certificates tzdata
