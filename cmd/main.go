@@ -12,7 +12,7 @@
 //	@license.name	MIT
 //	@license.url	https://opensource.org/licenses/MIT
 //
-//	@host		pico-api.banuacoder.com
+//	@host		pico-api-go.banuacoder.com
 //	@BasePath	/api/v1
 //
 //	@schemes	https http
@@ -34,16 +34,16 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
 	"os"
 
+	"github.com/banua-coder/pico-api-go/docs"
 	"github.com/banua-coder/pico-api-go/internal/config"
 	"github.com/banua-coder/pico-api-go/internal/handler"
 	"github.com/banua-coder/pico-api-go/internal/middleware"
 	"github.com/banua-coder/pico-api-go/internal/repository"
 	"github.com/banua-coder/pico-api-go/internal/service"
 	"github.com/banua-coder/pico-api-go/pkg/database"
-	// Import docs for Swagger (disabled for production deployment)
-	// _ "github.com/banua-coder/pico-api-go/docs"
 )
 
 func main() {
@@ -67,8 +67,18 @@ func main() {
 
 	covidService := service.NewCovidService(nationalCaseRepo, provinceRepo, provinceCaseRepo)
 
-	// Check if we should enable Swagger (disabled in production)
-	enableSwagger := os.Getenv("ENV") != "production"
+	// Override Swagger host/basePath from environment variables if set
+	if host := os.Getenv("SWAGGER_HOST"); host != "" {
+		docs.SwaggerInfo.Host = host
+	}
+	if basePath := os.Getenv("SWAGGER_BASE_PATH"); basePath != "" {
+		docs.SwaggerInfo.BasePath = basePath
+	}
+	if schemes := os.Getenv("SWAGGER_SCHEMES"); schemes != "" {
+		docs.SwaggerInfo.Schemes = []string{schemes}
+	}
+
+	enableSwagger := true
 	router := handler.SetupRoutes(covidService, db, enableSwagger)
 
 	router.Use(middleware.Recovery)

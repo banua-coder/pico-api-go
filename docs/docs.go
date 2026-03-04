@@ -851,8 +851,8 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "2.5.0",
-	Host:             "pico-api.banuacoder.com",
+	Version:          "2.4.0",
+	Host:             "pico-api-go.banuacoder.com",
 	BasePath:         "/api/v1",
 	Schemes:          []string{"https", "http"},
 	Title:            "Sulawesi Tengah COVID-19 Data API",

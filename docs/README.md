@@ -14,7 +14,7 @@ This directory contains auto-generated OpenAPI/Swagger documentation for the Sul
 
 When the API server is running, you can access the interactive Swagger UI at:
 - **Local development**: http://localhost:8080/swagger/index.html
-- **Production**: https://pico-api.banuacoder.com/swagger/index.html
+- **Production**: https://pico-api-go.banuacoder.com/swagger/index.html
 
 ### Swagger Specification Files
 

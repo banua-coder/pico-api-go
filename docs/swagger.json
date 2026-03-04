@@ -19,7 +19,7 @@
         },
         "version": "2.5.0"
     },
-    "host": "pico-api.banuacoder.com",
+    "host": "pico-api-go.banuacoder.com",
     "basePath": "/api/v1",
     "paths": {
         "/": {
