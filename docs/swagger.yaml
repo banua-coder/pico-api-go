@@ -193,7 +193,7 @@ definitions:
       total:
         type: integer
     type: object
-host: pico-api.banuacoder.com
+host: pico-api-go.banuacoder.com
 info:
   contact:
     email: support@banuacoder.com
