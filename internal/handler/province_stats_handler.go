@@ -7,10 +7,10 @@ import (
 )
 
 type ProvinceStatsHandler struct {
-	service *service.ProvinceStatsService
+	service service.ProvinceStatsServiceInterface
 }
 
-func NewProvinceStatsHandler(service *service.ProvinceStatsService) *ProvinceStatsHandler {
+func NewProvinceStatsHandler(service service.ProvinceStatsServiceInterface) *ProvinceStatsHandler {
 	return &ProvinceStatsHandler{service: service}
 }
 

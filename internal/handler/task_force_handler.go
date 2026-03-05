@@ -8,11 +8,11 @@ import (
 
 // TaskForceHandler handles HTTP requests for task force endpoints
 type TaskForceHandler struct {
-	service *service.TaskForceService
+	service service.TaskForceServiceInterface
 }
 
 // NewTaskForceHandler creates a new TaskForceHandler
-func NewTaskForceHandler(service *service.TaskForceService) *TaskForceHandler {
+func NewTaskForceHandler(service service.TaskForceServiceInterface) *TaskForceHandler {
 	return &TaskForceHandler{service: service}
 }
 

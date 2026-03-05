@@ -16,7 +16,7 @@ type Services struct {
 	HospitalService      *service.HospitalService
 	TaskForceService     *service.TaskForceService
 	VaccinationService   *service.VaccinationService
-	ProvinceStatsService *service.ProvinceStatsService
+	ProvinceStatsService service.ProvinceStatsServiceInterface
 }
 
 func SetupRoutes(svc Services, db *database.DB, enableSwagger bool) *mux.Router {

@@ -10,11 +10,11 @@ import (
 
 // RegencyHandler handles HTTP requests for regency endpoints
 type RegencyHandler struct {
-	service *service.RegencyService
+	service service.RegencyServiceInterface
 }
 
 // NewRegencyHandler creates a new RegencyHandler
-func NewRegencyHandler(service *service.RegencyService) *RegencyHandler {
+func NewRegencyHandler(service service.RegencyServiceInterface) *RegencyHandler {
 	return &RegencyHandler{service: service}
 }
 

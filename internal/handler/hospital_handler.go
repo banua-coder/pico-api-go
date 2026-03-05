@@ -9,11 +9,11 @@ import (
 
 // HospitalHandler handles HTTP requests for hospital endpoints
 type HospitalHandler struct {
-	service *service.HospitalService
+	service service.HospitalServiceInterface
 }
 
 // NewHospitalHandler creates a new HospitalHandler
-func NewHospitalHandler(service *service.HospitalService) *HospitalHandler {
+func NewHospitalHandler(service service.HospitalServiceInterface) *HospitalHandler {
 	return &HospitalHandler{service: service}
 }
 

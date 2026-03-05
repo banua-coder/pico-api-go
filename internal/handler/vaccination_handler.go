@@ -7,10 +7,10 @@ import (
 )
 
 type VaccinationHandler struct {
-	service *service.VaccinationService
+	service service.VaccinationServiceInterface
 }
 
-func NewVaccinationHandler(service *service.VaccinationService) *VaccinationHandler {
+func NewVaccinationHandler(service service.VaccinationServiceInterface) *VaccinationHandler {
 	return &VaccinationHandler{service: service}
 }
 
