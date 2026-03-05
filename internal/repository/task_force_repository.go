@@ -7,6 +7,11 @@ import (
 	"github.com/banua-coder/pico-api-go/pkg/database"
 )
 
+// TaskForceRepositoryInterface defines the contract for task force repository operations
+type TaskForceRepositoryInterface interface {
+	GetAllByProvinceID(provinceID int) ([]models.TaskForceByRegency, error)
+}
+
 // TaskForceRepository handles database operations for task forces
 type TaskForceRepository struct {
 	db *database.DB

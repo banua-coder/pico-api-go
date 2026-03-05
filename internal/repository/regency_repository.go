@@ -8,6 +8,12 @@ import (
 	"github.com/banua-coder/pico-api-go/pkg/database"
 )
 
+// RegencyRepositoryInterface defines the contract for regency repository operations
+type RegencyRepositoryInterface interface {
+	GetAll(provinceID int) ([]models.Regency, error)
+	GetByID(id int) (*models.Regency, error)
+}
+
 // RegencyRepository handles database operations for regencies
 type RegencyRepository struct {
 	db *database.DB

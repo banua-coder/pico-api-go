@@ -7,6 +7,14 @@ import (
 	"github.com/banua-coder/pico-api-go/pkg/database"
 )
 
+// ProvinceStatsRepositoryInterface defines the contract for province stats repository operations
+type ProvinceStatsRepositoryInterface interface {
+	GetGenderCases(provinceID int) ([]models.ProvinceGenderCase, error)
+	GetLatestGenderCase(provinceID int) (*models.ProvinceGenderCase, error)
+	GetTests(provinceID int) ([]models.ProvinceTest, error)
+	GetTestTypes() ([]models.TestType, error)
+}
+
 // ProvinceStatsRepository handles province gender cases and test data
 type ProvinceStatsRepository struct {
 	db *database.DB

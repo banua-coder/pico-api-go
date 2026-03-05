@@ -7,12 +7,12 @@ import (
 
 // RegencyService handles business logic for regencies
 type RegencyService struct {
-	regencyRepo     *repository.RegencyRepository
-	regencyCaseRepo *repository.RegencyCaseRepository
+	regencyRepo     repository.RegencyRepositoryInterface
+	regencyCaseRepo repository.RegencyCaseRepositoryInterface
 }
 
 // NewRegencyService creates a new RegencyService
-func NewRegencyService(regencyRepo *repository.RegencyRepository, regencyCaseRepo *repository.RegencyCaseRepository) *RegencyService {
+func NewRegencyService(regencyRepo repository.RegencyRepositoryInterface, regencyCaseRepo repository.RegencyCaseRepositoryInterface) *RegencyService {
 	return &RegencyService{
 		regencyRepo:     regencyRepo,
 		regencyCaseRepo: regencyCaseRepo,

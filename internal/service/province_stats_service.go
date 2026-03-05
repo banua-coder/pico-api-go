@@ -6,10 +6,10 @@ import (
 )
 
 type ProvinceStatsService struct {
-	repo *repository.ProvinceStatsRepository
+	repo repository.ProvinceStatsRepositoryInterface
 }
 
-func NewProvinceStatsService(repo *repository.ProvinceStatsRepository) *ProvinceStatsService {
+func NewProvinceStatsService(repo repository.ProvinceStatsRepositoryInterface) *ProvinceStatsService {
 	return &ProvinceStatsService{repo: repo}
 }
 

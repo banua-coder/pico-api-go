@@ -7,6 +7,13 @@ import (
 	"github.com/banua-coder/pico-api-go/pkg/database"
 )
 
+// VaccinationRepositoryInterface defines the contract for vaccination repository operations
+type VaccinationRepositoryInterface interface {
+	GetNationalVaccinations() ([]models.NationalVaccine, error)
+	GetProvinceVaccinations(provinceID int) ([]models.ProvinceVaccine, error)
+	GetVaccineLocations(provinceID int) ([]models.VaccineLocation, error)
+}
+
 // VaccinationRepository handles database operations for vaccination data
 type VaccinationRepository struct {
 	db *database.DB

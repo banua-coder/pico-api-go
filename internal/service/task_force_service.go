@@ -7,11 +7,11 @@ import (
 
 // TaskForceService handles business logic for task forces
 type TaskForceService struct {
-	taskForceRepo *repository.TaskForceRepository
+	taskForceRepo repository.TaskForceRepositoryInterface
 }
 
 // NewTaskForceService creates a new TaskForceService
-func NewTaskForceService(taskForceRepo *repository.TaskForceRepository) *TaskForceService {
+func NewTaskForceService(taskForceRepo repository.TaskForceRepositoryInterface) *TaskForceService {
 	return &TaskForceService{taskForceRepo: taskForceRepo}
 }
 

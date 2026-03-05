@@ -6,10 +6,10 @@ import (
 )
 
 type VaccinationService struct {
-	vaccinationRepo *repository.VaccinationRepository
+	vaccinationRepo repository.VaccinationRepositoryInterface
 }
 
-func NewVaccinationService(vaccinationRepo *repository.VaccinationRepository) *VaccinationService {
+func NewVaccinationService(vaccinationRepo repository.VaccinationRepositoryInterface) *VaccinationService {
 	return &VaccinationService{vaccinationRepo: vaccinationRepo}
 }
 

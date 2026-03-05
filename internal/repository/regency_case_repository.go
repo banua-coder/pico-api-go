@@ -7,6 +7,12 @@ import (
 	"github.com/banua-coder/pico-api-go/pkg/database"
 )
 
+// RegencyCaseRepositoryInterface defines the contract for regency case repository operations
+type RegencyCaseRepositoryInterface interface {
+	GetByRegencyID(regencyID int) ([]models.RegencyCase, error)
+	GetLatestByProvinceID(provinceID int) ([]models.RegencyCase, error)
+}
+
 // RegencyCaseRepository handles database operations for regency cases
 type RegencyCaseRepository struct {
 	db *database.DB

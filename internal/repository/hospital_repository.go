@@ -8,6 +8,12 @@ import (
 	"github.com/banua-coder/pico-api-go/pkg/database"
 )
 
+// HospitalRepositoryInterface defines the contract for hospital repository operations
+type HospitalRepositoryInterface interface {
+	GetAll(provinceID int) ([]models.Hospital, error)
+	GetByCode(code string) (*models.Hospital, error)
+}
+
 // HospitalRepository handles database operations for hospitals
 type HospitalRepository struct {
 	db *database.DB

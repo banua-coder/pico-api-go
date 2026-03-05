@@ -7,11 +7,11 @@ import (
 
 // HospitalService handles business logic for hospitals
 type HospitalService struct {
-	hospitalRepo *repository.HospitalRepository
+	hospitalRepo repository.HospitalRepositoryInterface
 }
 
 // NewHospitalService creates a new HospitalService
-func NewHospitalService(hospitalRepo *repository.HospitalRepository) *HospitalService {
+func NewHospitalService(hospitalRepo repository.HospitalRepositoryInterface) *HospitalService {
 	return &HospitalService{hospitalRepo: hospitalRepo}
 }
 
