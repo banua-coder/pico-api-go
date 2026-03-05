@@ -15,3 +15,4 @@ jobs:
       build-output: pico-api-go
       coverage-threshold: 80
       post-coverage-comment: true
+      golangci-lint-version: v2.10.1
