@@ -19,7 +19,9 @@ type CovidService interface {
 	GetNationalCasesByDateRangePaginated(startDate, endDate string, limit, offset int) ([]models.NationalCase, int, error)
 	GetNationalCasesByDateRangePaginatedSorted(startDate, endDate string, limit, offset int, sortParams utils.SortParams) ([]models.NationalCase, int, error)
 	GetLatestNationalCase() (*models.NationalCase, error)
+	GetNationalCaseByDay(day int64) (*models.NationalCase, error)
 	GetProvinces() ([]models.Province, error)
+	GetProvinceByID(id string) (*models.Province, error)
 	GetProvincesWithLatestCase() ([]models.ProvinceWithLatestCase, error)
 	GetProvinceCases(provinceID string) ([]models.ProvinceCaseWithDate, error)
 	GetProvinceCasesSorted(provinceID string, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, error)
@@ -115,6 +117,22 @@ func (s *covidService) GetLatestNationalCase() (*models.NationalCase, error) {
 		return nil, fmt.Errorf("failed to get latest national case: %w", err)
 	}
 	return nationalCase, nil
+}
+
+func (s *covidService) GetNationalCaseByDay(day int64) (*models.NationalCase, error) {
+	nationalCase, err := s.nationalCaseRepo.GetByDay(day)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get national case by day: %w", err)
+	}
+	return nationalCase, nil
+}
+
+func (s *covidService) GetProvinceByID(id string) (*models.Province, error) {
+	province, err := s.provinceRepo.GetByID(id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get province: %w", err)
+	}
+	return province, nil
 }
 
 func (s *covidService) GetNationalCasesPaginated(limit, offset int) ([]models.NationalCase, int, error) {
