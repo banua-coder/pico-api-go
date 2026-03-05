@@ -38,6 +38,24 @@ func (m *MockCovidService) GetLatestNationalCase() (*models.NationalCase, error)
 	return result.(*models.NationalCase), args.Error(1)
 }
 
+func (m *MockCovidService) GetNationalCaseByDay(day int64) (*models.NationalCase, error) {
+	args := m.Called(day)
+	result := args.Get(0)
+	if result == nil {
+		return nil, args.Error(1)
+	}
+	return result.(*models.NationalCase), args.Error(1)
+}
+
+func (m *MockCovidService) GetProvinceByID(id string) (*models.Province, error) {
+	args := m.Called(id)
+	result := args.Get(0)
+	if result == nil {
+		return nil, args.Error(1)
+	}
+	return result.(*models.Province), args.Error(1)
+}
+
 func (m *MockCovidService) GetProvinces() ([]models.Province, error) {
 	args := m.Called()
 	return args.Get(0).([]models.Province), args.Error(1)

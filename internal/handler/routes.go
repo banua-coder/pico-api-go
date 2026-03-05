@@ -11,11 +11,12 @@ import (
 
 // Services holds all service dependencies for route setup
 type Services struct {
-	CovidService        service.CovidService
-	RegencyService      *service.RegencyService
-	HospitalService     *service.HospitalService
-	TaskForceService    *service.TaskForceService
-	VaccinationService  *service.VaccinationService
+	CovidService         service.CovidService
+	RegencyService       *service.RegencyService
+	HospitalService      *service.HospitalService
+	TaskForceService     *service.TaskForceService
+	VaccinationService   *service.VaccinationService
+	ProvinceStatsService *service.ProvinceStatsService
 }
 
 func SetupRoutes(svc Services, db *database.DB, enableSwagger bool) *mux.Router {
@@ -33,9 +34,11 @@ func SetupRoutes(svc Services, db *database.DB, enableSwagger bool) *mux.Router 
 	api.HandleFunc("/health", covidHandler.HealthCheck).Methods("GET", "OPTIONS")
 	api.HandleFunc("/national", covidHandler.GetNationalCases).Methods("GET", "OPTIONS")
 	api.HandleFunc("/national/latest", covidHandler.GetLatestNationalCase).Methods("GET", "OPTIONS")
+	api.HandleFunc("/national/{day}", covidHandler.GetNationalCaseByDay).Methods("GET", "OPTIONS")
 	api.HandleFunc("/provinces", covidHandler.GetProvinces).Methods("GET", "OPTIONS")
 	api.HandleFunc("/provinces/cases", covidHandler.GetProvinceCases).Methods("GET", "OPTIONS")
 	api.HandleFunc("/provinces/{provinceId}/cases", covidHandler.GetProvinceCases).Methods("GET", "OPTIONS")
+	api.HandleFunc("/provinces/{code}", covidHandler.GetProvinceByID).Methods("GET", "OPTIONS")
 
 	// Regency endpoints
 	if svc.RegencyService != nil {
@@ -64,6 +67,15 @@ func SetupRoutes(svc Services, db *database.DB, enableSwagger bool) *mux.Router 
 		api.HandleFunc("/vaccination/national", vaccinationHandler.GetNationalVaccinations).Methods("GET", "OPTIONS")
 		api.HandleFunc("/vaccination/province", vaccinationHandler.GetProvinceVaccinations).Methods("GET", "OPTIONS")
 		api.HandleFunc("/vaccination/locations", vaccinationHandler.GetVaccineLocations).Methods("GET", "OPTIONS")
+	}
+
+	// Province stats endpoints (gender cases, tests)
+	if svc.ProvinceStatsService != nil {
+		statsHandler := NewProvinceStatsHandler(svc.ProvinceStatsService)
+		api.HandleFunc("/stats/gender", statsHandler.GetGenderCases).Methods("GET", "OPTIONS")
+		api.HandleFunc("/stats/gender/latest", statsHandler.GetLatestGenderCase).Methods("GET", "OPTIONS")
+		api.HandleFunc("/stats/tests", statsHandler.GetTests).Methods("GET", "OPTIONS")
+		api.HandleFunc("/stats/test-types", statsHandler.GetTestTypes).Methods("GET", "OPTIONS")
 	}
 
 	// Conditionally add Swagger documentation based on environment

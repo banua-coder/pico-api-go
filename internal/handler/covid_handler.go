@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/banua-coder/pico-api-go/internal/models"
@@ -397,6 +399,58 @@ func (h *CovidHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 // @Summary API endpoint index
 // @Description Get a list of all available API endpoints with descriptions
 // @Tags health
+// GetNationalCaseByDay godoc
+// @Summary Get national case data for a specific day
+// @Tags national
+// @Produce json
+// @Param day path int true "Day number"
+// @Success 200 {object} Response
+// @Failure 404 {object} Response
+// @Router /api/v1/national/{day} [get]
+func (h *CovidHandler) GetNationalCaseByDay(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	day, err := strconv.ParseInt(vars["day"], 10, 64)
+	if err != nil {
+		writeErrorResponse(w, http.StatusBadRequest, "Invalid day parameter")
+		return
+	}
+
+	nationalCase, err := h.covidService.GetNationalCaseByDay(day)
+	if err != nil {
+		writeErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if nationalCase == nil {
+		writeErrorResponse(w, http.StatusNotFound, fmt.Sprintf("Data untuk hari ke-%d tidak ditemukan", day))
+		return
+	}
+	writeSuccessResponse(w, nationalCase)
+}
+
+// GetProvinceByID godoc
+// @Summary Get a single province by ID
+// @Tags provinces
+// @Produce json
+// @Param code path string true "Province ID"
+// @Success 200 {object} Response
+// @Failure 404 {object} Response
+// @Router /api/v1/provinces/{code} [get]
+func (h *CovidHandler) GetProvinceByID(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	code := vars["code"]
+
+	province, err := h.covidService.GetProvinceByID(code)
+	if err != nil {
+		writeErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if province == nil {
+		writeErrorResponse(w, http.StatusNotFound, "Provinsi dengan kode "+code+" tidak ditemukan")
+		return
+	}
+	writeSuccessResponse(w, province)
+}
+
 // @Accept json
 // @Produce json
 // @Success 200 {object} Response{data=map[string]interface{}}
