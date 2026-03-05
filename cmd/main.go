@@ -77,6 +77,9 @@ func main() {
 	hospitalService := service.NewHospitalService(hospitalRepo)
 	taskForceService := service.NewTaskForceService(taskForceRepo)
 
+	vaccinationRepo := repository.NewVaccinationRepository(db)
+	vaccinationService := service.NewVaccinationService(vaccinationRepo)
+
 	// Override Swagger host/basePath from environment variables if set
 	if host := os.Getenv("SWAGGER_HOST"); host != "" {
 		docs.SwaggerInfo.Host = host
@@ -93,7 +96,8 @@ func main() {
 		CovidService:     covidService,
 		RegencyService:   regencyService,
 		HospitalService:  hospitalService,
-		TaskForceService: taskForceService,
+		TaskForceService:    taskForceService,
+		VaccinationService:  vaccinationService,
 	}
 	router := handler.SetupRoutes(svc, db, enableSwagger)
 

@@ -11,10 +11,11 @@ import (
 
 // Services holds all service dependencies for route setup
 type Services struct {
-	CovidService    service.CovidService
-	RegencyService  *service.RegencyService
-	HospitalService *service.HospitalService
-	TaskForceService *service.TaskForceService
+	CovidService        service.CovidService
+	RegencyService      *service.RegencyService
+	HospitalService     *service.HospitalService
+	TaskForceService    *service.TaskForceService
+	VaccinationService  *service.VaccinationService
 }
 
 func SetupRoutes(svc Services, db *database.DB, enableSwagger bool) *mux.Router {
@@ -55,6 +56,14 @@ func SetupRoutes(svc Services, db *database.DB, enableSwagger bool) *mux.Router 
 	if svc.TaskForceService != nil {
 		taskForceHandler := NewTaskForceHandler(svc.TaskForceService)
 		api.HandleFunc("/task-forces", taskForceHandler.GetTaskForces).Methods("GET", "OPTIONS")
+	}
+
+	// Vaccination endpoints
+	if svc.VaccinationService != nil {
+		vaccinationHandler := NewVaccinationHandler(svc.VaccinationService)
+		api.HandleFunc("/vaccination/national", vaccinationHandler.GetNationalVaccinations).Methods("GET", "OPTIONS")
+		api.HandleFunc("/vaccination/province", vaccinationHandler.GetProvinceVaccinations).Methods("GET", "OPTIONS")
+		api.HandleFunc("/vaccination/locations", vaccinationHandler.GetVaccineLocations).Methods("GET", "OPTIONS")
 	}
 
 	// Conditionally add Swagger documentation based on environment
