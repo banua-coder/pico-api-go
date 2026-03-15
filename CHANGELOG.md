@@ -12,6 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+
+## [v2.5.0] - 2026-03-15
+
+### Fixed
+
+- Force-recreate container on deploy and add health check retry ([994cac04](https://x-access-token:ghs_A83GcNhZUJrwtohxULPvFxFGaNkp3w1ER3bq@github.com/banua-coder/pico-api-go/commit/994cac04329eadeffc9dd16773be006fc04c3bfe))
+
 ## [v2.5.0] - 2026-03-15
 
 ### Hotfixes
