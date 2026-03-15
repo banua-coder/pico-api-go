@@ -538,23 +538,10 @@ jobs:
         if: steps.check_prs.outputs.skip_bump == 'false' && steps.current_dev_version.outputs.skip_update == 'false'
         run: |
           CLEAN_VERSION="${{ steps.next_version.outputs.clean_next_version }}"
-          echo "📝 Updating develop branch to $CLEAN_VERSION..."
+          echo "📝 Updating develop branch to $CLEAN_VERSION using configuration..."
 
-          # Update version in go.mod comment
-          if [ -f "go.mod" ]; then
-            if ! grep -q "// Version: " go.mod; then
-              sed -i '1 a\// Version: '"$CLEAN_VERSION" go.mod
-            else
-              sed -i 's|// Version: .*|// Version: '"$CLEAN_VERSION"'|' go.mod
-            fi
-            echo "✅ Updated version comment in go.mod"
-          fi
-
-          # Update version.go file if it exists
-          if [ -f "internal/version/version.go" ]; then
-            sed -i 's|const Version = ".*"|const Version = "'"$CLEAN_VERSION"'"|' internal/version/version.go
-            echo "✅ Updated version.go"
-          fi
+          # Use the update-version script to update all files based on .version-config.yml
+          ./scripts/update-version.sh "$CLEAN_VERSION"
 
       - name: Create required labels if they don't exist (develop bump)
         if: steps.check_prs.outputs.skip_bump == 'false' && steps.current_dev_version.outputs.skip_update == 'false'
