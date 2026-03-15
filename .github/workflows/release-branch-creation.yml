@@ -8,7 +8,7 @@ on:
       - "hotfix/**"
 
 env:
-  GO_VERSION: '1.25.x'
+  GO_VERSION: '1.26.x'
 
 jobs:
   release-branch-setup:
@@ -25,11 +25,13 @@ jobs:
           ref: ${{ github.event.ref }}
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true
 
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
 
       - name: Analyze branch and version
         id: version_info
@@ -445,6 +447,7 @@ jobs:
           ref: develop
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true
 
       - name: Check for existing version bump PRs
         id: check_prs
@@ -469,6 +472,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
 
       - name: Calculate next development version
         if: steps.check_prs.outputs.skip_bump == 'false'

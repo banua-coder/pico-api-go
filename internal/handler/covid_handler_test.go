@@ -38,6 +38,24 @@ func (m *MockCovidService) GetLatestNationalCase() (*models.NationalCase, error)
 	return result.(*models.NationalCase), args.Error(1)
 }
 
+func (m *MockCovidService) GetNationalCaseByDay(day int64) (*models.NationalCase, error) {
+	args := m.Called(day)
+	result := args.Get(0)
+	if result == nil {
+		return nil, args.Error(1)
+	}
+	return result.(*models.NationalCase), args.Error(1)
+}
+
+func (m *MockCovidService) GetProvinceByID(id string) (*models.Province, error) {
+	args := m.Called(id)
+	result := args.Get(0)
+	if result == nil {
+		return nil, args.Error(1)
+	}
+	return result.(*models.Province), args.Error(1)
+}
+
 func (m *MockCovidService) GetProvinces() ([]models.Province, error) {
 	args := m.Called()
 	return args.Get(0).([]models.Province), args.Error(1)
@@ -627,7 +645,7 @@ func TestCovidHandler_GetAPIIndex(t *testing.T) {
 	apiInfo, ok := data["api"].(map[string]interface{})
 	assert.True(t, ok)
 	assert.Equal(t, "Sulawesi Tengah COVID-19 Data API", apiInfo["title"])
-	assert.Equal(t, "2.4.0", apiInfo["version"])
+	assert.Equal(t, "2.5.0", apiInfo["version"])
 
 	// Verify endpoints structure
 	endpoints, ok := data["endpoints"].(map[string]interface{})
@@ -658,7 +676,7 @@ func TestCovidHandler_HealthCheck(t *testing.T) {
 	assert.True(t, ok)
 	assert.Equal(t, "degraded", data["status"])
 	assert.Equal(t, "COVID-19 API", data["service"])
-	assert.Equal(t, "2.4.0", data["version"])
+	assert.Equal(t, "2.5.0", data["version"])
 	assert.Contains(t, data, "database")
 
 	dbData, ok := data["database"].(map[string]interface{})

@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/banua-coder/pico-api-go/internal/models"
@@ -48,7 +49,7 @@ func (r *nationalCaseRepository) GetAllSorted(sortParams utils.SortParams) ([]mo
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			fmt.Printf("Error closing rows: %v\n", err)
+			log.Printf("Error closing rows: %v", err)
 		}
 	}()
 
@@ -90,7 +91,7 @@ func (r *nationalCaseRepository) GetByDateRangeSorted(startDate, endDate time.Ti
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			fmt.Printf("Error closing rows: %v\n", err)
+			log.Printf("Error closing rows: %v", err)
 		}
 	}()
 
@@ -183,7 +184,7 @@ func (r *nationalCaseRepository) GetAllPaginatedSorted(limit, offset int, sortPa
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			fmt.Printf("Error closing rows: %v\n", err)
+			log.Printf("Error closing rows: %v", err)
 		}
 	}()
 
@@ -235,7 +236,7 @@ func (r *nationalCaseRepository) GetByDateRangePaginatedSorted(startDate, endDat
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			fmt.Printf("Error closing rows: %v\n", err)
+			log.Printf("Error closing rows: %v", err)
 		}
 	}()
 

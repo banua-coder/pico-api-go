@@ -1,7 +1,7 @@
 // Package main provides the entry point for the Sulawesi Tengah COVID-19 Data API
 //
 //	@title			Sulawesi Tengah COVID-19 Data API
-//	@version		2.4.0
+//	@version		2.5.0
 //	@description	A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central Sulawesi), with additional national and provincial data for context. Features enhanced ODP/PDP grouping, hybrid pagination, and rate limiting protection. Rate limiting: 100 requests per minute per IP address by default, with appropriate HTTP headers for client guidance.
 //	@termsOfService	http://swagger.io/terms/
 //
@@ -54,7 +54,7 @@ func main() {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	defer func() {
-		if err := db.DB.Close(); err != nil {
+		if err := db.Close(); err != nil {
 			log.Printf("Error closing database connection: %v", err)
 		}
 	}()
@@ -66,6 +66,22 @@ func main() {
 	provinceCaseRepo := repository.NewProvinceCaseRepository(db)
 
 	covidService := service.NewCovidService(nationalCaseRepo, provinceRepo, provinceCaseRepo)
+
+	// New repositories and services for migrated Lumen endpoints
+	regencyRepo := repository.NewRegencyRepository(db)
+	regencyCaseRepo := repository.NewRegencyCaseRepository(db)
+	hospitalRepo := repository.NewHospitalRepository(db)
+	taskForceRepo := repository.NewTaskForceRepository(db)
+
+	regencyService := service.NewRegencyService(regencyRepo, regencyCaseRepo)
+	hospitalService := service.NewHospitalService(hospitalRepo)
+	taskForceService := service.NewTaskForceService(taskForceRepo)
+
+	vaccinationRepo := repository.NewVaccinationRepository(db)
+	vaccinationService := service.NewVaccinationService(vaccinationRepo)
+
+	provinceStatsRepo := repository.NewProvinceStatsRepository(db)
+	provinceStatsService := service.NewProvinceStatsService(provinceStatsRepo)
 
 	// Override Swagger host/basePath from environment variables if set
 	if host := os.Getenv("SWAGGER_HOST"); host != "" {
@@ -79,7 +95,15 @@ func main() {
 	}
 
 	enableSwagger := true
-	router := handler.SetupRoutes(covidService, db, enableSwagger)
+	svc := handler.Services{
+		CovidService:     covidService,
+		RegencyService:   regencyService,
+		HospitalService:  hospitalService,
+		TaskForceService:    taskForceService,
+		VaccinationService:   vaccinationService,
+		ProvinceStatsService: provinceStatsService,
+	}
+	router := handler.SetupRoutes(svc, db, enableSwagger)
 
 	router.Use(middleware.Recovery)
 	router.Use(middleware.Logging)
