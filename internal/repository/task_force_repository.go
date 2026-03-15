@@ -30,7 +30,7 @@ func (r *TaskForceRepository) GetAllByProvinceID(provinceID int) ([]models.TaskF
 	if err != nil {
 		return nil, fmt.Errorf("failed to query regencies: %w", err)
 	}
-	defer regRows.Close()
+	defer regRows.Close() //nolint:errcheck
 
 	var result []models.TaskForceByRegency
 	for regRows.Next() {
@@ -56,7 +56,7 @@ func (r *TaskForceRepository) GetAllByProvinceID(provinceID int) ([]models.TaskF
 		for tfRows.Next() {
 			var tf models.TaskForce
 			if err := tfRows.Scan(&tf.ID, &tf.RegencyID, &tf.Name); err != nil {
-				tfRows.Close()
+				_ = tfRows.Close()
 				return nil, fmt.Errorf("failed to scan task force: %w", err)
 			}
 
@@ -67,7 +67,7 @@ func (r *TaskForceRepository) GetAllByProvinceID(provinceID int) ([]models.TaskF
 				WHERE c.contactable_type = 'App\\Models\\TaskForce' AND c.contactable_id = ?`
 			cRows, err := r.db.Query(cQuery, tf.ID)
 			if err != nil {
-				tfRows.Close()
+				_ = tfRows.Close()
 				return nil, fmt.Errorf("failed to query contacts: %w", err)
 			}
 
@@ -75,18 +75,18 @@ func (r *TaskForceRepository) GetAllByProvinceID(provinceID int) ([]models.TaskF
 			for cRows.Next() {
 				var c models.Contact
 				if err := cRows.Scan(&c.ID, &c.ContactTypeID, &c.Contact, &c.ContactTypeName, &c.ContactTypeIcon); err != nil {
-					cRows.Close()
-					tfRows.Close()
+					_ = cRows.Close()
+					_ = tfRows.Close()
 					return nil, fmt.Errorf("failed to scan contact: %w", err)
 				}
 				contacts = append(contacts, c)
 			}
-			cRows.Close()
+			_ = cRows.Close()
 
 			tf.Contacts = contacts
 			taskForces = append(taskForces, tf)
 		}
-		tfRows.Close()
+		_ = tfRows.Close()
 
 		result[i].TaskForces = taskForces
 	}

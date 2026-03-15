@@ -37,7 +37,7 @@ func (r *HospitalRepository) GetAll(provinceID int) ([]models.Hospital, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to query hospitals: %w", err)
 	}
-	defer rows.Close()
+	defer rows.Close() //nolint:errcheck
 
 	var hospitals []models.Hospital
 	for rows.Next() {
@@ -112,7 +112,7 @@ func (r *HospitalRepository) getContacts(contactableType string, contactableID i
 	if err != nil {
 		return nil, fmt.Errorf("failed to query contacts: %w", err)
 	}
-	defer rows.Close()
+	defer rows.Close() //nolint:errcheck
 
 	var contacts []models.Contact
 	for rows.Next() {
@@ -135,7 +135,7 @@ func (r *HospitalRepository) getBeds(hospitalID int64) ([]models.HospitalBed, er
 	if err != nil {
 		return nil, fmt.Errorf("failed to query hospital beds: %w", err)
 	}
-	defer rows.Close()
+	defer rows.Close() //nolint:errcheck
 
 	var beds []models.HospitalBed
 	for rows.Next() {

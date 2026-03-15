@@ -55,7 +55,7 @@ func TestVaccinationRepository_GetProvinceVaccinations(t *testing.T) {
 	repo := NewVaccinationRepository(db)
 	now := time.Now()
 
-	provinceCols := append([]string{"id", "day", "province_id", "date", "total_vaccination_target",
+	provinceCols := []string{"id", "day", "province_id", "date", "total_vaccination_target",
 		"first_vaccination_received", "second_vaccination_received",
 		"cumulative_first_vaccination_received", "cumulative_second_vaccination_received",
 		"health_worker_vaccination_target", "health_worker_first_vaccination_received", "health_worker_second_vaccination_received",
@@ -68,7 +68,7 @@ func TestVaccinationRepository_GetProvinceVaccinations(t *testing.T) {
 		"cumulative_public_first_vaccination_received", "cumulative_public_second_vaccination_received",
 		"teenager_vaccination_target", "teenager_first_vaccination_received", "teenager_second_vaccination_received",
 		"cumulative_teenager_first_vaccination_received", "cumulative_teenager_second_vaccination_received",
-	})
+	}
 
 	vals := []driver.Value{1, 1, 72, now}
 	for i := 0; i < 30; i++ {

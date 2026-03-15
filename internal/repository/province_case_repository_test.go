@@ -212,7 +212,7 @@ func addProvinceCaseRow(rows *sqlmock.Rows, provinceID string, now time.Time) *s
 
 func TestProvinceCaseRepository_GetAllPaginated(t *testing.T) {
 	db, mock := setupMockDB(t)
-	defer db.Close()
+	defer db.Close() //nolint:errcheck
 	repo := NewProvinceCaseRepository(db)
 	now := time.Now()
 
@@ -231,7 +231,7 @@ func TestProvinceCaseRepository_GetAllPaginated(t *testing.T) {
 
 func TestProvinceCaseRepository_GetAllPaginatedSorted(t *testing.T) {
 	db, mock := setupMockDB(t)
-	defer db.Close()
+	defer db.Close() //nolint:errcheck
 	repo := NewProvinceCaseRepository(db)
 	now := time.Now()
 
@@ -251,7 +251,7 @@ func TestProvinceCaseRepository_GetAllPaginatedSorted(t *testing.T) {
 
 func TestProvinceCaseRepository_GetByProvinceIDPaginated(t *testing.T) {
 	db, mock := setupMockDB(t)
-	defer db.Close()
+	defer db.Close() //nolint:errcheck
 	repo := NewProvinceCaseRepository(db)
 	provinceID := "11"
 	now := time.Now()
@@ -272,7 +272,7 @@ func TestProvinceCaseRepository_GetByProvinceIDPaginated(t *testing.T) {
 
 func TestProvinceCaseRepository_GetByProvinceIDAndDateRangePaginated(t *testing.T) {
 	db, mock := setupMockDB(t)
-	defer db.Close()
+	defer db.Close() //nolint:errcheck
 	repo := NewProvinceCaseRepository(db)
 	provinceID := "11"
 	start := time.Date(2020, 3, 1, 0, 0, 0, 0, time.UTC)
@@ -295,7 +295,7 @@ func TestProvinceCaseRepository_GetByProvinceIDAndDateRangePaginated(t *testing.
 
 func TestProvinceCaseRepository_GetByDateRange(t *testing.T) {
 	db, mock := setupMockDB(t)
-	defer db.Close()
+	defer db.Close() //nolint:errcheck
 	repo := NewProvinceCaseRepository(db)
 	start := time.Date(2020, 3, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2020, 3, 31, 0, 0, 0, 0, time.UTC)
@@ -314,7 +314,7 @@ func TestProvinceCaseRepository_GetByDateRange(t *testing.T) {
 
 func TestProvinceCaseRepository_GetByDateRangePaginated(t *testing.T) {
 	db, mock := setupMockDB(t)
-	defer db.Close()
+	defer db.Close() //nolint:errcheck
 	repo := NewProvinceCaseRepository(db)
 	start := time.Date(2020, 3, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2020, 3, 31, 0, 0, 0, 0, time.UTC)
@@ -336,7 +336,7 @@ func TestProvinceCaseRepository_GetByDateRangePaginated(t *testing.T) {
 
 func TestProvinceCaseRepository_GetByProvinceIDSorted(t *testing.T) {
 	db, mock := setupMockDB(t)
-	defer db.Close()
+	defer db.Close() //nolint:errcheck
 	repo := NewProvinceCaseRepository(db)
 	provinceID := "11"
 	now := time.Now()
@@ -354,7 +354,7 @@ func TestProvinceCaseRepository_GetByProvinceIDSorted(t *testing.T) {
 
 func TestProvinceCaseRepository_GetByProvinceIDPaginatedSorted(t *testing.T) {
 	db, mock := setupMockDB(t)
-	defer db.Close()
+	defer db.Close() //nolint:errcheck
 	repo := NewProvinceCaseRepository(db)
 	provinceID := "11"
 	now := time.Now()
@@ -376,7 +376,7 @@ func TestProvinceCaseRepository_GetByProvinceIDPaginatedSorted(t *testing.T) {
 
 func TestProvinceCaseRepository_GetByProvinceIDAndDateRangeSorted(t *testing.T) {
 	db, mock := setupMockDB(t)
-	defer db.Close()
+	defer db.Close() //nolint:errcheck
 	repo := NewProvinceCaseRepository(db)
 	provinceID := "11"
 	start := time.Date(2020, 3, 1, 0, 0, 0, 0, time.UTC)
@@ -396,7 +396,7 @@ func TestProvinceCaseRepository_GetByProvinceIDAndDateRangeSorted(t *testing.T) 
 
 func TestProvinceCaseRepository_GetByProvinceIDAndDateRangePaginatedSorted(t *testing.T) {
 	db, mock := setupMockDB(t)
-	defer db.Close()
+	defer db.Close() //nolint:errcheck
 	repo := NewProvinceCaseRepository(db)
 	provinceID := "11"
 	start := time.Date(2020, 3, 1, 0, 0, 0, 0, time.UTC)
@@ -420,7 +420,7 @@ func TestProvinceCaseRepository_GetByProvinceIDAndDateRangePaginatedSorted(t *te
 
 func TestProvinceCaseRepository_GetByDateRangeSorted(t *testing.T) {
 	db, mock := setupMockDB(t)
-	defer db.Close()
+	defer db.Close() //nolint:errcheck
 	repo := NewProvinceCaseRepository(db)
 	start := time.Date(2020, 3, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2020, 3, 31, 0, 0, 0, 0, time.UTC)
@@ -440,7 +440,7 @@ func TestProvinceCaseRepository_GetByDateRangeSorted(t *testing.T) {
 
 func TestProvinceCaseRepository_GetByDateRangePaginatedSorted(t *testing.T) {
 	db, mock := setupMockDB(t)
-	defer db.Close()
+	defer db.Close() //nolint:errcheck
 	repo := NewProvinceCaseRepository(db)
 	start := time.Date(2020, 3, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2020, 3, 31, 0, 0, 0, 0, time.UTC)
@@ -463,7 +463,7 @@ func TestProvinceCaseRepository_GetByDateRangePaginatedSorted(t *testing.T) {
 
 func TestProvinceCaseRepository_GetAllSorted_ByProvinceName(t *testing.T) {
 	db, mock := setupMockDB(t)
-	defer db.Close()
+	defer db.Close() //nolint:errcheck
 	repo := NewProvinceCaseRepository(db)
 	now := time.Now()
 
@@ -479,7 +479,7 @@ func TestProvinceCaseRepository_GetAllSorted_ByProvinceName(t *testing.T) {
 
 func TestProvinceCaseRepository_GetAllSorted_UnknownField(t *testing.T) {
 	db, mock := setupMockDB(t)
-	defer db.Close()
+	defer db.Close() //nolint:errcheck
 	repo := NewProvinceCaseRepository(db)
 	now := time.Now()
 
