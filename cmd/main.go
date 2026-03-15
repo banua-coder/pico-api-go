@@ -67,6 +67,22 @@ func main() {
 
 	covidService := service.NewCovidService(nationalCaseRepo, provinceRepo, provinceCaseRepo)
 
+	// New repositories and services for migrated Lumen endpoints
+	regencyRepo := repository.NewRegencyRepository(db)
+	regencyCaseRepo := repository.NewRegencyCaseRepository(db)
+	hospitalRepo := repository.NewHospitalRepository(db)
+	taskForceRepo := repository.NewTaskForceRepository(db)
+
+	regencyService := service.NewRegencyService(regencyRepo, regencyCaseRepo)
+	hospitalService := service.NewHospitalService(hospitalRepo)
+	taskForceService := service.NewTaskForceService(taskForceRepo)
+
+	vaccinationRepo := repository.NewVaccinationRepository(db)
+	vaccinationService := service.NewVaccinationService(vaccinationRepo)
+
+	provinceStatsRepo := repository.NewProvinceStatsRepository(db)
+	provinceStatsService := service.NewProvinceStatsService(provinceStatsRepo)
+
 	// Override Swagger host/basePath from environment variables if set
 	if host := os.Getenv("SWAGGER_HOST"); host != "" {
 		docs.SwaggerInfo.Host = host
@@ -79,7 +95,15 @@ func main() {
 	}
 
 	enableSwagger := true
-	router := handler.SetupRoutes(covidService, db, enableSwagger)
+	svc := handler.Services{
+		CovidService:     covidService,
+		RegencyService:   regencyService,
+		HospitalService:  hospitalService,
+		TaskForceService:    taskForceService,
+		VaccinationService:   vaccinationService,
+		ProvinceStatsService: provinceStatsService,
+	}
+	router := handler.SetupRoutes(svc, db, enableSwagger)
 
 	router.Use(middleware.Recovery)
 	router.Use(middleware.Logging)
