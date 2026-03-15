@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"log"
 	"database/sql"
 	"fmt"
 
@@ -32,7 +33,11 @@ func (r *RegencyRepository) GetAll(provinceID int) ([]models.Regency, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to query regencies: %w", err)
 	}
-	defer rows.Close() //nolint:errcheck
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("Error closing rows: %v", err)
+		}
+	}()
 
 	var regencies []models.Regency
 	for rows.Next() {

@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"log"
 	"fmt"
 
 	"github.com/banua-coder/pico-api-go/internal/models"
@@ -38,7 +39,11 @@ func (r *ProvinceStatsRepository) GetGenderCases(provinceID int) ([]models.Provi
 	if err != nil {
 		return nil, fmt.Errorf("failed to query gender cases: %w", err)
 	}
-	defer rows.Close() //nolint:errcheck
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("Error closing rows: %v", err)
+		}
+	}()
 
 	var cases []models.ProvinceGenderCase
 	for rows.Next() {
@@ -95,7 +100,11 @@ func (r *ProvinceStatsRepository) GetTests(provinceID int) ([]models.ProvinceTes
 	if err != nil {
 		return nil, fmt.Errorf("failed to query province tests: %w", err)
 	}
-	defer rows.Close() //nolint:errcheck
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("Error closing rows: %v", err)
+		}
+	}()
 
 	var tests []models.ProvinceTest
 	for rows.Next() {
@@ -121,7 +130,11 @@ func (r *ProvinceStatsRepository) GetTestTypes() ([]models.TestType, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to query test types: %w", err)
 	}
-	defer rows.Close() //nolint:errcheck
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("Error closing rows: %v", err)
+		}
+	}()
 
 	var types []models.TestType
 	for rows.Next() {

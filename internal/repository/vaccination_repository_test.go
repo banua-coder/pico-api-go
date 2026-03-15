@@ -35,7 +35,11 @@ func addNationalVaccineRow(rows *sqlmock.Rows, now time.Time) *sqlmock.Rows {
 
 func TestVaccinationRepository_GetNationalVaccinations(t *testing.T) {
 	db, mock := setupMockDB(t)
-	defer db.Close() //nolint:errcheck
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Logf("Error closing db: %v", err)
+		}
+	}()
 	repo := NewVaccinationRepository(db)
 	now := time.Now()
 
@@ -51,7 +55,11 @@ func TestVaccinationRepository_GetNationalVaccinations(t *testing.T) {
 
 func TestVaccinationRepository_GetProvinceVaccinations(t *testing.T) {
 	db, mock := setupMockDB(t)
-	defer db.Close() //nolint:errcheck
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Logf("Error closing db: %v", err)
+		}
+	}()
 	repo := NewVaccinationRepository(db)
 	now := time.Now()
 
@@ -88,7 +96,11 @@ func TestVaccinationRepository_GetProvinceVaccinations(t *testing.T) {
 
 func TestVaccinationRepository_GetVaccineLocations(t *testing.T) {
 	db, mock := setupMockDB(t)
-	defer db.Close() //nolint:errcheck
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Logf("Error closing db: %v", err)
+		}
+	}()
 	repo := NewVaccinationRepository(db)
 
 	cols := []string{"id", "regency_id", "name", "address", "operational_time",

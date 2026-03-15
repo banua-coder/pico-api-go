@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"log"
 	"fmt"
 
 	"github.com/banua-coder/pico-api-go/internal/models"
@@ -43,7 +44,11 @@ func (r *RegencyCaseRepository) GetByRegencyID(regencyID int) ([]models.RegencyC
 	if err != nil {
 		return nil, fmt.Errorf("failed to query regency cases: %w", err)
 	}
-	defer rows.Close() //nolint:errcheck
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("Error closing rows: %v", err)
+		}
+	}()
 
 	var cases []models.RegencyCase
 	for rows.Next() {
@@ -90,7 +95,11 @@ func (r *RegencyCaseRepository) GetLatestByProvinceID(provinceID int) ([]models.
 	if err != nil {
 		return nil, fmt.Errorf("failed to query latest regency cases: %w", err)
 	}
-	defer rows.Close() //nolint:errcheck
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("Error closing rows: %v", err)
+		}
+	}()
 
 	var cases []models.RegencyCase
 	for rows.Next() {

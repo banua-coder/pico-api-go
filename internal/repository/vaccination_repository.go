@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"log"
 	"fmt"
 
 	"github.com/banua-coder/pico-api-go/internal/models"
@@ -45,7 +46,11 @@ func (r *VaccinationRepository) GetNationalVaccinations() ([]models.NationalVacc
 	if err != nil {
 		return nil, fmt.Errorf("failed to query national vaccinations: %w", err)
 	}
-	defer rows.Close() //nolint:errcheck
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("Error closing rows: %v", err)
+		}
+	}()
 
 	var vaccines []models.NationalVaccine
 	for rows.Next() {
@@ -92,7 +97,11 @@ func (r *VaccinationRepository) GetProvinceVaccinations(provinceID int) ([]model
 	if err != nil {
 		return nil, fmt.Errorf("failed to query province vaccinations: %w", err)
 	}
-	defer rows.Close() //nolint:errcheck
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("Error closing rows: %v", err)
+		}
+	}()
 
 	var vaccines []models.ProvinceVaccine
 	for rows.Next() {
@@ -130,7 +139,11 @@ func (r *VaccinationRepository) GetVaccineLocations(provinceID int) ([]models.Va
 	if err != nil {
 		return nil, fmt.Errorf("failed to query vaccine locations: %w", err)
 	}
-	defer rows.Close() //nolint:errcheck
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("Error closing rows: %v", err)
+		}
+	}()
 
 	var locations []models.VaccineLocation
 	for rows.Next() {
