@@ -1,0 +1,12 @@
+name: Housekeeping
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  branch-cleanup:
+    name: Branch Cleanup
+    uses: banua-coder/banua-coder-workflow/.github/workflows/housekeeping.yml@main
+    with:
+      protected-branches: 'main,develop'
