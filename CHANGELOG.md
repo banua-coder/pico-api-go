@@ -11,6 +11,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+
+## [v2.5.0] - 2026-03-15
+
+### Hotfixes
+
+- Fix deploy workflow — trigger on tags, add ssh deploy step ([776d9578](https://github.com/banua-coder/pico-api-go/commit/776d9578d3efc9ac73d8a8eaab1354b22ceaba1d))
+
+### Added
+
+- Add province stats, national by day, single province endpoints ([16ad143b](https://github.com/banua-coder/pico-api-go/commit/16ad143b4e07f699e20bde8b7cc7719d34bdd851))
+- Add vaccination endpoints — national, province, locations ([32ce6f4a](https://github.com/banua-coder/pico-api-go/commit/32ce6f4a8dbdb9bf7e3d8ae08d160febe250b4ce))
+- Migrate lumen endpoints — regencies, hospitals, task forces ([29d7863f](https://github.com/banua-coder/pico-api-go/commit/29d7863fe8fd2118e5e90d5bf4aadf7030d05fc7))
+- Enable swagger ui in production build ([fe19501b](https://github.com/banua-coder/pico-api-go/commit/fe19501ba81f45538cc2a0afba1f16801f2f5abd))
+
+### Fixed
+
+- Remove all redundant embedded db field selectors (qf1008) ([d85e9d61](https://github.com/banua-coder/pico-api-go/commit/d85e9d61bd4f679baf4223f25b1aae035a0cf9fb))
+- Remove redundant embedded db field selectors (qf1008) ([cfbeecc3](https://github.com/banua-coder/pico-api-go/commit/cfbeecc3acdf76bb8185ab251bfa642ad88f6b09))
+- Upgrade golangci-lint to v2.10.1 for go 1.26 compatibility ([aa3bcf9e](https://github.com/banua-coder/pico-api-go/commit/aa3bcf9e7058a84b2bc1010a89ec2fa13dba10f3))
+- Handle null values in province case odp/pdp fields ([82388377](https://github.com/banua-coder/pico-api-go/commit/82388377d6d7f4449ab3bc50b9e958b8777d0012))
+- Update swagger host to pico-api-go.banuacoder.com ([983fa25e](https://github.com/banua-coder/pico-api-go/commit/983fa25e636735ac1d3c92a1abee885f9736bfa0))
+- Use ./cmd/ package path in dockerfile (main_production.go not found) ([8359a50c](https://github.com/banua-coder/pico-api-go/commit/8359a50c57024cbf63419d8b5356e12357cd795a))
+- Update host to pico-api-go.banuacoder.com ([f97f6c9e](https://github.com/banua-coder/pico-api-go/commit/f97f6c9e64267460b40079809607d1938b865ba7))
+- Create-release job now runs after successful deployment ([73b1fbbc](https://github.com/banua-coder/pico-api-go/commit/73b1fbbc0361b7340839ffcf7c82a212d04eb39e))
+
+### Documentation
+
+- Add contributing.md with git flow workflow ([401732c9](https://github.com/banua-coder/pico-api-go/commit/401732c955c1d42924fbbc9938b4920439fa0673))
+
+### Tests
+
+- Add repository tests to meet 85% coverage threshold ([0d01572b](https://github.com/banua-coder/pico-api-go/commit/0d01572b7a90b375ca446ccdfcf079a36eaeed48))
+- Add service layer unit tests to improve coverage ([9066ddd6](https://github.com/banua-coder/pico-api-go/commit/9066ddd6dbca1fec8fece3bafc2fca1033f0ac12))
+- Add unit tests for all new handlers + refactor to service interfaces ([6ff000db](https://github.com/banua-coder/pico-api-go/commit/6ff000db026e7d1b8cd9506a196acefa91f90180))
+
+### CI/CD
+
+- Retrigger ci after golangci-lint-action upgrade to v7 ([5ce2c25e](https://github.com/banua-coder/pico-api-go/commit/5ce2c25e686a0aa529cf0d20f35bb9fcd9d71cc0))
+- Add ssh deploy step — pull & restart container after image push ([9936208a](https://github.com/banua-coder/pico-api-go/commit/9936208a4c1927ec04607a9c1cd19f3320bf0647))
+- Restore original ci.yml; deploy triggers on version tags (docker/ghcr) ([75c19820](https://github.com/banua-coder/pico-api-go/commit/75c19820821009fec7bbadaa942c90f8182d6cff))
+- Deploy triggers on main + hotfix/**, ci on develop + feature/bugfix/release + prs ([820f648d](https://github.com/banua-coder/pico-api-go/commit/820f648d0c455b4f8fbac747d5c97880cb6b2f76))
+- Separate deploy (main only) and ci workflows (develop/feature/pr) ([3331bace](https://github.com/banua-coder/pico-api-go/commit/3331bace0d9b18b6dad84729ea72df85ce714c80))
+- Add setup-buildx-action to fix gha cache export ([56a74d00](https://github.com/banua-coder/pico-api-go/commit/56a74d0036838b949eb354a542b9c169f84de5ca))
+- Add docker build and deploy workflow to ghcr ([3928c39c](https://github.com/banua-coder/pico-api-go/commit/3928c39c60a81b9c0b2d10dd7a0dde282d08e677))
+
+### Maintenance
+
+- Upgrade go to 1.26 and migrate to reusable workflows ([31439dd0](https://github.com/banua-coder/pico-api-go/commit/31439dd0ad3b77944fabf14eab5eaeeedc9d23bc))
+- Sync develop with main (resolve conflicts, keep main version) ([b0d0bd6d](https://github.com/banua-coder/pico-api-go/commit/b0d0bd6db6b5412a6baf8d87c34e31805edbfd5f))
+- Update version to 2.5.0 and fix remaining issues ([367fac96](https://github.com/banua-coder/pico-api-go/commit/367fac96a7f71f7ab04c299c6ae9e9ab1d44c86f))
+
 ## [v2.4.0] - 2025-09-15
 
 ### Added
