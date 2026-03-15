@@ -214,7 +214,7 @@ func TestProvinceCaseRepository_GetAllPaginated(t *testing.T) {
 	db, mock := setupMockDB(t)
 	defer func() {
 		if err := db.Close(); err != nil {
-			t.Logf("Error closing rows: %v", err)
+			t.Logf("Error closing db: %v", err)
 		}
 	}()
 	repo := NewProvinceCaseRepository(db)
@@ -237,7 +237,7 @@ func TestProvinceCaseRepository_GetAllPaginatedSorted(t *testing.T) {
 	db, mock := setupMockDB(t)
 	defer func() {
 		if err := db.Close(); err != nil {
-			t.Logf("Error closing rows: %v", err)
+			t.Logf("Error closing db: %v", err)
 		}
 	}()
 	repo := NewProvinceCaseRepository(db)
@@ -261,7 +261,7 @@ func TestProvinceCaseRepository_GetByProvinceIDPaginated(t *testing.T) {
 	db, mock := setupMockDB(t)
 	defer func() {
 		if err := db.Close(); err != nil {
-			t.Logf("Error closing rows: %v", err)
+			t.Logf("Error closing db: %v", err)
 		}
 	}()
 	repo := NewProvinceCaseRepository(db)
@@ -286,7 +286,7 @@ func TestProvinceCaseRepository_GetByProvinceIDAndDateRangePaginated(t *testing.
 	db, mock := setupMockDB(t)
 	defer func() {
 		if err := db.Close(); err != nil {
-			t.Logf("Error closing rows: %v", err)
+			t.Logf("Error closing db: %v", err)
 		}
 	}()
 	repo := NewProvinceCaseRepository(db)
@@ -313,7 +313,7 @@ func TestProvinceCaseRepository_GetByDateRange(t *testing.T) {
 	db, mock := setupMockDB(t)
 	defer func() {
 		if err := db.Close(); err != nil {
-			t.Logf("Error closing rows: %v", err)
+			t.Logf("Error closing db: %v", err)
 		}
 	}()
 	repo := NewProvinceCaseRepository(db)
@@ -336,7 +336,7 @@ func TestProvinceCaseRepository_GetByDateRangePaginated(t *testing.T) {
 	db, mock := setupMockDB(t)
 	defer func() {
 		if err := db.Close(); err != nil {
-			t.Logf("Error closing rows: %v", err)
+			t.Logf("Error closing db: %v", err)
 		}
 	}()
 	repo := NewProvinceCaseRepository(db)
@@ -362,7 +362,7 @@ func TestProvinceCaseRepository_GetByProvinceIDSorted(t *testing.T) {
 	db, mock := setupMockDB(t)
 	defer func() {
 		if err := db.Close(); err != nil {
-			t.Logf("Error closing rows: %v", err)
+			t.Logf("Error closing db: %v", err)
 		}
 	}()
 	repo := NewProvinceCaseRepository(db)
@@ -384,7 +384,7 @@ func TestProvinceCaseRepository_GetByProvinceIDPaginatedSorted(t *testing.T) {
 	db, mock := setupMockDB(t)
 	defer func() {
 		if err := db.Close(); err != nil {
-			t.Logf("Error closing rows: %v", err)
+			t.Logf("Error closing db: %v", err)
 		}
 	}()
 	repo := NewProvinceCaseRepository(db)
@@ -410,7 +410,7 @@ func TestProvinceCaseRepository_GetByProvinceIDAndDateRangeSorted(t *testing.T) 
 	db, mock := setupMockDB(t)
 	defer func() {
 		if err := db.Close(); err != nil {
-			t.Logf("Error closing rows: %v", err)
+			t.Logf("Error closing db: %v", err)
 		}
 	}()
 	repo := NewProvinceCaseRepository(db)
@@ -434,7 +434,7 @@ func TestProvinceCaseRepository_GetByProvinceIDAndDateRangePaginatedSorted(t *te
 	db, mock := setupMockDB(t)
 	defer func() {
 		if err := db.Close(); err != nil {
-			t.Logf("Error closing rows: %v", err)
+			t.Logf("Error closing db: %v", err)
 		}
 	}()
 	repo := NewProvinceCaseRepository(db)
@@ -462,7 +462,7 @@ func TestProvinceCaseRepository_GetByDateRangeSorted(t *testing.T) {
 	db, mock := setupMockDB(t)
 	defer func() {
 		if err := db.Close(); err != nil {
-			t.Logf("Error closing rows: %v", err)
+			t.Logf("Error closing db: %v", err)
 		}
 	}()
 	repo := NewProvinceCaseRepository(db)
@@ -486,7 +486,7 @@ func TestProvinceCaseRepository_GetByDateRangePaginatedSorted(t *testing.T) {
 	db, mock := setupMockDB(t)
 	defer func() {
 		if err := db.Close(); err != nil {
-			t.Logf("Error closing rows: %v", err)
+			t.Logf("Error closing db: %v", err)
 		}
 	}()
 	repo := NewProvinceCaseRepository(db)
@@ -513,7 +513,7 @@ func TestProvinceCaseRepository_GetAllSorted_ByProvinceName(t *testing.T) {
 	db, mock := setupMockDB(t)
 	defer func() {
 		if err := db.Close(); err != nil {
-			t.Logf("Error closing rows: %v", err)
+			t.Logf("Error closing db: %v", err)
 		}
 	}()
 	repo := NewProvinceCaseRepository(db)
@@ -533,7 +533,7 @@ func TestProvinceCaseRepository_GetAllSorted_UnknownField(t *testing.T) {
 	db, mock := setupMockDB(t)
 	defer func() {
 		if err := db.Close(); err != nil {
-			t.Logf("Error closing rows: %v", err)
+			t.Logf("Error closing db: %v", err)
 		}
 	}()
 	repo := NewProvinceCaseRepository(db)

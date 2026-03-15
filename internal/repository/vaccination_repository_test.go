@@ -37,7 +37,7 @@ func TestVaccinationRepository_GetNationalVaccinations(t *testing.T) {
 	db, mock := setupMockDB(t)
 	defer func() {
 		if err := db.Close(); err != nil {
-			t.Logf("Error closing rows: %v", err)
+			t.Logf("Error closing db: %v", err)
 		}
 	}()
 	repo := NewVaccinationRepository(db)
@@ -57,7 +57,7 @@ func TestVaccinationRepository_GetProvinceVaccinations(t *testing.T) {
 	db, mock := setupMockDB(t)
 	defer func() {
 		if err := db.Close(); err != nil {
-			t.Logf("Error closing rows: %v", err)
+			t.Logf("Error closing db: %v", err)
 		}
 	}()
 	repo := NewVaccinationRepository(db)
@@ -98,7 +98,7 @@ func TestVaccinationRepository_GetVaccineLocations(t *testing.T) {
 	db, mock := setupMockDB(t)
 	defer func() {
 		if err := db.Close(); err != nil {
-			t.Logf("Error closing rows: %v", err)
+			t.Logf("Error closing db: %v", err)
 		}
 	}()
 	repo := NewVaccinationRepository(db)
