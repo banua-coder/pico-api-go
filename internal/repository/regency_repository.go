@@ -32,7 +32,7 @@ func (r *RegencyRepository) GetAll(provinceID int) ([]models.Regency, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to query regencies: %w", err)
 	}
-	defer rows.Close()
+	defer rows.Close() //nolint:errcheck
 
 	var regencies []models.Regency
 	for rows.Next() {

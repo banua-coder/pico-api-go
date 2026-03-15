@@ -45,7 +45,7 @@ func (r *VaccinationRepository) GetNationalVaccinations() ([]models.NationalVacc
 	if err != nil {
 		return nil, fmt.Errorf("failed to query national vaccinations: %w", err)
 	}
-	defer rows.Close()
+	defer rows.Close() //nolint:errcheck
 
 	var vaccines []models.NationalVaccine
 	for rows.Next() {
@@ -92,7 +92,7 @@ func (r *VaccinationRepository) GetProvinceVaccinations(provinceID int) ([]model
 	if err != nil {
 		return nil, fmt.Errorf("failed to query province vaccinations: %w", err)
 	}
-	defer rows.Close()
+	defer rows.Close() //nolint:errcheck
 
 	var vaccines []models.ProvinceVaccine
 	for rows.Next() {
@@ -130,7 +130,7 @@ func (r *VaccinationRepository) GetVaccineLocations(provinceID int) ([]models.Va
 	if err != nil {
 		return nil, fmt.Errorf("failed to query vaccine locations: %w", err)
 	}
-	defer rows.Close()
+	defer rows.Close() //nolint:errcheck
 
 	var locations []models.VaccineLocation
 	for rows.Next() {

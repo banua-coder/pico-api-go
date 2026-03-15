@@ -38,7 +38,7 @@ func (r *ProvinceStatsRepository) GetGenderCases(provinceID int) ([]models.Provi
 	if err != nil {
 		return nil, fmt.Errorf("failed to query gender cases: %w", err)
 	}
-	defer rows.Close()
+	defer rows.Close() //nolint:errcheck
 
 	var cases []models.ProvinceGenderCase
 	for rows.Next() {
@@ -95,7 +95,7 @@ func (r *ProvinceStatsRepository) GetTests(provinceID int) ([]models.ProvinceTes
 	if err != nil {
 		return nil, fmt.Errorf("failed to query province tests: %w", err)
 	}
-	defer rows.Close()
+	defer rows.Close() //nolint:errcheck
 
 	var tests []models.ProvinceTest
 	for rows.Next() {
@@ -121,7 +121,7 @@ func (r *ProvinceStatsRepository) GetTestTypes() ([]models.TestType, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to query test types: %w", err)
 	}
-	defer rows.Close()
+	defer rows.Close() //nolint:errcheck
 
 	var types []models.TestType
 	for rows.Next() {

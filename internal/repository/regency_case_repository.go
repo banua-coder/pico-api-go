@@ -43,7 +43,7 @@ func (r *RegencyCaseRepository) GetByRegencyID(regencyID int) ([]models.RegencyC
 	if err != nil {
 		return nil, fmt.Errorf("failed to query regency cases: %w", err)
 	}
-	defer rows.Close()
+	defer rows.Close() //nolint:errcheck
 
 	var cases []models.RegencyCase
 	for rows.Next() {
@@ -90,7 +90,7 @@ func (r *RegencyCaseRepository) GetLatestByProvinceID(provinceID int) ([]models.
 	if err != nil {
 		return nil, fmt.Errorf("failed to query latest regency cases: %w", err)
 	}
-	defer rows.Close()
+	defer rows.Close() //nolint:errcheck
 
 	var cases []models.RegencyCase
 	for rows.Next() {
