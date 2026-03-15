@@ -1,4 +1,22 @@
 # Changelog
+## [v2.5.1] - 2026-03-15
+
+### 🐛 Bug Fixes
+
+-  add all new endpoints to /api/v1 index response (0bb07af)
+
+### 📚 Documentation
+
+-  update changelog for v2.5.0 (ed28b3f)
+
+### 🔧 Chores
+
+-  bump version to v2.5.1 (31e554d)
+
+### 📝 Other Changes
+
+- Merge pull request #56 from banua-coder/hotfix/v2.5.1 (2ed01ec)
+
 ## [v2.5.0] - 2026-03-15
 
 ### ✨ Features
