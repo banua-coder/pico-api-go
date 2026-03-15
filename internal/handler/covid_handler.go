@@ -350,7 +350,7 @@ func (h *CovidHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	health := map[string]interface{}{
 		"status":    "healthy",
 		"service":   "COVID-19 API",
-		"version": "2.5.0",
+		"version": "2.5.1",
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
 	}
 
@@ -459,7 +459,7 @@ func (h *CovidHandler) GetAPIIndex(w http.ResponseWriter, r *http.Request) {
 	endpoints := map[string]interface{}{
 		"api": map[string]interface{}{
 			"title":       "Sulawesi Tengah COVID-19 Data API",
-			"version": "2.5.0",
+			"version": "2.5.1",
 			"description": "A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central Sulawesi)",
 		},
 		"documentation": map[string]interface{}{
@@ -506,6 +506,81 @@ func (h *CovidHandler) GetAPIIndex(w http.ResponseWriter, r *http.Request) {
 					},
 				},
 			},
+			"regencies": map[string]interface{}{
+				"list": map[string]string{
+					"url":         "/api/v1/regencies",
+					"method":      "GET",
+					"description": "Get all regencies in Sulawesi Tengah with latest case data",
+				},
+				"detail": map[string]string{
+					"url":         "/api/v1/regencies/{code}",
+					"method":      "GET",
+					"description": "Get regency detail by code",
+				},
+				"cases": map[string]string{
+					"url":         "/api/v1/regencies/{code}/cases",
+					"method":      "GET",
+					"description": "Get COVID-19 cases for a specific regency",
+				},
+			},
+			"hospitals": map[string]interface{}{
+				"list": map[string]string{
+					"url":         "/api/v1/hospitals",
+					"method":      "GET",
+					"description": "Get hospitals in Sulawesi Tengah with bed availability",
+				},
+				"detail": map[string]string{
+					"url":         "/api/v1/hospitals/{code}",
+					"method":      "GET",
+					"description": "Get hospital detail by code",
+				},
+			},
+			"task_forces": map[string]interface{}{
+				"list": map[string]string{
+					"url":         "/api/v1/task-forces",
+					"method":      "GET",
+					"description": "Get COVID-19 task forces grouped by regency",
+				},
+			},
+			"vaccination": map[string]interface{}{
+				"national": map[string]string{
+					"url":         "/api/v1/vaccination/national",
+					"method":      "GET",
+					"description": "Get national vaccination data",
+				},
+				"province": map[string]string{
+					"url":         "/api/v1/vaccination/province",
+					"method":      "GET",
+					"description": "Get vaccination data by province",
+				},
+				"locations": map[string]string{
+					"url":         "/api/v1/vaccination/locations",
+					"method":      "GET",
+					"description": "Get vaccination locations in Sulawesi Tengah",
+				},
+			},
+			"stats": map[string]interface{}{
+				"gender": map[string]string{
+					"url":         "/api/v1/stats/gender",
+					"method":      "GET",
+					"description": "Get COVID-19 cases by gender",
+				},
+				"gender_latest": map[string]string{
+					"url":         "/api/v1/stats/gender/latest",
+					"method":      "GET",
+					"description": "Get latest COVID-19 cases by gender",
+				},
+				"tests": map[string]string{
+					"url":         "/api/v1/stats/tests",
+					"method":      "GET",
+					"description": "Get COVID-19 test statistics",
+				},
+				"test_types": map[string]string{
+					"url":         "/api/v1/stats/test-types",
+					"method":      "GET",
+					"description": "Get COVID-19 test type breakdown",
+				},
+			},
 		},
 		"features": []string{
 			"Hybrid pagination system (paginated by default, ?all=true for complete data)",
@@ -513,12 +588,21 @@ func (h *CovidHandler) GetAPIIndex(w http.ResponseWriter, r *http.Request) {
 			"Enhanced ODP/PDP data grouping",
 			"Provinces with latest case data by default",
 			"Sulawesi Tengah focused with national context data",
+			"Regency-level case data",
+			"Hospital bed availability tracking",
+			"Task force contacts by regency",
+			"Vaccination progress data",
+			"Gender and test type statistics",
 		},
 		"examples": map[string]interface{}{
-			"sulawesi_tengah_cases": "/api/v1/provinces/72/cases",
-			"paginated_data":        "/api/v1/provinces/cases?limit=100&offset=50",
-			"date_range":            "/api/v1/national?start_date=2024-01-01&end_date=2024-12-31",
-			"complete_dataset":      "/api/v1/provinces/cases?all=true",
+			"sulawesi_tengah_cases":   "/api/v1/provinces/72/cases",
+			"paginated_data":          "/api/v1/provinces/cases?limit=100&offset=50",
+			"date_range":              "/api/v1/national?start_date=2024-01-01&end_date=2024-12-31",
+			"complete_dataset":        "/api/v1/provinces/cases?all=true",
+			"regency_cases":           "/api/v1/regencies/7201/cases",
+			"hospital_list":           "/api/v1/hospitals",
+			"vaccination_province":    "/api/v1/vaccination/province?province_id=72",
+			"gender_stats":            "/api/v1/stats/gender",
 		},
 	}
 
