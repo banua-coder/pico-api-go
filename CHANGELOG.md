@@ -1,4 +1,74 @@
 # Changelog
+## [v2.5.0] - 2026-03-15
+
+### ✨ Features
+
+-  enable Swagger UI in production build (fe19501)
+-  migrate Lumen endpoints — regencies, hospitals, task forces (29d7863)
+-  add vaccination endpoints — national, province, locations (32ce6f4)
+-  add province stats, national by day, single province endpoints (16ad143)
+
+### 🐛 Bug Fixes
+
+-  create-release job now runs after successful deployment (73b1fbb)
+-  update host to pico-api-go.banuacoder.com (f97f6c9)
+-  use ./cmd/ package path in Dockerfile (main_production.go not found) (8359a50)
+-  update swagger host to pico-api-go.banuacoder.com (983fa25)
+-  handle NULL values in province case ODP/PDP fields (8238837)
+-  upgrade golangci-lint to v2.10.1 for Go 1.26 compatibility (aa3bcf9)
+-  remove redundant embedded DB field selectors (QF1008) (cfbeecc)
+-  remove all redundant embedded DB field selectors (QF1008) (d85e9d6)
+-  resolve golangci-lint errcheck and govet issues (5428b62)
+-  resolve git auth error in release branch creation workflow (6de04ee)
+-  add nolint:errcheck to remaining defer Close() calls (a4d975f)
+-  properly handle rows.Close() and db.Close() errors (29041b6)
+-  properly handle rows/db Close() errors (07fb831)
+-  pin release workflow to @v1 tag (08a1f1e)
+-  restore corrupt assert.Equal args and fix .version-config.yml patterns (a016065)
+
+### 📚 Documentation
+
+-  add CONTRIBUTING.md with git flow workflow (401732c)
+
+### 🧪 Tests
+
+-  add unit tests for all new handlers + refactor to service interfaces (6ff000d)
+-  add service layer unit tests to improve coverage (9066ddd)
+-  add repository tests to meet 85% coverage threshold (0d01572)
+
+### 👷 CI
+
+-  add Docker build and deploy workflow to GHCR (3928c39)
+-  add setup-buildx-action to fix GHA cache export (56a74d0)
+-  separate deploy (main only) and CI workflows (develop/feature/PR) (3331bac)
+-  deploy triggers on main + hotfix/**, CI on develop + feature/bugfix/release + PRs (820f648)
+-  restore original ci.yml; deploy triggers on version tags (Docker/GHCR) (75c1982)
+-  add SSH deploy step — pull & restart container after image push (9936208)
+-  retrigger CI after golangci-lint-action upgrade to v7 (5ce2c25)
+-  re-trigger release workflow with new WORKFLOW_TOKEN (556305d)
+
+### 🔧 Chores
+
+-  back-merge v2.4.0 from main to develop (832fc4f)
+-  update version to 2.5.0 and fix remaining issues (367fac9)
+-  sync develop with main (resolve conflicts, keep main version) (b0d0bd6)
+-  upgrade Go to 1.26 and migrate to reusable workflows (31439dd)
+-  integrate branch cleanup from reusable workflow (4d473d6)
+-  prepare v2.5.0 release (0aca0fc)
+-  bump version to v2.5.0 (b47db4a)
+
+### 📝 Other Changes
+
+- Merge pull request #38 from banua-coder/chore/back-merge-v2.4.0-to-develop (38837aa)
+- Merge pull request #40 from banua-coder/fix/nullable-province-case-fields (8c77691)
+- hotfix: fix deploy workflow — trigger on tags, add SSH deploy step (776d957)
+- Merge pull request #43 from banua-coder/hotfix/fix-deploy-workflow (461c699)
+- Merge pull request #45 from banua-coder/chore/upgrade-go-and-integrate-reusable-workflows (787b598)
+- Merge pull request #44 from banua-coder/feature/migrate-lumen-endpoints (cb0a27f)
+- Merge pull request #46 from banua-coder/chore/integrate-branch-cleanup-housekeeping (81ec193)
+- Merge pull request #47 from banua-coder/chore/prepare-release-v2.5.0 (70d1dac)
+- Merge pull request #48 from banua-coder/release/v2.5.0 (fad460f)
+
 
 All notable changes to this project will be documented in this file.
 
