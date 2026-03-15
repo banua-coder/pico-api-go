@@ -1220,7 +1220,7 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "2.5.0",
+	Version:          "2.5.1",
 	Host:             "pico-api-go.banuacoder.com",
 	BasePath:         "/api/v1",
 	Schemes:          []string{"https", "http"},

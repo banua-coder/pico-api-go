@@ -82,6 +82,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+
+## [v2.5.1] - 2026-03-15
+
+### Fixed
+
+- Add all new endpoints to /api/v1 index response ([0bb07af7](https://x-access-token:ghs_PuzxNojwvTKftmjQ9RlaGqUuyiceaC1x5l0C@github.com/banua-coder/pico-api-go/commit/0bb07af752c5ea146eb21a35ebf17410f7ce114e))
+
+### Documentation
+
+- Update changelog for v2.5.0 ([ed28b3f4](https://x-access-token:ghs_PuzxNojwvTKftmjQ9RlaGqUuyiceaC1x5l0C@github.com/banua-coder/pico-api-go/commit/ed28b3f438bdadb56d458dd622fde489fe3ead4b))
+
 ## [v2.5.0] - 2026-03-15
 
 ### Hotfixes
