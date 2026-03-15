@@ -72,9 +72,9 @@ version_files:
     when: "major_version_only"
 
   - path: "internal/handler/covid_handler_test.go"
-    pattern: 'assert\.Equal\(t, "[0-9]+\.[0-9]+\.[0-9]+", [^)]*\["version"\]\)'
-    replacement: 'assert.Equal(t, "{version}", $1["version"])'
-    description: "Test version assertions"
+    pattern: 'assert\.Equal\(t, "[0-9]+\.[0-9]+\.[0-9]+", apiInfo\["version"\]\)'
+    replacement: 'assert.Equal(t, "{version}", apiInfo["version"])'
+    description: "API info test version assertion"
 
   - path: "internal/handler/covid_handler_test.go"
     pattern: 'assert\.Equal\(t, "[0-9]+\.[0-9]+\.[0-9]+", data\["version"\]\)'
