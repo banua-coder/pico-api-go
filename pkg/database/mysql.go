@@ -129,5 +129,5 @@ func (db *DB) HealthCheck() error {
 
 // GetConnectionStats returns database connection statistics
 func (db *DB) GetConnectionStats() sql.DBStats {
-	return db.DB.Stats()
+	return db.Stats()
 }
