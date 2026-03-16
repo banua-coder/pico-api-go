@@ -361,3 +361,258 @@ func TestCovidService_GetAllProvinceCasesByDateRange(t *testing.T) {
 	assert.Equal(t, expectedCases, cases)
 	mockProvinceCaseRepo.AssertExpectations(t)
 }
+
+func TestCovidService_GetNationalCasesSorted(t *testing.T) {
+	mockNationalRepo, _, _, service := setupMockService()
+	sort := utils.SortParams{Field: "day", Order: "asc"}
+	expected := []models.NationalCase{{ID: 1, Positive: 100}}
+	mockNationalRepo.On("GetAllSorted", sort).Return(expected, nil)
+	result, err := service.GetNationalCasesSorted(sort)
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+	mockNationalRepo.AssertExpectations(t)
+}
+
+func TestCovidService_GetNationalCasesByDateRangeSorted(t *testing.T) {
+	mockNationalRepo, _, _, service := setupMockService()
+	sort := utils.SortParams{Field: "day", Order: "asc"}
+	start := time.Date(2020, 3, 1, 0, 0, 0, 0, time.UTC)
+	end := time.Date(2020, 3, 31, 0, 0, 0, 0, time.UTC)
+	expected := []models.NationalCase{{ID: 1, Positive: 100}}
+	mockNationalRepo.On("GetByDateRangeSorted", start, end, sort).Return(expected, nil)
+	result, err := service.GetNationalCasesByDateRangeSorted("2020-03-01", "2020-03-31", sort)
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+	mockNationalRepo.AssertExpectations(t)
+}
+
+func TestCovidService_GetNationalCaseByDay(t *testing.T) {
+	mockNationalRepo, _, _, service := setupMockService()
+	expected := &models.NationalCase{ID: 1, Positive: 100}
+	mockNationalRepo.On("GetByDay", int64(1)).Return(expected, nil)
+	result, err := service.GetNationalCaseByDay(1)
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+	mockNationalRepo.AssertExpectations(t)
+}
+
+func TestCovidService_GetProvinceByID(t *testing.T) {
+	_, mockProvinceRepo, _, service := setupMockService()
+	expected := &models.Province{ID: "11", Name: "Aceh"}
+	mockProvinceRepo.On("GetByID", "11").Return(expected, nil)
+	result, err := service.GetProvinceByID("11")
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+	mockProvinceRepo.AssertExpectations(t)
+}
+
+func TestCovidService_GetNationalCasesPaginated(t *testing.T) {
+	mockNationalRepo, _, _, service := setupMockService()
+	expected := []models.NationalCase{{ID: 1, Positive: 100}}
+	mockNationalRepo.On("GetAllPaginated", 10, 0).Return(expected, 1, nil)
+	result, total, err := service.GetNationalCasesPaginated(10, 0)
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+	assert.Equal(t, 1, total)
+	mockNationalRepo.AssertExpectations(t)
+}
+
+func TestCovidService_GetNationalCasesPaginatedSorted(t *testing.T) {
+	mockNationalRepo, _, _, service := setupMockService()
+	sort := utils.SortParams{Field: "day", Order: "asc"}
+	expected := []models.NationalCase{{ID: 1, Positive: 100}}
+	mockNationalRepo.On("GetAllPaginatedSorted", 10, 0, sort).Return(expected, 1, nil)
+	result, total, err := service.GetNationalCasesPaginatedSorted(10, 0, sort)
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+	assert.Equal(t, 1, total)
+	mockNationalRepo.AssertExpectations(t)
+}
+
+func TestCovidService_GetNationalCasesByDateRangePaginated(t *testing.T) {
+	mockNationalRepo, _, _, service := setupMockService()
+	start := time.Date(2020, 3, 1, 0, 0, 0, 0, time.UTC)
+	end := time.Date(2020, 3, 31, 0, 0, 0, 0, time.UTC)
+	expected := []models.NationalCase{{ID: 1, Positive: 100}}
+	mockNationalRepo.On("GetByDateRangePaginated", start, end, 10, 0).Return(expected, 1, nil)
+	result, total, err := service.GetNationalCasesByDateRangePaginated("2020-03-01", "2020-03-31", 10, 0)
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+	assert.Equal(t, 1, total)
+	mockNationalRepo.AssertExpectations(t)
+}
+
+func TestCovidService_GetNationalCasesByDateRangePaginatedSorted(t *testing.T) {
+	mockNationalRepo, _, _, service := setupMockService()
+	sort := utils.SortParams{Field: "day", Order: "asc"}
+	start := time.Date(2020, 3, 1, 0, 0, 0, 0, time.UTC)
+	end := time.Date(2020, 3, 31, 0, 0, 0, 0, time.UTC)
+	expected := []models.NationalCase{{ID: 1, Positive: 100}}
+	mockNationalRepo.On("GetByDateRangePaginatedSorted", start, end, 10, 0, sort).Return(expected, 1, nil)
+	result, total, err := service.GetNationalCasesByDateRangePaginatedSorted("2020-03-01", "2020-03-31", 10, 0, sort)
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+	assert.Equal(t, 1, total)
+	mockNationalRepo.AssertExpectations(t)
+}
+
+func TestCovidService_GetProvincesWithLatestCase(t *testing.T) {
+	_, mockProvinceRepo, mockProvinceCaseRepo, service := setupMockService()
+	provinces := []models.Province{{ID: "11", Name: "Aceh"}}
+	latestCase := &models.ProvinceCaseWithDate{ProvinceCase: models.ProvinceCase{ID: 1, ProvinceID: "11", Positive: 50}}
+	mockProvinceRepo.On("GetAll").Return(provinces, nil)
+	mockProvinceCaseRepo.On("GetLatestByProvinceID", "11").Return(latestCase, nil)
+	result, err := service.GetProvincesWithLatestCase()
+	assert.NoError(t, err)
+	assert.Len(t, result, 1)
+	mockProvinceRepo.AssertExpectations(t)
+	mockProvinceCaseRepo.AssertExpectations(t)
+}
+
+func TestCovidService_GetAllProvinceCasesSorted(t *testing.T) {
+	_, _, mockProvinceCaseRepo, service := setupMockService()
+	sort := utils.SortParams{Field: "day", Order: "asc"}
+	expected := []models.ProvinceCaseWithDate{{ProvinceCase: models.ProvinceCase{ID: 1}}}
+	mockProvinceCaseRepo.On("GetAllSorted", sort).Return(expected, nil)
+	result, err := service.GetAllProvinceCasesSorted(sort)
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+	mockProvinceCaseRepo.AssertExpectations(t)
+}
+
+func TestCovidService_GetProvinceCasesPaginated(t *testing.T) {
+	_, _, mockProvinceCaseRepo, service := setupMockService()
+	expected := []models.ProvinceCaseWithDate{{ProvinceCase: models.ProvinceCase{ID: 1, ProvinceID: "11"}}}
+	mockProvinceCaseRepo.On("GetByProvinceIDPaginated", "11", 10, 0).Return(expected, 1, nil)
+	result, total, err := service.GetProvinceCasesPaginated("11", 10, 0)
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+	assert.Equal(t, 1, total)
+	mockProvinceCaseRepo.AssertExpectations(t)
+}
+
+func TestCovidService_GetProvinceCasesByDateRangePaginated(t *testing.T) {
+	_, _, mockProvinceCaseRepo, service := setupMockService()
+	start := time.Date(2020, 3, 1, 0, 0, 0, 0, time.UTC)
+	end := time.Date(2020, 3, 31, 0, 0, 0, 0, time.UTC)
+	expected := []models.ProvinceCaseWithDate{{ProvinceCase: models.ProvinceCase{ID: 1}}}
+	mockProvinceCaseRepo.On("GetByProvinceIDAndDateRangePaginated", "11", start, end, 10, 0).Return(expected, 1, nil)
+	result, total, err := service.GetProvinceCasesByDateRangePaginated("11", "2020-03-01", "2020-03-31", 10, 0)
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+	assert.Equal(t, 1, total)
+	mockProvinceCaseRepo.AssertExpectations(t)
+}
+
+func TestCovidService_GetAllProvinceCasesPaginated(t *testing.T) {
+	_, _, mockProvinceCaseRepo, service := setupMockService()
+	expected := []models.ProvinceCaseWithDate{{ProvinceCase: models.ProvinceCase{ID: 1}}}
+	mockProvinceCaseRepo.On("GetAllPaginated", 10, 0).Return(expected, 1, nil)
+	result, total, err := service.GetAllProvinceCasesPaginated(10, 0)
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+	assert.Equal(t, 1, total)
+	mockProvinceCaseRepo.AssertExpectations(t)
+}
+
+func TestCovidService_GetAllProvinceCasesByDateRangePaginated(t *testing.T) {
+	_, _, mockProvinceCaseRepo, service := setupMockService()
+	start := time.Date(2020, 3, 1, 0, 0, 0, 0, time.UTC)
+	end := time.Date(2020, 3, 31, 0, 0, 0, 0, time.UTC)
+	expected := []models.ProvinceCaseWithDate{{ProvinceCase: models.ProvinceCase{ID: 1}}}
+	mockProvinceCaseRepo.On("GetByDateRangePaginated", start, end, 10, 0).Return(expected, 1, nil)
+	result, total, err := service.GetAllProvinceCasesByDateRangePaginated("2020-03-01", "2020-03-31", 10, 0)
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+	assert.Equal(t, 1, total)
+	mockProvinceCaseRepo.AssertExpectations(t)
+}
+
+func TestCovidService_GetAllProvinceCasesPaginatedSorted(t *testing.T) {
+	_, _, mockProvinceCaseRepo, service := setupMockService()
+	sort := utils.SortParams{Field: "day", Order: "asc"}
+	expected := []models.ProvinceCaseWithDate{{ProvinceCase: models.ProvinceCase{ID: 1}}}
+	mockProvinceCaseRepo.On("GetAllPaginatedSorted", 10, 0, sort).Return(expected, 1, nil)
+	result, total, err := service.GetAllProvinceCasesPaginatedSorted(10, 0, sort)
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+	assert.Equal(t, 1, total)
+	mockProvinceCaseRepo.AssertExpectations(t)
+}
+
+func TestCovidService_GetAllProvinceCasesByDateRangeSorted(t *testing.T) {
+	_, _, mockProvinceCaseRepo, service := setupMockService()
+	sort := utils.SortParams{Field: "day", Order: "asc"}
+	start := time.Date(2020, 3, 1, 0, 0, 0, 0, time.UTC)
+	end := time.Date(2020, 3, 31, 0, 0, 0, 0, time.UTC)
+	expected := []models.ProvinceCaseWithDate{{ProvinceCase: models.ProvinceCase{ID: 1}}}
+	mockProvinceCaseRepo.On("GetByDateRangeSorted", start, end, sort).Return(expected, nil)
+	result, err := service.GetAllProvinceCasesByDateRangeSorted("2020-03-01", "2020-03-31", sort)
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+	mockProvinceCaseRepo.AssertExpectations(t)
+}
+
+func TestCovidService_GetAllProvinceCasesByDateRangePaginatedSorted(t *testing.T) {
+	_, _, mockProvinceCaseRepo, service := setupMockService()
+	sort := utils.SortParams{Field: "day", Order: "asc"}
+	start := time.Date(2020, 3, 1, 0, 0, 0, 0, time.UTC)
+	end := time.Date(2020, 3, 31, 0, 0, 0, 0, time.UTC)
+	expected := []models.ProvinceCaseWithDate{{ProvinceCase: models.ProvinceCase{ID: 1}}}
+	mockProvinceCaseRepo.On("GetByDateRangePaginatedSorted", start, end, 10, 0, sort).Return(expected, 1, nil)
+	result, total, err := service.GetAllProvinceCasesByDateRangePaginatedSorted("2020-03-01", "2020-03-31", 10, 0, sort)
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+	assert.Equal(t, 1, total)
+	mockProvinceCaseRepo.AssertExpectations(t)
+}
+
+func TestCovidService_GetProvinceCasesSorted(t *testing.T) {
+	_, _, mockProvinceCaseRepo, service := setupMockService()
+	sort := utils.SortParams{Field: "day", Order: "asc"}
+	expected := []models.ProvinceCaseWithDate{{ProvinceCase: models.ProvinceCase{ID: 1, ProvinceID: "11"}}}
+	mockProvinceCaseRepo.On("GetByProvinceIDSorted", "11", sort).Return(expected, nil)
+	result, err := service.GetProvinceCasesSorted("11", sort)
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+	mockProvinceCaseRepo.AssertExpectations(t)
+}
+
+func TestCovidService_GetProvinceCasesPaginatedSorted(t *testing.T) {
+	_, _, mockProvinceCaseRepo, service := setupMockService()
+	sort := utils.SortParams{Field: "day", Order: "asc"}
+	expected := []models.ProvinceCaseWithDate{{ProvinceCase: models.ProvinceCase{ID: 1, ProvinceID: "11"}}}
+	mockProvinceCaseRepo.On("GetByProvinceIDPaginatedSorted", "11", 10, 0, sort).Return(expected, 1, nil)
+	result, total, err := service.GetProvinceCasesPaginatedSorted("11", 10, 0, sort)
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+	assert.Equal(t, 1, total)
+	mockProvinceCaseRepo.AssertExpectations(t)
+}
+
+func TestCovidService_GetProvinceCasesByDateRangeSorted(t *testing.T) {
+	_, _, mockProvinceCaseRepo, service := setupMockService()
+	sort := utils.SortParams{Field: "day", Order: "asc"}
+	start := time.Date(2020, 3, 1, 0, 0, 0, 0, time.UTC)
+	end := time.Date(2020, 3, 31, 0, 0, 0, 0, time.UTC)
+	expected := []models.ProvinceCaseWithDate{{ProvinceCase: models.ProvinceCase{ID: 1}}}
+	mockProvinceCaseRepo.On("GetByProvinceIDAndDateRangeSorted", "11", start, end, sort).Return(expected, nil)
+	result, err := service.GetProvinceCasesByDateRangeSorted("11", "2020-03-01", "2020-03-31", sort)
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+	mockProvinceCaseRepo.AssertExpectations(t)
+}
+
+func TestCovidService_GetProvinceCasesByDateRangePaginatedSorted(t *testing.T) {
+	_, _, mockProvinceCaseRepo, service := setupMockService()
+	sort := utils.SortParams{Field: "day", Order: "asc"}
+	start := time.Date(2020, 3, 1, 0, 0, 0, 0, time.UTC)
+	end := time.Date(2020, 3, 31, 0, 0, 0, 0, time.UTC)
+	expected := []models.ProvinceCaseWithDate{{ProvinceCase: models.ProvinceCase{ID: 1}}}
+	mockProvinceCaseRepo.On("GetByProvinceIDAndDateRangePaginatedSorted", "11", start, end, 10, 0, sort).Return(expected, 1, nil)
+	result, total, err := service.GetProvinceCasesByDateRangePaginatedSorted("11", "2020-03-01", "2020-03-31", 10, 0, sort)
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+	assert.Equal(t, 1, total)
+	mockProvinceCaseRepo.AssertExpectations(t)
+}

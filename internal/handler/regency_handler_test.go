@@ -65,6 +65,32 @@ func TestGetRegencies_Error(t *testing.T) {
 	svc.AssertExpectations(t)
 }
 
+func TestGetRegencies_LoadAll(t *testing.T) {
+	svc := new(MockRegencyService)
+	svc.On("GetRegencies").Return([]models.Regency{{ID: 7201, Name: "Kab. Banggai"}}, nil)
+
+	h := NewRegencyHandler(svc)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/regencies?load_all=true", nil)
+	w := httptest.NewRecorder()
+	h.GetRegencies(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	svc.AssertExpectations(t)
+}
+
+func TestGetRegencies_LoadAll_Error(t *testing.T) {
+	svc := new(MockRegencyService)
+	svc.On("GetRegencies").Return([]models.Regency{}, errors.New("db error"))
+
+	h := NewRegencyHandler(svc)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/regencies?load_all=true", nil)
+	w := httptest.NewRecorder()
+	h.GetRegencies(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	svc.AssertExpectations(t)
+}
+
 func TestGetRegencyByID_Success(t *testing.T) {
 	svc := new(MockRegencyService)
 	svc.On("GetRegencyByID", 7201).Return(&models.Regency{ID: 7201, Name: "Kab. Banggai"}, nil)

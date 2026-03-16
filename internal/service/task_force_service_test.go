@@ -79,3 +79,34 @@ func TestTaskForceService_GetTaskForces_Error(t *testing.T) {
 	assert.Empty(t, result)
 	mockRepo.AssertExpectations(t)
 }
+
+func TestTaskForceService_GetTaskForcesPaginated(t *testing.T) {
+	mockRepo, svc := setupTaskForceService()
+
+	expected := []models.TaskForceByRegency{
+		{RegencyID: 7201, RegencyName: "Kabupaten Banggai", TaskForces: []models.TaskForce{
+			{ID: 1, RegencyID: 7201, Name: "Posko COVID-19 Banggai"},
+		}},
+	}
+	mockRepo.On("GetPaginatedByProvinceID", 72, 10, 0).Return(expected, 1, nil)
+
+	result, total, err := svc.GetTaskForcesPaginated(10, 0)
+
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+	assert.Equal(t, 1, total)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestTaskForceService_GetTaskForcesPaginated_Error(t *testing.T) {
+	mockRepo, svc := setupTaskForceService()
+
+	mockRepo.On("GetPaginatedByProvinceID", 72, 10, 0).Return([]models.TaskForceByRegency{}, 0, errors.New("db error"))
+
+	result, total, err := svc.GetTaskForcesPaginated(10, 0)
+
+	assert.Error(t, err)
+	assert.Empty(t, result)
+	assert.Equal(t, 0, total)
+	mockRepo.AssertExpectations(t)
+}

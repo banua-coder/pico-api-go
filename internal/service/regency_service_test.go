@@ -174,3 +174,32 @@ func TestRegencyService_GetLatestRegencyCases_Error(t *testing.T) {
 	assert.Empty(t, result)
 	mockCaseRepo.AssertExpectations(t)
 }
+
+func TestRegencyService_GetRegenciesPaginated(t *testing.T) {
+	mockRepo, _, svc := setupRegencyService()
+
+	expected := []models.Regency{
+		{ID: 7201, ProvinceID: 72, Name: "Kabupaten Banggai"},
+	}
+	mockRepo.On("GetPaginated", 72, 10, 0).Return(expected, 1, nil)
+
+	result, total, err := svc.GetRegenciesPaginated(10, 0)
+
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+	assert.Equal(t, 1, total)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestRegencyService_GetRegenciesPaginated_Error(t *testing.T) {
+	mockRepo, _, svc := setupRegencyService()
+
+	mockRepo.On("GetPaginated", 72, 10, 0).Return([]models.Regency{}, 0, errors.New("db error"))
+
+	result, total, err := svc.GetRegenciesPaginated(10, 0)
+
+	assert.Error(t, err)
+	assert.Empty(t, result)
+	assert.Equal(t, 0, total)
+	mockRepo.AssertExpectations(t)
+}

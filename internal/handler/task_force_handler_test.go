@@ -49,3 +49,30 @@ func TestGetTaskForces_Error(t *testing.T) {
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 	svc.AssertExpectations(t)
 }
+
+func TestGetTaskForces_LoadAll(t *testing.T) {
+	svc := new(MockTaskForceService)
+	data := []models.TaskForceByRegency{{RegencyID: 7201, RegencyName: "Kab. Banggai"}}
+	svc.On("GetTaskForces").Return(data, nil)
+
+	h := NewTaskForceHandler(svc)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/task-forces?load_all=true", nil)
+	w := httptest.NewRecorder()
+	h.GetTaskForces(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	svc.AssertExpectations(t)
+}
+
+func TestGetTaskForces_LoadAll_Error(t *testing.T) {
+	svc := new(MockTaskForceService)
+	svc.On("GetTaskForces").Return([]models.TaskForceByRegency{}, errors.New("db error"))
+
+	h := NewTaskForceHandler(svc)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/task-forces?load_all=true", nil)
+	w := httptest.NewRecorder()
+	h.GetTaskForces(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	svc.AssertExpectations(t)
+}
