@@ -19,6 +19,11 @@ func (m *MockRegencyRepository) GetAll(provinceID int) ([]models.Regency, error)
 	return args.Get(0).([]models.Regency), args.Error(1)
 }
 
+func (m *MockRegencyRepository) GetPaginated(provinceID, limit, offset int) ([]models.Regency, int, error) {
+	args := m.Called(provinceID, limit, offset)
+	return args.Get(0).([]models.Regency), args.Int(1), args.Error(2)
+}
+
 func (m *MockRegencyRepository) GetByID(id int) (*models.Regency, error) {
 	args := m.Called(id)
 	result := args.Get(0)

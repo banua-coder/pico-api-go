@@ -20,6 +20,21 @@ func (m *MockVaccinationRepository) GetNationalVaccinations() ([]models.National
 	return args.Get(0).([]models.NationalVaccine), args.Error(1)
 }
 
+func (m *MockVaccinationRepository) GetNationalVaccinationsPaginated(limit, offset int) ([]models.NationalVaccine, int, error) {
+	args := m.Called(limit, offset)
+	return args.Get(0).([]models.NationalVaccine), args.Int(1), args.Error(2)
+}
+
+func (m *MockVaccinationRepository) GetProvinceVaccinationsPaginated(provinceID, limit, offset int) ([]models.ProvinceVaccine, int, error) {
+	args := m.Called(provinceID, limit, offset)
+	return args.Get(0).([]models.ProvinceVaccine), args.Int(1), args.Error(2)
+}
+
+func (m *MockVaccinationRepository) GetVaccineLocationsPaginated(provinceID, limit, offset int) ([]models.VaccineLocation, int, error) {
+	args := m.Called(provinceID, limit, offset)
+	return args.Get(0).([]models.VaccineLocation), args.Int(1), args.Error(2)
+}
+
 func (m *MockVaccinationRepository) GetProvinceVaccinations(provinceID int) ([]models.ProvinceVaccine, error) {
 	args := m.Called(provinceID)
 	return args.Get(0).([]models.ProvinceVaccine), args.Error(1)

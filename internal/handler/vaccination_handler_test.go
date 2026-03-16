@@ -14,6 +14,21 @@ import (
 
 type MockVaccinationService struct{ mock.Mock }
 
+func (m *MockVaccinationService) GetNationalVaccinationsPaginated(limit, offset int) ([]models.NationalVaccine, int, error) {
+	args := m.Called(limit, offset)
+	return args.Get(0).([]models.NationalVaccine), args.Int(1), args.Error(2)
+}
+
+func (m *MockVaccinationService) GetProvinceVaccinationsPaginated(limit, offset int) ([]models.ProvinceVaccine, int, error) {
+	args := m.Called(limit, offset)
+	return args.Get(0).([]models.ProvinceVaccine), args.Int(1), args.Error(2)
+}
+
+func (m *MockVaccinationService) GetVaccineLocationsPaginated(limit, offset int) ([]models.VaccineLocation, int, error) {
+	args := m.Called(limit, offset)
+	return args.Get(0).([]models.VaccineLocation), args.Int(1), args.Error(2)
+}
+
 func (m *MockVaccinationService) GetNationalVaccinations() ([]models.NationalVaccine, error) {
 	args := m.Called()
 	return args.Get(0).([]models.NationalVaccine), args.Error(1)
@@ -33,7 +48,7 @@ func sampleNationalVaccine() models.NationalVaccine {
 
 func TestGetNationalVaccinations_Success(t *testing.T) {
 	svc := new(MockVaccinationService)
-	svc.On("GetNationalVaccinations").Return([]models.NationalVaccine{sampleNationalVaccine()}, nil)
+	svc.On("GetNationalVaccinationsPaginated", 10, 0).Return([]models.NationalVaccine{sampleNationalVaccine()}, 1, nil)
 
 	h := NewVaccinationHandler(svc)
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/vaccination/national", nil)
@@ -46,7 +61,7 @@ func TestGetNationalVaccinations_Success(t *testing.T) {
 
 func TestGetNationalVaccinations_Error(t *testing.T) {
 	svc := new(MockVaccinationService)
-	svc.On("GetNationalVaccinations").Return([]models.NationalVaccine{}, errors.New("db error"))
+	svc.On("GetNationalVaccinationsPaginated", 10, 0).Return([]models.NationalVaccine{}, 0, errors.New("db error"))
 
 	h := NewVaccinationHandler(svc)
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/vaccination/national", nil)
@@ -59,7 +74,7 @@ func TestGetNationalVaccinations_Error(t *testing.T) {
 
 func TestGetProvinceVaccinations_Success(t *testing.T) {
 	svc := new(MockVaccinationService)
-	svc.On("GetProvinceVaccinations").Return([]models.ProvinceVaccine{{NationalVaccine: sampleNationalVaccine(), ProvinceID: 72}}, nil)
+	svc.On("GetProvinceVaccinationsPaginated", 10, 0).Return([]models.ProvinceVaccine{{NationalVaccine: sampleNationalVaccine(), ProvinceID: 72}}, 1, nil)
 
 	h := NewVaccinationHandler(svc)
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/vaccination/province", nil)
@@ -72,7 +87,7 @@ func TestGetProvinceVaccinations_Success(t *testing.T) {
 
 func TestGetVaccineLocations_Success(t *testing.T) {
 	svc := new(MockVaccinationService)
-	svc.On("GetVaccineLocations").Return([]models.VaccineLocation{{ID: 1, Name: "Puskesmas A"}}, nil)
+	svc.On("GetVaccineLocationsPaginated", 10, 0).Return([]models.VaccineLocation{{ID: 1, Name: "Puskesmas A"}}, 1, nil)
 
 	h := NewVaccinationHandler(svc)
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/vaccination/locations", nil)

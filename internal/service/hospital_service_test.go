@@ -19,6 +19,11 @@ func (m *MockHospitalRepository) GetAll(provinceID int) ([]models.Hospital, erro
 	return args.Get(0).([]models.Hospital), args.Error(1)
 }
 
+func (m *MockHospitalRepository) GetPaginated(provinceID, limit, offset int) ([]models.Hospital, int, error) {
+	args := m.Called(provinceID, limit, offset)
+	return args.Get(0).([]models.Hospital), args.Int(1), args.Error(2)
+}
+
 func (m *MockHospitalRepository) GetByCode(code string) (*models.Hospital, error) {
 	args := m.Called(code)
 	result := args.Get(0)

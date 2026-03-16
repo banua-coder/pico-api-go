@@ -13,6 +13,11 @@ import (
 
 type MockTaskForceService struct{ mock.Mock }
 
+func (m *MockTaskForceService) GetTaskForcesPaginated(limit, offset int) ([]models.TaskForceByRegency, int, error) {
+	args := m.Called(limit, offset)
+	return args.Get(0).([]models.TaskForceByRegency), args.Int(1), args.Error(2)
+}
+
 func (m *MockTaskForceService) GetTaskForces() ([]models.TaskForceByRegency, error) {
 	args := m.Called()
 	return args.Get(0).([]models.TaskForceByRegency), args.Error(1)
@@ -21,7 +26,7 @@ func (m *MockTaskForceService) GetTaskForces() ([]models.TaskForceByRegency, err
 func TestGetTaskForces_Success(t *testing.T) {
 	svc := new(MockTaskForceService)
 	data := []models.TaskForceByRegency{{RegencyID: 7201, RegencyName: "Kab. Banggai"}}
-	svc.On("GetTaskForces").Return(data, nil)
+	svc.On("GetTaskForcesPaginated", 10, 0).Return(data, 1, nil)
 
 	h := NewTaskForceHandler(svc)
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/task-forces", nil)
@@ -34,7 +39,7 @@ func TestGetTaskForces_Success(t *testing.T) {
 
 func TestGetTaskForces_Error(t *testing.T) {
 	svc := new(MockTaskForceService)
-	svc.On("GetTaskForces").Return([]models.TaskForceByRegency{}, errors.New("db error"))
+	svc.On("GetTaskForcesPaginated", 10, 0).Return([]models.TaskForceByRegency{}, 0, errors.New("db error"))
 
 	h := NewTaskForceHandler(svc)
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/task-forces", nil)

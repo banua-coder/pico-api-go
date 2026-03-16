@@ -12,6 +12,7 @@ import (
 // RegencyRepositoryInterface defines the contract for regency repository operations
 type RegencyRepositoryInterface interface {
 	GetAll(provinceID int) ([]models.Regency, error)
+	GetPaginated(provinceID, limit, offset int) ([]models.Regency, int, error)
 	GetByID(id int) (*models.Regency, error)
 }
 
@@ -48,6 +49,35 @@ func (r *RegencyRepository) GetAll(provinceID int) ([]models.Regency, error) {
 		regencies = append(regencies, reg)
 	}
 	return regencies, rows.Err()
+}
+
+// GetPaginated returns a page of regencies with total count
+func (r *RegencyRepository) GetPaginated(provinceID, limit, offset int) ([]models.Regency, int, error) {
+	var total int
+	if err := r.db.QueryRow(`SELECT COUNT(*) FROM regencies WHERE province_id = ?`, provinceID).Scan(&total); err != nil {
+		return nil, 0, fmt.Errorf("failed to count regencies: %w", err)
+	}
+
+	query := `SELECT id, province_id, name, created_at, updated_at FROM regencies WHERE province_id = ? ORDER BY name LIMIT ? OFFSET ?`
+	rows, err := r.db.Query(query, provinceID, limit, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to query regencies: %w", err)
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("Error closing rows: %v", err)
+		}
+	}()
+
+	var regencies []models.Regency
+	for rows.Next() {
+		var reg models.Regency
+		if err := rows.Scan(&reg.ID, &reg.ProvinceID, &reg.Name, &reg.CreatedAt, &reg.UpdatedAt); err != nil {
+			return nil, 0, fmt.Errorf("failed to scan regency: %w", err)
+		}
+		regencies = append(regencies, reg)
+	}
+	return regencies, total, rows.Err()
 }
 
 // GetByID returns a single regency by ID

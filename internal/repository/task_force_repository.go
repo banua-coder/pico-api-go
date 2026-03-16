@@ -11,6 +11,7 @@ import (
 // TaskForceRepositoryInterface defines the contract for task force repository operations
 type TaskForceRepositoryInterface interface {
 	GetAllByProvinceID(provinceID int) ([]models.TaskForceByRegency, error)
+	GetPaginatedByProvinceID(provinceID, limit, offset int) ([]models.TaskForceByRegency, int, error)
 }
 
 // TaskForceRepository handles database operations for task forces
@@ -109,4 +110,82 @@ func (r *TaskForceRepository) GetAllByProvinceID(provinceID int) ([]models.TaskF
 	}
 
 	return result, nil
+}
+
+// GetPaginatedByProvinceID returns a page of task forces grouped by regency, with total regency count
+func (r *TaskForceRepository) GetPaginatedByProvinceID(provinceID, limit, offset int) ([]models.TaskForceByRegency, int, error) {
+	var total int
+	if err := r.db.QueryRow(`SELECT COUNT(*) FROM regencies WHERE province_id = ?`, provinceID).Scan(&total); err != nil {
+		return nil, 0, fmt.Errorf("failed to count regencies: %w", err)
+	}
+
+	regQuery := `SELECT id, name FROM regencies WHERE province_id = ? ORDER BY name LIMIT ? OFFSET ?`
+	regRows, err := r.db.Query(regQuery, provinceID, limit, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to query regencies: %w", err)
+	}
+	defer func() {
+		if err := regRows.Close(); err != nil {
+			log.Printf("Error closing rows: %v", err)
+		}
+	}()
+
+	var result []models.TaskForceByRegency
+	for regRows.Next() {
+		var reg models.TaskForceByRegency
+		if err := regRows.Scan(&reg.RegencyID, &reg.RegencyName); err != nil {
+			return nil, 0, fmt.Errorf("failed to scan regency: %w", err)
+		}
+		result = append(result, reg)
+	}
+	if err := regRows.Err(); err != nil {
+		return nil, 0, err
+	}
+
+	for i := range result {
+		tfQuery := `SELECT tf.id, tf.regency_id, tf.name FROM task_forces tf WHERE tf.regency_id = ?`
+		tfRows, err := r.db.Query(tfQuery, result[i].RegencyID)
+		if err != nil {
+			return nil, 0, fmt.Errorf("failed to query task forces: %w", err)
+		}
+
+		var taskForces []models.TaskForce
+		for tfRows.Next() {
+			var tf models.TaskForce
+			if err := tfRows.Scan(&tf.ID, &tf.RegencyID, &tf.Name); err != nil {
+				tfRows.Close()
+				return nil, 0, fmt.Errorf("failed to scan task force: %w", err)
+			}
+
+			cQuery := `SELECT c.id, c.contact_type_id, c.contact, ct.name, ct.icon
+				FROM contacts c
+				JOIN contact_types ct ON c.contact_type_id = ct.id
+				WHERE c.contactable_type = 'App\\Models\\TaskForce' AND c.contactable_id = ?`
+			cRows, err := r.db.Query(cQuery, tf.ID)
+			if err != nil {
+				tfRows.Close()
+				return nil, 0, fmt.Errorf("failed to query contacts: %w", err)
+			}
+
+			var contacts []models.Contact
+			for cRows.Next() {
+				var c models.Contact
+				if err := cRows.Scan(&c.ID, &c.ContactTypeID, &c.Contact, &c.ContactTypeName, &c.ContactTypeIcon); err != nil {
+					cRows.Close()
+					tfRows.Close()
+					return nil, 0, fmt.Errorf("failed to scan contact: %w", err)
+				}
+				contacts = append(contacts, c)
+			}
+			cRows.Close()
+
+			tf.Contacts = contacts
+			taskForces = append(taskForces, tf)
+		}
+		tfRows.Close()
+
+		result[i].TaskForces = taskForces
+	}
+
+	return result, total, nil
 }

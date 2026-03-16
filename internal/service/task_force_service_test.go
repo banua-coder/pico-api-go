@@ -14,6 +14,11 @@ type MockTaskForceRepository struct {
 	mock.Mock
 }
 
+func (m *MockTaskForceRepository) GetPaginatedByProvinceID(provinceID, limit, offset int) ([]models.TaskForceByRegency, int, error) {
+	args := m.Called(provinceID, limit, offset)
+	return args.Get(0).([]models.TaskForceByRegency), args.Int(1), args.Error(2)
+}
+
 func (m *MockTaskForceRepository) GetAllByProvinceID(provinceID int) ([]models.TaskForceByRegency, error) {
 	args := m.Called(provinceID)
 	return args.Get(0).([]models.TaskForceByRegency), args.Error(1)
