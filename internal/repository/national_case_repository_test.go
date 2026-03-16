@@ -7,6 +7,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/banua-coder/pico-api-go/pkg/database"
+	"github.com/banua-coder/pico-api-go/pkg/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -195,4 +196,79 @@ func TestNationalCaseRepository_GetByDay_NotFound(t *testing.T) {
 	assert.Nil(t, nationalCase)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func nationalCaseRows() *sqlmock.Rows {
+	now := time.Now()
+	rt := 1.2
+	rtUpper := 1.5
+	rtLower := 0.9
+	return sqlmock.NewRows([]string{
+		"id", "day", "date", "positive", "recovered", "deceased",
+		"cumulative_positive", "cumulative_recovered", "cumulative_deceased",
+		"rt", "rt_upper", "rt_lower",
+	}).AddRow(1, 1, now, 100, 80, 5, 1000, 800, 50, rt, rtUpper, rtLower)
+}
+
+func TestNationalCaseRepository_GetAllPaginated(t *testing.T) {
+	db, mock := setupMockDB(t)
+	defer func() { _ = db.Close() }()
+	repo := NewNationalCaseRepository(db)
+
+	mock.ExpectQuery(`SELECT COUNT\(\*\)`).WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1))
+	mock.ExpectQuery(`SELECT id, day`).WithArgs(10, 0).WillReturnRows(nationalCaseRows())
+
+	result, total, err := repo.GetAllPaginated(10, 0)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, total)
+	assert.Len(t, result, 1)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestNationalCaseRepository_GetAllPaginatedSorted(t *testing.T) {
+	db, mock := setupMockDB(t)
+	defer func() { _ = db.Close() }()
+	repo := NewNationalCaseRepository(db)
+
+	mock.ExpectQuery(`SELECT COUNT\(\*\)`).WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1))
+	mock.ExpectQuery(`SELECT id, day`).WithArgs(10, 0).WillReturnRows(nationalCaseRows())
+
+	result, total, err := repo.GetAllPaginatedSorted(10, 0, utils.SortParams{Field: "date", Order: "asc"})
+	assert.NoError(t, err)
+	assert.Equal(t, 1, total)
+	assert.Len(t, result, 1)
+}
+
+func TestNationalCaseRepository_GetByDateRangePaginated(t *testing.T) {
+	db, mock := setupMockDB(t)
+	defer func() { _ = db.Close() }()
+	repo := NewNationalCaseRepository(db)
+
+	start := time.Date(2020, 3, 1, 0, 0, 0, 0, time.UTC)
+	end := time.Date(2020, 3, 31, 0, 0, 0, 0, time.UTC)
+
+	mock.ExpectQuery(`SELECT COUNT\(\*\)`).WithArgs(start, end).WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1))
+	mock.ExpectQuery(`SELECT id, day`).WithArgs(start, end, 10, 0).WillReturnRows(nationalCaseRows())
+
+	result, total, err := repo.GetByDateRangePaginated(start, end, 10, 0)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, total)
+	assert.Len(t, result, 1)
+}
+
+func TestNationalCaseRepository_GetByDateRangePaginatedSorted(t *testing.T) {
+	db, mock := setupMockDB(t)
+	defer func() { _ = db.Close() }()
+	repo := NewNationalCaseRepository(db)
+
+	start := time.Date(2020, 3, 1, 0, 0, 0, 0, time.UTC)
+	end := time.Date(2020, 3, 31, 0, 0, 0, 0, time.UTC)
+
+	mock.ExpectQuery(`SELECT COUNT\(\*\)`).WithArgs(start, end).WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1))
+	mock.ExpectQuery(`SELECT id, day`).WithArgs(start, end, 10, 0).WillReturnRows(nationalCaseRows())
+
+	result, total, err := repo.GetByDateRangePaginatedSorted(start, end, 10, 0, utils.SortParams{Field: "date", Order: "asc"})
+	assert.NoError(t, err)
+	assert.Equal(t, 1, total)
+	assert.Len(t, result, 1)
 }

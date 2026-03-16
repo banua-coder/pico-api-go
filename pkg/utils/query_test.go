@@ -220,3 +220,57 @@ func TestValidatePaginationParams(t *testing.T) {
 		})
 	}
 }
+
+func TestParseSortParam_Default(t *testing.T) {
+	req := &http.Request{URL: &url.URL{RawQuery: ""}}
+	result := ParseSortParam(req, "date")
+	assert.Equal(t, "date", result.Field)
+	assert.Equal(t, "asc", result.Order)
+}
+
+func TestParseSortParam_FieldOnly(t *testing.T) {
+	req := &http.Request{URL: &url.URL{RawQuery: url.Values{"sort": {"day"}}.Encode()}}
+	result := ParseSortParam(req, "date")
+	assert.Equal(t, "day", result.Field)
+	assert.Equal(t, "asc", result.Order)
+}
+
+func TestParseSortParam_FieldAndOrder(t *testing.T) {
+	req := &http.Request{URL: &url.URL{RawQuery: url.Values{"sort": {"day:desc"}}.Encode()}}
+	result := ParseSortParam(req, "date")
+	assert.Equal(t, "day", result.Field)
+	assert.Equal(t, "desc", result.Order)
+}
+
+func TestParseSortParam_InvalidOrder(t *testing.T) {
+	req := &http.Request{URL: &url.URL{RawQuery: url.Values{"sort": {"day:random"}}.Encode()}}
+	result := ParseSortParam(req, "date")
+	assert.Equal(t, "day", result.Field)
+	assert.Equal(t, "asc", result.Order)
+}
+
+func TestParseSortParam_InvalidField(t *testing.T) {
+	req := &http.Request{URL: &url.URL{RawQuery: url.Values{"sort": {"unknown_field:asc"}}.Encode()}}
+	result := ParseSortParam(req, "date")
+	assert.Equal(t, "date", result.Field) // falls back to default
+}
+
+func TestIsValidSortField(t *testing.T) {
+	assert.True(t, IsValidSortField("date"))
+	assert.True(t, IsValidSortField("day"))
+	assert.True(t, IsValidSortField("positive"))
+	assert.True(t, IsValidSortField("province_id"))
+	assert.False(t, IsValidSortField("unknown"))
+	assert.False(t, IsValidSortField(""))
+}
+
+func TestGetSQLOrderClause(t *testing.T) {
+	s := SortParams{Field: "date", Order: "desc"}
+	assert.Equal(t, "date DESC", s.GetSQLOrderClause())
+
+	s2 := SortParams{Field: "positive", Order: "asc"}
+	assert.Equal(t, "positive ASC", s2.GetSQLOrderClause())
+
+	s3 := SortParams{Field: "unknown_field", Order: "asc"}
+	assert.Equal(t, "date ASC", s3.GetSQLOrderClause()) // fallback to date
+}
