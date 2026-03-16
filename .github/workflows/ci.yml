@@ -16,3 +16,4 @@ jobs:
       coverage-threshold: 80
       post-coverage-comment: true
       golangci-lint-version: v2.10.1
+      test-packages: "./internal/... ./pkg/utils/..."
