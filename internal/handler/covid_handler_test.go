@@ -645,7 +645,7 @@ func TestCovidHandler_GetAPIIndex(t *testing.T) {
 	apiInfo, ok := data["api"].(map[string]interface{})
 	assert.True(t, ok)
 	assert.Equal(t, "Sulawesi Tengah COVID-19 Data API", apiInfo["title"])
-	assert.Equal(t, "2.5.1", apiInfo["version"])
+	assert.Equal(t, "2.6.0", apiInfo["version"])
 
 	// Verify endpoints structure
 	endpoints, ok := data["endpoints"].(map[string]interface{})
@@ -676,10 +676,122 @@ func TestCovidHandler_HealthCheck(t *testing.T) {
 	assert.True(t, ok)
 	assert.Equal(t, "degraded", data["status"])
 	assert.Equal(t, "COVID-19 API", data["service"])
-	assert.Equal(t, "2.5.1", data["version"])
+	assert.Equal(t, "2.6.0", data["version"])
 	assert.Contains(t, data, "database")
 
 	dbData, ok := data["database"].(map[string]interface{})
 	assert.True(t, ok)
 	assert.Equal(t, "unavailable", dbData["status"])
+}
+
+func TestCovidHandler_GetNationalCaseByDay_Success(t *testing.T) {
+	svc := new(MockCovidService)
+	expected := &models.NationalCase{ID: 1, Positive: 100}
+	svc.On("GetNationalCaseByDay", int64(1)).Return(expected, nil)
+
+	handler := NewCovidHandler(svc, nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/national/1", nil)
+	rr := httptest.NewRecorder()
+
+	router := mux.NewRouter()
+	router.HandleFunc("/api/v1/national/{day}", handler.GetNationalCaseByDay)
+	router.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	svc.AssertExpectations(t)
+}
+
+func TestCovidHandler_GetNationalCaseByDay_InvalidDay(t *testing.T) {
+	svc := new(MockCovidService)
+
+	handler := NewCovidHandler(svc, nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/national/abc", nil)
+	rr := httptest.NewRecorder()
+
+	router := mux.NewRouter()
+	router.HandleFunc("/api/v1/national/{day}", handler.GetNationalCaseByDay)
+	router.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+}
+
+func TestCovidHandler_GetNationalCaseByDay_NotFound(t *testing.T) {
+	svc := new(MockCovidService)
+	svc.On("GetNationalCaseByDay", int64(999)).Return((*models.NationalCase)(nil), nil)
+
+	handler := NewCovidHandler(svc, nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/national/999", nil)
+	rr := httptest.NewRecorder()
+
+	router := mux.NewRouter()
+	router.HandleFunc("/api/v1/national/{day}", handler.GetNationalCaseByDay)
+	router.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusNotFound, rr.Code)
+	svc.AssertExpectations(t)
+}
+
+func TestCovidHandler_GetNationalCaseByDay_Error(t *testing.T) {
+	svc := new(MockCovidService)
+	svc.On("GetNationalCaseByDay", int64(1)).Return((*models.NationalCase)(nil), errors.New("db error"))
+
+	handler := NewCovidHandler(svc, nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/national/1", nil)
+	rr := httptest.NewRecorder()
+
+	router := mux.NewRouter()
+	router.HandleFunc("/api/v1/national/{day}", handler.GetNationalCaseByDay)
+	router.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusInternalServerError, rr.Code)
+	svc.AssertExpectations(t)
+}
+
+func TestCovidHandler_GetProvinceByID_Success(t *testing.T) {
+	svc := new(MockCovidService)
+	expected := &models.Province{ID: "11", Name: "Aceh"}
+	svc.On("GetProvinceByID", "11").Return(expected, nil)
+
+	handler := NewCovidHandler(svc, nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/provinces/11", nil)
+	rr := httptest.NewRecorder()
+
+	router := mux.NewRouter()
+	router.HandleFunc("/api/v1/provinces/{code}", handler.GetProvinceByID)
+	router.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	svc.AssertExpectations(t)
+}
+
+func TestCovidHandler_GetProvinceByID_NotFound(t *testing.T) {
+	svc := new(MockCovidService)
+	svc.On("GetProvinceByID", "99").Return((*models.Province)(nil), nil)
+
+	handler := NewCovidHandler(svc, nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/provinces/99", nil)
+	rr := httptest.NewRecorder()
+
+	router := mux.NewRouter()
+	router.HandleFunc("/api/v1/provinces/{code}", handler.GetProvinceByID)
+	router.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusNotFound, rr.Code)
+	svc.AssertExpectations(t)
+}
+
+func TestCovidHandler_GetProvinceByID_Error(t *testing.T) {
+	svc := new(MockCovidService)
+	svc.On("GetProvinceByID", "11").Return((*models.Province)(nil), errors.New("db error"))
+
+	handler := NewCovidHandler(svc, nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/provinces/11", nil)
+	rr := httptest.NewRecorder()
+
+	router := mux.NewRouter()
+	router.HandleFunc("/api/v1/provinces/{code}", handler.GetProvinceByID)
+	router.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusInternalServerError, rr.Code)
+	svc.AssertExpectations(t)
 }

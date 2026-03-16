@@ -12,6 +12,7 @@ import (
 // HospitalRepositoryInterface defines the contract for hospital repository operations
 type HospitalRepositoryInterface interface {
 	GetAll(provinceID int) ([]models.Hospital, error)
+	GetPaginated(provinceID, limit, offset int) ([]models.Hospital, int, error)
 	GetByCode(code string) (*models.Hospital, error)
 }
 
@@ -73,6 +74,63 @@ func (r *HospitalRepository) GetAll(provinceID int) ([]models.Hospital, error) {
 	}
 
 	return hospitals, nil
+}
+
+// GetPaginated returns a page of hospitals along with total count
+func (r *HospitalRepository) GetPaginated(provinceID, limit, offset int) ([]models.Hospital, int, error) {
+	likeParam := fmt.Sprintf("%d%%", provinceID)
+
+	var total int
+	countQuery := `SELECT COUNT(*) FROM hospitals WHERE regency_id LIKE ?`
+	if err := r.db.QueryRow(countQuery, likeParam).Scan(&total); err != nil {
+		return nil, 0, fmt.Errorf("failed to count hospitals: %w", err)
+	}
+
+	query := `SELECT h.id, h.regency_id, h.name, h.hospital_code, h.address, h.latitude, h.longitude,
+		COALESCE((SELECT available FROM hospital_beds WHERE hospital_id = h.id AND hospital_bed_type_id = 1 LIMIT 1), 0) as igd_count
+		FROM hospitals h
+		WHERE h.regency_id LIKE ?
+		ORDER BY h.name
+		LIMIT ? OFFSET ?`
+
+	rows, err := r.db.Query(query, likeParam, limit, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to query hospitals: %w", err)
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("Error closing rows: %v", err)
+		}
+	}()
+
+	var hospitals []models.Hospital
+	for rows.Next() {
+		var h models.Hospital
+		if err := rows.Scan(&h.ID, &h.RegencyID, &h.Name, &h.HospitalCode, &h.Address,
+			&h.Latitude, &h.Longitude, &h.IGDCount); err != nil {
+			return nil, 0, fmt.Errorf("failed to scan hospital: %w", err)
+		}
+		hospitals = append(hospitals, h)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, err
+	}
+
+	for i := range hospitals {
+		contacts, err := r.getContacts("App\\Models\\Hospital", hospitals[i].ID)
+		if err != nil {
+			return nil, 0, err
+		}
+		hospitals[i].Contacts = contacts
+
+		beds, err := r.getBeds(hospitals[i].ID)
+		if err != nil {
+			return nil, 0, err
+		}
+		hospitals[i].Beds = beds
+	}
+
+	return hospitals, total, nil
 }
 
 // GetByCode returns a hospital by its code

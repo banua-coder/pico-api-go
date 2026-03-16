@@ -19,6 +19,11 @@ func (m *MockHospitalRepository) GetAll(provinceID int) ([]models.Hospital, erro
 	return args.Get(0).([]models.Hospital), args.Error(1)
 }
 
+func (m *MockHospitalRepository) GetPaginated(provinceID, limit, offset int) ([]models.Hospital, int, error) {
+	args := m.Called(provinceID, limit, offset)
+	return args.Get(0).([]models.Hospital), args.Int(1), args.Error(2)
+}
+
 func (m *MockHospitalRepository) GetByCode(code string) (*models.Hospital, error) {
 	args := m.Called(code)
 	result := args.Get(0)
@@ -98,5 +103,35 @@ func TestHospitalService_GetHospitalByCode_Error(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestHospitalService_GetHospitalsPaginated(t *testing.T) {
+	mockRepo, svc := setupHospitalService()
+
+	code := "7201001"
+	expected := []models.Hospital{
+		{ID: 1, RegencyID: 7201, Name: "RSUD Banggai", HospitalCode: &code},
+	}
+	mockRepo.On("GetPaginated", 72, 10, 0).Return(expected, 1, nil)
+
+	result, total, err := svc.GetHospitalsPaginated(10, 0)
+
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+	assert.Equal(t, 1, total)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestHospitalService_GetHospitalsPaginated_Error(t *testing.T) {
+	mockRepo, svc := setupHospitalService()
+
+	mockRepo.On("GetPaginated", 72, 10, 0).Return([]models.Hospital{}, 0, errors.New("db error"))
+
+	result, total, err := svc.GetHospitalsPaginated(10, 0)
+
+	assert.Error(t, err)
+	assert.Empty(t, result)
+	assert.Equal(t, 0, total)
 	mockRepo.AssertExpectations(t)
 }

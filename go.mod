@@ -1,6 +1,6 @@
 module github.com/banua-coder/pico-api-go
 
-// Version: 2.5.0
+// Version: 2.6.0
 
 go 1.26.0
 

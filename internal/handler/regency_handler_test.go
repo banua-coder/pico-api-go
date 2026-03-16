@@ -14,6 +14,11 @@ import (
 
 type MockRegencyService struct{ mock.Mock }
 
+func (m *MockRegencyService) GetRegenciesPaginated(limit, offset int) ([]models.Regency, int, error) {
+	args := m.Called(limit, offset)
+	return args.Get(0).([]models.Regency), args.Int(1), args.Error(2)
+}
+
 func (m *MockRegencyService) GetRegencies() ([]models.Regency, error) {
 	args := m.Called()
 	return args.Get(0).([]models.Regency), args.Error(1)
@@ -36,7 +41,7 @@ func (m *MockRegencyService) GetLatestRegencyCases() ([]models.RegencyCase, erro
 
 func TestGetRegencies_Success(t *testing.T) {
 	svc := new(MockRegencyService)
-	svc.On("GetRegencies").Return([]models.Regency{{ID: 7201, Name: "Kab. Banggai"}}, nil)
+	svc.On("GetRegenciesPaginated", 10, 0).Return([]models.Regency{{ID: 7201, Name: "Kab. Banggai"}}, 1, nil)
 
 	h := NewRegencyHandler(svc)
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/regencies", nil)
@@ -49,10 +54,36 @@ func TestGetRegencies_Success(t *testing.T) {
 
 func TestGetRegencies_Error(t *testing.T) {
 	svc := new(MockRegencyService)
-	svc.On("GetRegencies").Return([]models.Regency{}, errors.New("db error"))
+	svc.On("GetRegenciesPaginated", 10, 0).Return([]models.Regency{}, 0, errors.New("db error"))
 
 	h := NewRegencyHandler(svc)
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/regencies", nil)
+	w := httptest.NewRecorder()
+	h.GetRegencies(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	svc.AssertExpectations(t)
+}
+
+func TestGetRegencies_LoadAll(t *testing.T) {
+	svc := new(MockRegencyService)
+	svc.On("GetRegencies").Return([]models.Regency{{ID: 7201, Name: "Kab. Banggai"}}, nil)
+
+	h := NewRegencyHandler(svc)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/regencies?load_all=true", nil)
+	w := httptest.NewRecorder()
+	h.GetRegencies(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	svc.AssertExpectations(t)
+}
+
+func TestGetRegencies_LoadAll_Error(t *testing.T) {
+	svc := new(MockRegencyService)
+	svc.On("GetRegencies").Return([]models.Regency{}, errors.New("db error"))
+
+	h := NewRegencyHandler(svc)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/regencies?load_all=true", nil)
 	w := httptest.NewRecorder()
 	h.GetRegencies(w, req)
 

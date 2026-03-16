@@ -19,20 +19,35 @@ func NewRegencyHandler(service service.RegencyServiceInterface) *RegencyHandler 
 }
 
 // GetRegencies godoc
-// @Summary Get all regencies in Sulawesi Tengah
-// @Description Returns all kabupaten/kota in Sulawesi Tengah
+// @Summary Get regencies in Sulawesi Tengah (paginated)
+// @Description Returns paginated kabupaten/kota list. Use ?load_all=true to get all.
 // @Tags regencies
 // @Produce json
+// @Param page query int false "Page number (default: 1)"
+// @Param per_page query int false "Items per page (default: 10, max: 100)"
+// @Param load_all query bool false "Set true to return all regencies without pagination"
 // @Success 200 {object} Response
 // @Failure 500 {object} Response
 // @Router /api/v1/regencies [get]
 func (h *RegencyHandler) GetRegencies(w http.ResponseWriter, r *http.Request) {
-	regencies, err := h.service.GetRegencies()
+	p := parsePaginationParams(r)
+
+	if p.LoadAll {
+		regencies, err := h.service.GetRegencies()
+		if err != nil {
+			writeErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		writeSuccessResponse(w, regencies)
+		return
+	}
+
+	regencies, total, err := h.service.GetRegenciesPaginated(p.PerPage, p.Offset)
 	if err != nil {
 		writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	writeSuccessResponse(w, regencies)
+	writePaginatedResponse(w, regencies, buildPaginationMeta(p, total))
 }
 
 // GetRegencyByID godoc

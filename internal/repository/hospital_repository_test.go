@@ -158,3 +158,52 @@ func TestHospitalRepository_GetByCode_DBError(t *testing.T) {
 	_, err := repo.GetByCode("7201001")
 	assert.Error(t, err)
 }
+
+func TestHospitalRepository_GetPaginated(t *testing.T) {
+	repo, mock := setupHospitalRepo(t)
+	code := "7201001"
+
+	mock.ExpectQuery(`SELECT COUNT\(\*\) FROM hospitals`).
+		WithArgs("72%").
+		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1))
+
+	mock.ExpectQuery(`SELECT h.id`).
+		WithArgs("72%", 10, 0).
+		WillReturnRows(sqlmock.NewRows(hospitalCols).
+			AddRow(1, 7201, "RSUD Palu", code, "Jl. Test", 0.1, 119.1, 5))
+
+	expectEmptyContacts(mock, 1)
+	expectEmptyBeds(mock, 1)
+
+	hospitals, total, err := repo.GetPaginated(72, 10, 0)
+	assert.NoError(t, err)
+	assert.Len(t, hospitals, 1)
+	assert.Equal(t, 1, total)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestHospitalRepository_GetPaginated_CountError(t *testing.T) {
+	repo, mock := setupHospitalRepo(t)
+
+	mock.ExpectQuery(`SELECT COUNT\(\*\) FROM hospitals`).
+		WithArgs("72%").
+		WillReturnError(errors.New("db error"))
+
+	_, _, err := repo.GetPaginated(72, 10, 0)
+	assert.Error(t, err)
+}
+
+func TestHospitalRepository_GetPaginated_QueryError(t *testing.T) {
+	repo, mock := setupHospitalRepo(t)
+
+	mock.ExpectQuery(`SELECT COUNT\(\*\) FROM hospitals`).
+		WithArgs("72%").
+		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(5))
+
+	mock.ExpectQuery(`SELECT h.id`).
+		WithArgs("72%", 10, 0).
+		WillReturnError(errors.New("db error"))
+
+	_, _, err := repo.GetPaginated(72, 10, 0)
+	assert.Error(t, err)
+}

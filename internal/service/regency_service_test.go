@@ -19,6 +19,11 @@ func (m *MockRegencyRepository) GetAll(provinceID int) ([]models.Regency, error)
 	return args.Get(0).([]models.Regency), args.Error(1)
 }
 
+func (m *MockRegencyRepository) GetPaginated(provinceID, limit, offset int) ([]models.Regency, int, error) {
+	args := m.Called(provinceID, limit, offset)
+	return args.Get(0).([]models.Regency), args.Int(1), args.Error(2)
+}
+
 func (m *MockRegencyRepository) GetByID(id int) (*models.Regency, error) {
 	args := m.Called(id)
 	result := args.Get(0)
@@ -168,4 +173,33 @@ func TestRegencyService_GetLatestRegencyCases_Error(t *testing.T) {
 	assert.Error(t, err)
 	assert.Empty(t, result)
 	mockCaseRepo.AssertExpectations(t)
+}
+
+func TestRegencyService_GetRegenciesPaginated(t *testing.T) {
+	mockRepo, _, svc := setupRegencyService()
+
+	expected := []models.Regency{
+		{ID: 7201, ProvinceID: 72, Name: "Kabupaten Banggai"},
+	}
+	mockRepo.On("GetPaginated", 72, 10, 0).Return(expected, 1, nil)
+
+	result, total, err := svc.GetRegenciesPaginated(10, 0)
+
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+	assert.Equal(t, 1, total)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestRegencyService_GetRegenciesPaginated_Error(t *testing.T) {
+	mockRepo, _, svc := setupRegencyService()
+
+	mockRepo.On("GetPaginated", 72, 10, 0).Return([]models.Regency{}, 0, errors.New("db error"))
+
+	result, total, err := svc.GetRegenciesPaginated(10, 0)
+
+	assert.Error(t, err)
+	assert.Empty(t, result)
+	assert.Equal(t, 0, total)
+	mockRepo.AssertExpectations(t)
 }
