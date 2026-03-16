@@ -20,6 +20,11 @@ func (s *HospitalService) GetHospitals() ([]models.Hospital, error) {
 	return s.hospitalRepo.GetAll(72)
 }
 
+// GetHospitalsPaginated returns a page of hospitals with total count
+func (s *HospitalService) GetHospitalsPaginated(limit, offset int) ([]models.Hospital, int, error) {
+	return s.hospitalRepo.GetPaginated(72, limit, offset)
+}
+
 // GetHospitalByCode returns a single hospital by code
 func (s *HospitalService) GetHospitalByCode(code string) (*models.Hospital, error) {
 	return s.hospitalRepo.GetByCode(code)

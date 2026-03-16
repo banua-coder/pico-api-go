@@ -14,6 +14,11 @@ import (
 
 type MockHospitalService struct{ mock.Mock }
 
+func (m *MockHospitalService) GetHospitalsPaginated(limit, offset int) ([]models.Hospital, int, error) {
+	args := m.Called(limit, offset)
+	return args.Get(0).([]models.Hospital), args.Int(1), args.Error(2)
+}
+
 func (m *MockHospitalService) GetHospitals() ([]models.Hospital, error) {
 	args := m.Called()
 	return args.Get(0).([]models.Hospital), args.Error(1)
@@ -31,7 +36,7 @@ func strPtr(s string) *string { return &s }
 func TestGetHospitals_Success(t *testing.T) {
 	svc := new(MockHospitalService)
 	hospitals := []models.Hospital{{ID: 1, Name: "RSUD Undata", HospitalCode: strPtr("7200001")}}
-	svc.On("GetHospitals").Return(hospitals, nil)
+	svc.On("GetHospitalsPaginated", 10, 0).Return(hospitals, 1, nil)
 
 	h := NewHospitalHandler(svc)
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/hospitals", nil)
@@ -42,9 +47,23 @@ func TestGetHospitals_Success(t *testing.T) {
 	svc.AssertExpectations(t)
 }
 
+func TestGetHospitals_LoadAll(t *testing.T) {
+	svc := new(MockHospitalService)
+	hospitals := []models.Hospital{{ID: 1, Name: "RSUD Undata", HospitalCode: strPtr("7200001")}}
+	svc.On("GetHospitals").Return(hospitals, nil)
+
+	h := NewHospitalHandler(svc)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/hospitals?load_all=true", nil)
+	w := httptest.NewRecorder()
+	h.GetHospitals(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	svc.AssertExpectations(t)
+}
+
 func TestGetHospitals_Error(t *testing.T) {
 	svc := new(MockHospitalService)
-	svc.On("GetHospitals").Return([]models.Hospital{}, errors.New("db error"))
+	svc.On("GetHospitalsPaginated", 10, 0).Return([]models.Hospital{}, 0, errors.New("db error"))
 
 	h := NewHospitalHandler(svc)
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/hospitals", nil)
