@@ -153,7 +153,9 @@ func (r *TaskForceRepository) GetPaginatedByProvinceID(provinceID, limit, offset
 		for tfRows.Next() {
 			var tf models.TaskForce
 			if err := tfRows.Scan(&tf.ID, &tf.RegencyID, &tf.Name); err != nil {
-				tfRows.Close()
+				if cerr := tfRows.Close(); cerr != nil {
+					log.Printf("Error closing rows: %v", cerr)
+				}
 				return nil, 0, fmt.Errorf("failed to scan task force: %w", err)
 			}
 
@@ -163,7 +165,9 @@ func (r *TaskForceRepository) GetPaginatedByProvinceID(provinceID, limit, offset
 				WHERE c.contactable_type = 'App\\Models\\TaskForce' AND c.contactable_id = ?`
 			cRows, err := r.db.Query(cQuery, tf.ID)
 			if err != nil {
-				tfRows.Close()
+				if cerr := tfRows.Close(); cerr != nil {
+					log.Printf("Error closing rows: %v", cerr)
+				}
 				return nil, 0, fmt.Errorf("failed to query contacts: %w", err)
 			}
 
@@ -171,18 +175,26 @@ func (r *TaskForceRepository) GetPaginatedByProvinceID(provinceID, limit, offset
 			for cRows.Next() {
 				var c models.Contact
 				if err := cRows.Scan(&c.ID, &c.ContactTypeID, &c.Contact, &c.ContactTypeName, &c.ContactTypeIcon); err != nil {
-					cRows.Close()
-					tfRows.Close()
+					if cerr := cRows.Close(); cerr != nil {
+						log.Printf("Error closing rows: %v", cerr)
+					}
+					if cerr := tfRows.Close(); cerr != nil {
+						log.Printf("Error closing rows: %v", cerr)
+					}
 					return nil, 0, fmt.Errorf("failed to scan contact: %w", err)
 				}
 				contacts = append(contacts, c)
 			}
-			cRows.Close()
+			if cerr := cRows.Close(); cerr != nil {
+				log.Printf("Error closing rows: %v", cerr)
+			}
 
 			tf.Contacts = contacts
 			taskForces = append(taskForces, tf)
 		}
-		tfRows.Close()
+		if cerr := tfRows.Close(); cerr != nil {
+			log.Printf("Error closing rows: %v", cerr)
+		}
 
 		result[i].TaskForces = taskForces
 	}
