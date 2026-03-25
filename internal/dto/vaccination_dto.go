@@ -1,10 +1,17 @@
 package dto
 
 import (
+	"math"
 	"time"
 
 	"github.com/banua-coder/pico-api-go/internal/models"
 )
+
+// CoverageData represents vaccination coverage as percentage.
+type CoverageData struct {
+	Dose1 float64 `json:"dose_1"`
+	Dose2 float64 `json:"dose_2"`
+}
 
 // DoseData holds dose_1 and dose_2 counts.
 type DoseData struct {
@@ -14,111 +21,89 @@ type DoseData struct {
 
 // GroupData holds vaccination data for a specific group.
 type GroupData struct {
-	Target     int64    `json:"target"`
-	Daily      DoseData `json:"daily"`
-	Cumulative DoseData `json:"cumulative"`
+	Target     int64        `json:"target"`
+	Daily      DoseData     `json:"daily"`
+	Cumulative DoseData     `json:"cumulative"`
+	Coverage   CoverageData `json:"coverage"`
 }
 
 // VaccinationTotals holds total daily and cumulative dose data.
 type VaccinationTotals struct {
-	Daily      DoseData `json:"daily"`
-	Cumulative DoseData `json:"cumulative"`
+	Daily      DoseData     `json:"daily"`
+	Cumulative DoseData     `json:"cumulative"`
+	Coverage   CoverageData `json:"coverage"`
 }
 
 // VaccinationResponse is the API response for national vaccination data.
 type VaccinationResponse struct {
-	ID     int64             `json:"id"`
-	Day    int64             `json:"day"`
-	Date   time.Time         `json:"date"`
-	Target int64             `json:"target"`
-	Total  VaccinationTotals `json:"total"`
+	ID     int64                `json:"id"`
+	Day    int64                `json:"day"`
+	Date   time.Time            `json:"date"`
+	Target int64                `json:"target"`
+	Total  VaccinationTotals    `json:"total"`
 	Groups map[string]GroupData `json:"groups"`
 }
 
 // ProvinceVaccinationResponse is the API response for provincial vaccination data.
 type ProvinceVaccinationResponse struct {
-	ID         int64             `json:"id"`
-	Day        int64             `json:"day"`
-	Date       time.Time         `json:"date"`
-	ProvinceID int               `json:"province_id"`
-	Target     int64             `json:"target"`
-	Total      VaccinationTotals `json:"total"`
+	ID         int64                `json:"id"`
+	Day        int64                `json:"day"`
+	Date       time.Time            `json:"date"`
+	ProvinceID int                  `json:"province_id"`
+	Target     int64                `json:"target"`
+	Total      VaccinationTotals    `json:"total"`
 	Groups     map[string]GroupData `json:"groups"`
+}
+
+// calcCoverage returns (cumulative / target) * 100, rounded to 2 decimals.
+// Returns 0.00 if target is 0.
+func calcCoverage(cumulative int64, target int64) float64 {
+	if target == 0 {
+		return 0.0
+	}
+	return math.Round(float64(cumulative)/float64(target)*10000) / 100
+}
+
+func buildGroup(target int64, daily, cumulative DoseData) GroupData {
+	return GroupData{
+		Target: target, Daily: daily, Cumulative: cumulative,
+		Coverage: CoverageData{
+			Dose1: calcCoverage(cumulative.Dose1, target),
+			Dose2: calcCoverage(cumulative.Dose2, target),
+		},
+	}
 }
 
 // TransformNationalVaccine converts a NationalVaccine model to VaccinationResponse DTO.
 func TransformNationalVaccine(v models.NationalVaccine) VaccinationResponse {
+	totalDaily := DoseData{Dose1: v.FirstVaccinationReceived, Dose2: v.SecondVaccinationReceived}
+	totalCum := DoseData{Dose1: v.CumulativeFirstVaccinationReceived, Dose2: v.CumulativeSecondVaccinationReceived}
+
 	return VaccinationResponse{
-		ID:     v.ID,
-		Day:    v.Day,
-		Date:   v.Date,
-		Target: v.TotalVaccinationTarget,
+		ID: v.ID, Day: v.Day, Date: v.Date, Target: v.TotalVaccinationTarget,
 		Total: VaccinationTotals{
-			Daily: DoseData{
-				Dose1: v.FirstVaccinationReceived,
-				Dose2: v.SecondVaccinationReceived,
-			},
-			Cumulative: DoseData{
-				Dose1: v.CumulativeFirstVaccinationReceived,
-				Dose2: v.CumulativeSecondVaccinationReceived,
+			Daily: totalDaily, Cumulative: totalCum,
+			Coverage: CoverageData{
+				Dose1: calcCoverage(totalCum.Dose1, v.TotalVaccinationTarget),
+				Dose2: calcCoverage(totalCum.Dose2, v.TotalVaccinationTarget),
 			},
 		},
 		Groups: map[string]GroupData{
-			"health_worker": {
-				Target: v.HealthWorkerVaccinationTarget,
-				Daily: DoseData{
-					Dose1: v.HealthWorkerFirstVaccinationReceived,
-					Dose2: v.HealthWorkerSecondVaccinationReceived,
-				},
-				Cumulative: DoseData{
-					Dose1: v.CumulativeHealthWorkerFirstVaccinationReceived,
-					Dose2: v.CumulativeHealthWorkerSecondVaccinationReceived,
-				},
-			},
-			"elderly": {
-				Target: v.ElderlyVaccinationTarget,
-				Daily: DoseData{
-					Dose1: v.ElderlyFirstVaccinationReceived,
-					Dose2: v.ElderlySecondVaccinationReceived,
-				},
-				Cumulative: DoseData{
-					Dose1: v.CumulativeElderlyFirstVaccinationReceived,
-					Dose2: v.CumulativeElderlySecondVaccinationReceived,
-				},
-			},
-			"public_officer": {
-				Target: v.PublicOfficerVaccinationTarget,
-				Daily: DoseData{
-					Dose1: v.PublicOfficerFirstVaccinationReceived,
-					Dose2: v.PublicOfficerSecondVaccinationReceived,
-				},
-				Cumulative: DoseData{
-					Dose1: v.CumulativePublicOfficerFirstVaccinationReceived,
-					Dose2: v.CumulativePublicOfficerSecondVaccinationReceived,
-				},
-			},
-			"public": {
-				Target: v.PublicVaccinationTarget,
-				Daily: DoseData{
-					Dose1: v.PublicFirstVaccinationReceived,
-					Dose2: v.PublicSecondVaccinationReceived,
-				},
-				Cumulative: DoseData{
-					Dose1: v.CumulativePublicFirstVaccinationReceived,
-					Dose2: v.CumulativePublicSecondVaccinationReceived,
-				},
-			},
-			"teenager": {
-				Target: v.TeenagerVaccinationTarget,
-				Daily: DoseData{
-					Dose1: v.TeenagerFirstVaccinationReceived,
-					Dose2: v.TeenagerSecondVaccinationReceived,
-				},
-				Cumulative: DoseData{
-					Dose1: v.CumulativeTeenagerFirstVaccinationReceived,
-					Dose2: v.CumulativeTeenagerSecondVaccinationReceived,
-				},
-			},
+			"health_worker": buildGroup(v.HealthWorkerVaccinationTarget,
+				DoseData{v.HealthWorkerFirstVaccinationReceived, v.HealthWorkerSecondVaccinationReceived},
+				DoseData{v.CumulativeHealthWorkerFirstVaccinationReceived, v.CumulativeHealthWorkerSecondVaccinationReceived}),
+			"elderly": buildGroup(v.ElderlyVaccinationTarget,
+				DoseData{v.ElderlyFirstVaccinationReceived, v.ElderlySecondVaccinationReceived},
+				DoseData{v.CumulativeElderlyFirstVaccinationReceived, v.CumulativeElderlySecondVaccinationReceived}),
+			"public_officer": buildGroup(v.PublicOfficerVaccinationTarget,
+				DoseData{v.PublicOfficerFirstVaccinationReceived, v.PublicOfficerSecondVaccinationReceived},
+				DoseData{v.CumulativePublicOfficerFirstVaccinationReceived, v.CumulativePublicOfficerSecondVaccinationReceived}),
+			"public": buildGroup(v.PublicVaccinationTarget,
+				DoseData{v.PublicFirstVaccinationReceived, v.PublicSecondVaccinationReceived},
+				DoseData{v.CumulativePublicFirstVaccinationReceived, v.CumulativePublicSecondVaccinationReceived}),
+			"teenager": buildGroup(v.TeenagerVaccinationTarget,
+				DoseData{v.TeenagerFirstVaccinationReceived, v.TeenagerSecondVaccinationReceived},
+				DoseData{v.CumulativeTeenagerFirstVaccinationReceived, v.CumulativeTeenagerSecondVaccinationReceived}),
 		},
 	}
 }
@@ -127,12 +112,8 @@ func TransformNationalVaccine(v models.NationalVaccine) VaccinationResponse {
 func TransformProvinceVaccine(v models.ProvinceVaccine) ProvinceVaccinationResponse {
 	national := TransformNationalVaccine(v.NationalVaccine)
 	return ProvinceVaccinationResponse{
-		ID:         national.ID,
-		Day:        national.Day,
-		Date:       national.Date,
-		ProvinceID: v.ProvinceID,
-		Target:     national.Target,
-		Total:      national.Total,
-		Groups:     national.Groups,
+		ID: national.ID, Day: national.Day, Date: national.Date,
+		ProvinceID: v.ProvinceID, Target: national.Target,
+		Total: national.Total, Groups: national.Groups,
 	}
 }
