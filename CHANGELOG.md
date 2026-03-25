@@ -1,4 +1,31 @@
 # Changelog
+## [2.6.1] - 2026-03-25
+
+### 🐛 Bug Fixes
+
+-  use WORKFLOW_PAT org secret instead of WORKFLOW_TOKEN (d6d932c)
+-  remove /api/v1 prefix from @Router annotations (d6ba522)
+-  remove /api/v1 prefix from @Router annotations (fdac8c4)
+-  remove /api/v1 prefix from @Router annotations (9e1d85e)
+-  remove /api/v1 prefix from @Router annotations (d56aeba)
+-  remove /api/v1 prefix from @Router annotations (a2e3f46)
+-  remove /api/v1 prefix from @Router annotations (208a4c7)
+
+### 📚 Documentation
+
+-  update changelog for v2.6.0 (ebde3af)
+-  regenerate swagger with fixed paths (no double /api/v1) (a659834)
+-  regenerate swagger with fixed paths (no double /api/v1) (9b4bcee)
+-  regenerate swagger with fixed paths (no double /api/v1) (30d9fd5)
+
+### 🔧 Chores
+
+-  bump version to 2.6.1 (520cf6d)
+
+### 📝 Other Changes
+
+- Merge pull request #64 from banua-coder/hotfix/2.6.1 (e4adcd0)
+
 ## [v2.6.0] - 2026-03-25
 
 ### ✨ Features
