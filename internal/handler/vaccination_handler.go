@@ -3,6 +3,8 @@ package handler
 import (
 	"net/http"
 
+	"github.com/banua-coder/pico-api-go/internal/dto"
+	"github.com/banua-coder/pico-api-go/internal/models"
 	"github.com/banua-coder/pico-api-go/internal/service"
 )
 
@@ -22,7 +24,7 @@ func NewVaccinationHandler(service service.VaccinationServiceInterface) *Vaccina
 // @Param page query int false "Page number (default: 1)"
 // @Param per_page query int false "Items per page (default: 10, max: 100)"
 // @Param load_all query bool false "Set true to return all records without pagination"
-// @Success 200 {object} Response
+// @Success 200 {object} Response{data=[]dto.VaccinationResponse}
 // @Router /vaccination/national [get]
 func (h *VaccinationHandler) GetNationalVaccinations(w http.ResponseWriter, r *http.Request) {
 	p := parsePaginationParams(r)
@@ -33,7 +35,7 @@ func (h *VaccinationHandler) GetNationalVaccinations(w http.ResponseWriter, r *h
 			writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		writeSuccessResponse(w, data)
+		writeSuccessResponse(w, transformNationalSlice(data))
 		return
 	}
 
@@ -42,7 +44,7 @@ func (h *VaccinationHandler) GetNationalVaccinations(w http.ResponseWriter, r *h
 		writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	writePaginatedResponse(w, data, buildPaginationMeta(p, total))
+	writePaginatedResponse(w, transformNationalSlice(data), buildPaginationMeta(p, total))
 }
 
 // GetProvinceVaccinations godoc
@@ -53,7 +55,7 @@ func (h *VaccinationHandler) GetNationalVaccinations(w http.ResponseWriter, r *h
 // @Param page query int false "Page number (default: 1)"
 // @Param per_page query int false "Items per page (default: 10, max: 100)"
 // @Param load_all query bool false "Set true to return all records without pagination"
-// @Success 200 {object} Response
+// @Success 200 {object} Response{data=[]dto.ProvinceVaccinationResponse}
 // @Router /vaccination/province [get]
 func (h *VaccinationHandler) GetProvinceVaccinations(w http.ResponseWriter, r *http.Request) {
 	p := parsePaginationParams(r)
@@ -64,7 +66,7 @@ func (h *VaccinationHandler) GetProvinceVaccinations(w http.ResponseWriter, r *h
 			writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		writeSuccessResponse(w, data)
+		writeSuccessResponse(w, transformProvinceSlice(data))
 		return
 	}
 
@@ -73,7 +75,7 @@ func (h *VaccinationHandler) GetProvinceVaccinations(w http.ResponseWriter, r *h
 		writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	writePaginatedResponse(w, data, buildPaginationMeta(p, total))
+	writePaginatedResponse(w, transformProvinceSlice(data), buildPaginationMeta(p, total))
 }
 
 // GetVaccineLocations godoc
@@ -105,4 +107,20 @@ func (h *VaccinationHandler) GetVaccineLocations(w http.ResponseWriter, r *http.
 		return
 	}
 	writePaginatedResponse(w, data, buildPaginationMeta(p, total))
+}
+
+func transformNationalSlice(data []models.NationalVaccine) []dto.VaccinationResponse {
+	result := make([]dto.VaccinationResponse, len(data))
+	for i, v := range data {
+		result[i] = dto.TransformNationalVaccine(v)
+	}
+	return result
+}
+
+func transformProvinceSlice(data []models.ProvinceVaccine) []dto.ProvinceVaccinationResponse {
+	result := make([]dto.ProvinceVaccinationResponse, len(data))
+	for i, v := range data {
+		result[i] = dto.TransformProvinceVaccine(v)
+	}
+	return result
 }
