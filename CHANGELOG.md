@@ -1,4 +1,56 @@
 # Changelog
+## [2.7.0] - 2026-03-25
+
+### ✨ Features
+
+-  restructure gender stats response for better readability (#67) (ab2968f)
+-  restructure vaccination response payload for better readability (6eb9b35)
+-  add vaccination coverage percentage to response (af6133d)
+
+### 🐛 Bug Fixes
+
+-  use WORKFLOW_TOKEN for gh CLI calls in release-branch-creation workflow (f8d618e)
+-  use WORKFLOW_PAT org secret instead of WORKFLOW_TOKEN (d6d932c)
+-  remove /api/v1 prefix from @Router annotations (d6ba522)
+-  remove /api/v1 prefix from @Router annotations (fdac8c4)
+-  remove /api/v1 prefix from @Router annotations (9e1d85e)
+-  remove /api/v1 prefix from @Router annotations (d56aeba)
+-  remove /api/v1 prefix from @Router annotations (a2e3f46)
+-  remove /api/v1 prefix from @Router annotations (208a4c7)
+-  accept both v-prefixed and plain semver tags in deploy trigger (684e843)
+-  use WORKFLOW_TOKEN for gh CLI calls in release-branch-creation workflow (662fd4c)
+-  rewrite vaccination DTO tests to match actual struct fields (e67b84b)
+-  remove duplicate bump-develop-version job (handled by reusable workflow) (a50d92f)
+-  remove duplicate release-branch-creation workflow (fully handled by reusable workflow) (a4ba4d7)
+
+### 📚 Documentation
+
+-  update changelog for v2.6.0 (ebde3af)
+-  regenerate swagger with fixed paths (no double /api/v1) (a659834)
+-  regenerate swagger with fixed paths (no double /api/v1) (9b4bcee)
+-  regenerate swagger with fixed paths (no double /api/v1) (30d9fd5)
+-  update changelog for 2.6.1 (cf610ca)
+
+### 🔧 Chores
+
+-  bump version to v2.7.0 for next development cycle (6356336)
+-  bump version to 2.6.1 (520cf6d)
+-  bump version to v2.7.0 for next development cycle (be91838)
+-  prepare v2.7.0 release (5fc39d9)
+
+### 📝 Other Changes
+
+- Merge pull request #62 from banua-coder/fix/release-workflow-token (b70fa3c)
+- Merge pull request #60 from banua-coder/chore/bump-next-version (8ac5cd0)
+- Merge branch 'develop' into chore/back-merge-v2.6.0 (c8c5136)
+- Merge pull request #63 from banua-coder/chore/back-merge-v2.6.0 (7c96678)
+- Merge pull request #64 from banua-coder/hotfix/2.6.1 (e4adcd0)
+- Merge pull request #65 from banua-coder/chore/back-merge-2.6.1 (4e29a65)
+- Merge pull request #66 from banua-coder/feature/vaccination-response-restructure (934ac0c)
+- Merge pull request #69 from banua-coder/feature/vaccination-coverage-v2 (d5bf33d)
+- Merge pull request #72 from banua-coder/chore/prepare-release-v2.7.0 (e3c764d)
+- Merge pull request #70 from banua-coder/release/2.7.0 (802e888)
+
 ## [2.6.1] - 2026-03-25
 
 ### 🐛 Bug Fixes
