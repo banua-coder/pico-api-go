@@ -19,3 +19,8 @@ func NewTaskForceService(taskForceRepo repository.TaskForceRepositoryInterface) 
 func (s *TaskForceService) GetTaskForces() ([]models.TaskForceByRegency, error) {
 	return s.taskForceRepo.GetAllByProvinceID(72)
 }
+
+// GetTaskForcesPaginated returns a page of task forces grouped by regency with total count
+func (s *TaskForceService) GetTaskForcesPaginated(limit, offset int) ([]models.TaskForceByRegency, int, error) {
+	return s.taskForceRepo.GetPaginatedByProvinceID(72, limit, offset)
+}

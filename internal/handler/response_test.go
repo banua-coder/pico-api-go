@@ -84,3 +84,93 @@ func TestWriteErrorResponse_InternalServerError(t *testing.T) {
 	assert.Equal(t, "error", response.Status)
 	assert.Equal(t, errorMessage, response.Error)
 }
+
+func TestWritePaginatedResponse(t *testing.T) {
+	rr := httptest.NewRecorder()
+	data := []string{"item1", "item2"}
+	meta := PaginationMeta{Page: 1, PerPage: 10, Total: 2, TotalPages: 1, HasNext: false, HasPrev: false}
+
+	writePaginatedResponse(rr, data, meta)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	var response Response
+	err := json.Unmarshal(rr.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "success", response.Status)
+	assert.NotNil(t, response.Data)
+}
+
+func TestParsePaginationParams_Defaults(t *testing.T) {
+	req, _ := http.NewRequest(http.MethodGet, "/", nil)
+	p := parsePaginationParams(req)
+	assert.Equal(t, 1, p.Page)
+	assert.Equal(t, 10, p.PerPage)
+	assert.Equal(t, 0, p.Offset)
+	assert.False(t, p.LoadAll)
+}
+
+func TestParsePaginationParams_Custom(t *testing.T) {
+	req, _ := http.NewRequest(http.MethodGet, "/?page=3&per_page=20", nil)
+	p := parsePaginationParams(req)
+	assert.Equal(t, 3, p.Page)
+	assert.Equal(t, 20, p.PerPage)
+	assert.Equal(t, 40, p.Offset)
+}
+
+func TestParsePaginationParams_LoadAll(t *testing.T) {
+	req, _ := http.NewRequest(http.MethodGet, "/?load_all=true", nil)
+	p := parsePaginationParams(req)
+	assert.True(t, p.LoadAll)
+}
+
+func TestParsePaginationParams_LoadAllNumeric(t *testing.T) {
+	req, _ := http.NewRequest(http.MethodGet, "/?load_all=1", nil)
+	p := parsePaginationParams(req)
+	assert.True(t, p.LoadAll)
+}
+
+func TestParsePaginationParams_PerPageCapped(t *testing.T) {
+	req, _ := http.NewRequest(http.MethodGet, "/?per_page=999", nil)
+	p := parsePaginationParams(req)
+	assert.Equal(t, 100, p.PerPage)
+}
+
+func TestParsePaginationParams_InvalidValues(t *testing.T) {
+	req, _ := http.NewRequest(http.MethodGet, "/?page=abc&per_page=xyz", nil)
+	p := parsePaginationParams(req)
+	assert.Equal(t, 1, p.Page)
+	assert.Equal(t, 10, p.PerPage)
+}
+
+func TestBuildPaginationMeta(t *testing.T) {
+	p := PaginationParams{Page: 2, PerPage: 10}
+	meta := buildPaginationMeta(p, 25)
+	assert.Equal(t, 2, meta.Page)
+	assert.Equal(t, 10, meta.PerPage)
+	assert.Equal(t, 25, meta.Total)
+	assert.Equal(t, 3, meta.TotalPages)
+	assert.True(t, meta.HasNext)
+	assert.True(t, meta.HasPrev)
+}
+
+func TestBuildPaginationMeta_LastPage(t *testing.T) {
+	p := PaginationParams{Page: 3, PerPage: 10}
+	meta := buildPaginationMeta(p, 25)
+	assert.False(t, meta.HasNext)
+	assert.True(t, meta.HasPrev)
+}
+
+func TestBuildPaginationMeta_SinglePage(t *testing.T) {
+	p := PaginationParams{Page: 1, PerPage: 10}
+	meta := buildPaginationMeta(p, 5)
+	assert.Equal(t, 1, meta.TotalPages)
+	assert.False(t, meta.HasNext)
+	assert.False(t, meta.HasPrev)
+}
+
+func TestBuildPaginationMeta_Empty(t *testing.T) {
+	p := PaginationParams{Page: 1, PerPage: 10}
+	meta := buildPaginationMeta(p, 0)
+	assert.Equal(t, 1, meta.TotalPages)
+	assert.False(t, meta.HasNext)
+}

@@ -99,3 +99,55 @@ func TestGetTestTypes_Success(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	svc.AssertExpectations(t)
 }
+
+func TestGetLatestGenderCase_NilData(t *testing.T) {
+	svc := new(MockProvinceStatsService)
+	svc.On("GetLatestGenderCase").Return(nil, nil)
+
+	h := NewProvinceStatsHandler(svc)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/stats/gender/latest", nil)
+	w := httptest.NewRecorder()
+	h.GetLatestGenderCase(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	svc.AssertExpectations(t)
+}
+
+func TestGetLatestGenderCase_Error(t *testing.T) {
+	svc := new(MockProvinceStatsService)
+	svc.On("GetLatestGenderCase").Return(nil, errors.New("db error"))
+
+	h := NewProvinceStatsHandler(svc)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/stats/gender/latest", nil)
+	w := httptest.NewRecorder()
+	h.GetLatestGenderCase(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	svc.AssertExpectations(t)
+}
+
+func TestGetTests_Error(t *testing.T) {
+	svc := new(MockProvinceStatsService)
+	svc.On("GetTests").Return([]models.ProvinceTest{}, errors.New("db error"))
+
+	h := NewProvinceStatsHandler(svc)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/stats/tests", nil)
+	w := httptest.NewRecorder()
+	h.GetTests(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	svc.AssertExpectations(t)
+}
+
+func TestGetTestTypes_Error(t *testing.T) {
+	svc := new(MockProvinceStatsService)
+	svc.On("GetTestTypes").Return([]models.TestType{}, errors.New("db error"))
+
+	h := NewProvinceStatsHandler(svc)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/stats/test-types", nil)
+	w := httptest.NewRecorder()
+	h.GetTestTypes(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	svc.AssertExpectations(t)
+}

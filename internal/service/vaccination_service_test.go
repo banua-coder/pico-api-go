@@ -20,6 +20,21 @@ func (m *MockVaccinationRepository) GetNationalVaccinations() ([]models.National
 	return args.Get(0).([]models.NationalVaccine), args.Error(1)
 }
 
+func (m *MockVaccinationRepository) GetNationalVaccinationsPaginated(limit, offset int) ([]models.NationalVaccine, int, error) {
+	args := m.Called(limit, offset)
+	return args.Get(0).([]models.NationalVaccine), args.Int(1), args.Error(2)
+}
+
+func (m *MockVaccinationRepository) GetProvinceVaccinationsPaginated(provinceID, limit, offset int) ([]models.ProvinceVaccine, int, error) {
+	args := m.Called(provinceID, limit, offset)
+	return args.Get(0).([]models.ProvinceVaccine), args.Int(1), args.Error(2)
+}
+
+func (m *MockVaccinationRepository) GetVaccineLocationsPaginated(provinceID, limit, offset int) ([]models.VaccineLocation, int, error) {
+	args := m.Called(provinceID, limit, offset)
+	return args.Get(0).([]models.VaccineLocation), args.Int(1), args.Error(2)
+}
+
 func (m *MockVaccinationRepository) GetProvinceVaccinations(provinceID int) ([]models.ProvinceVaccine, error) {
 	args := m.Called(provinceID)
 	return args.Get(0).([]models.ProvinceVaccine), args.Error(1)
@@ -116,5 +131,92 @@ func TestVaccinationService_GetVaccineLocations_Error(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Empty(t, result)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestVaccinationService_GetNationalVaccinationsPaginated(t *testing.T) {
+	mockRepo, svc := setupVaccinationService()
+
+	expected := []models.NationalVaccine{
+		{ID: 1, Day: 1, Date: time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)},
+	}
+	mockRepo.On("GetNationalVaccinationsPaginated", 10, 0).Return(expected, 1, nil)
+
+	result, total, err := svc.GetNationalVaccinationsPaginated(10, 0)
+
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+	assert.Equal(t, 1, total)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestVaccinationService_GetNationalVaccinationsPaginated_Error(t *testing.T) {
+	mockRepo, svc := setupVaccinationService()
+
+	mockRepo.On("GetNationalVaccinationsPaginated", 10, 0).Return([]models.NationalVaccine{}, 0, errors.New("db error"))
+
+	result, total, err := svc.GetNationalVaccinationsPaginated(10, 0)
+
+	assert.Error(t, err)
+	assert.Empty(t, result)
+	assert.Equal(t, 0, total)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestVaccinationService_GetProvinceVaccinationsPaginated(t *testing.T) {
+	mockRepo, svc := setupVaccinationService()
+
+	expected := []models.ProvinceVaccine{
+		{ProvinceID: 72, NationalVaccine: models.NationalVaccine{ID: 1}},
+	}
+	mockRepo.On("GetProvinceVaccinationsPaginated", 72, 10, 0).Return(expected, 1, nil)
+
+	result, total, err := svc.GetProvinceVaccinationsPaginated(10, 0)
+
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+	assert.Equal(t, 1, total)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestVaccinationService_GetProvinceVaccinationsPaginated_Error(t *testing.T) {
+	mockRepo, svc := setupVaccinationService()
+
+	mockRepo.On("GetProvinceVaccinationsPaginated", 72, 10, 0).Return([]models.ProvinceVaccine{}, 0, errors.New("db error"))
+
+	result, total, err := svc.GetProvinceVaccinationsPaginated(10, 0)
+
+	assert.Error(t, err)
+	assert.Empty(t, result)
+	assert.Equal(t, 0, total)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestVaccinationService_GetVaccineLocationsPaginated(t *testing.T) {
+	mockRepo, svc := setupVaccinationService()
+
+	expected := []models.VaccineLocation{
+		{ID: 1, RegencyID: 7201, Name: "Puskesmas Banggai"},
+	}
+	mockRepo.On("GetVaccineLocationsPaginated", 72, 10, 0).Return(expected, 1, nil)
+
+	result, total, err := svc.GetVaccineLocationsPaginated(10, 0)
+
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
+	assert.Equal(t, 1, total)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestVaccinationService_GetVaccineLocationsPaginated_Error(t *testing.T) {
+	mockRepo, svc := setupVaccinationService()
+
+	mockRepo.On("GetVaccineLocationsPaginated", 72, 10, 0).Return([]models.VaccineLocation{}, 0, errors.New("db error"))
+
+	result, total, err := svc.GetVaccineLocationsPaginated(10, 0)
+
+	assert.Error(t, err)
+	assert.Empty(t, result)
+	assert.Equal(t, 0, total)
 	mockRepo.AssertExpectations(t)
 }

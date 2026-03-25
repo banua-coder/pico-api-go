@@ -24,6 +24,11 @@ func (s *RegencyService) GetRegencies() ([]models.Regency, error) {
 	return s.regencyRepo.GetAll(72)
 }
 
+// GetRegenciesPaginated returns a page of regencies with total count
+func (s *RegencyService) GetRegenciesPaginated(limit, offset int) ([]models.Regency, int, error) {
+	return s.regencyRepo.GetPaginated(72, limit, offset)
+}
+
 // GetRegencyByID returns a single regency
 func (s *RegencyService) GetRegencyByID(id int) (*models.Regency, error) {
 	return s.regencyRepo.GetByID(id)
