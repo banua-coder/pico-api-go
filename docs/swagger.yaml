@@ -1,5 +1,118 @@
 basePath: /api/v1
 definitions:
+  dto.AgeGroups:
+    properties:
+      "0_14":
+        type: integer
+      "15_19":
+        type: integer
+      "20_24":
+        type: integer
+      "25_49":
+        type: integer
+      "50_54":
+        type: integer
+      55_plus:
+        type: integer
+    type: object
+  dto.CategoryData:
+    properties:
+      female:
+        $ref: '#/definitions/dto.GenderData'
+      male:
+        $ref: '#/definitions/dto.GenderData'
+    type: object
+  dto.CoverageData:
+    properties:
+      dose_1:
+        type: number
+      dose_2:
+        type: number
+    type: object
+  dto.DoseData:
+    properties:
+      dose_1:
+        type: integer
+      dose_2:
+        type: integer
+    type: object
+  dto.GenderData:
+    properties:
+      age_groups:
+        $ref: '#/definitions/dto.AgeGroups'
+      total:
+        type: integer
+    type: object
+  dto.GenderStatsResponse:
+    description: Nested gender and age group statistics
+    properties:
+      day:
+        type: integer
+      id:
+        type: integer
+      pdp:
+        $ref: '#/definitions/dto.CategoryData'
+      positive:
+        $ref: '#/definitions/dto.CategoryData'
+      province_id:
+        type: integer
+    type: object
+  dto.GroupData:
+    properties:
+      coverage:
+        $ref: '#/definitions/dto.CoverageData'
+      cumulative:
+        $ref: '#/definitions/dto.DoseData'
+      daily:
+        $ref: '#/definitions/dto.DoseData'
+      target:
+        type: integer
+    type: object
+  dto.ProvinceVaccinationResponse:
+    properties:
+      date:
+        type: string
+      day:
+        type: integer
+      groups:
+        additionalProperties:
+          $ref: '#/definitions/dto.GroupData'
+        type: object
+      id:
+        type: integer
+      province_id:
+        type: integer
+      target:
+        type: integer
+      total:
+        $ref: '#/definitions/dto.VaccinationTotals'
+    type: object
+  dto.VaccinationResponse:
+    properties:
+      date:
+        type: string
+      day:
+        type: integer
+      groups:
+        additionalProperties:
+          $ref: '#/definitions/dto.GroupData'
+        type: object
+      id:
+        type: integer
+      target:
+        type: integer
+      total:
+        $ref: '#/definitions/dto.VaccinationTotals'
+    type: object
+  dto.VaccinationTotals:
+    properties:
+      coverage:
+        $ref: '#/definitions/dto.CoverageData'
+      cumulative:
+        $ref: '#/definitions/dto.DoseData'
+      daily:
+        $ref: '#/definitions/dto.DoseData'
+    type: object
   handler.Response:
     properties:
       data: {}
@@ -209,7 +322,7 @@ info:
     url: https://opensource.org/licenses/MIT
   termsOfService: http://swagger.io/terms/
   title: Sulawesi Tengah COVID-19 Data API
-  version: 2.6.0
+  version: 2.7.0
 paths:
   /:
     get:
@@ -699,11 +812,25 @@ paths:
       - regencies
   /stats/gender:
     get:
+      description: Returns all COVID-19 case records grouped by gender (male/female)
+        and age groups (0-14, 15-19, 20-24, 25-49, 50-54, 55+) for positive and PDP
+        categories.
       produces:
       - application/json
       responses:
         "200":
           description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.GenderStatsResponse'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
           schema:
             $ref: '#/definitions/handler.Response'
       summary: Get COVID-19 cases by gender and age group in Sulawesi Tengah
@@ -711,11 +838,22 @@ paths:
       - province-stats
   /stats/gender/latest:
     get:
+      description: Returns the most recent COVID-19 case record grouped by gender
+        and age groups for positive and PDP categories.
       produces:
       - application/json
       responses:
         "200":
           description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.GenderStatsResponse'
+              type: object
+        "500":
+          description: Internal Server Error
           schema:
             $ref: '#/definitions/handler.Response'
       summary: Get latest gender/age case data for Sulawesi Tengah
@@ -822,7 +960,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handler.Response'
+            allOf:
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.VaccinationResponse'
+                  type: array
+              type: object
       summary: Get national vaccination data (paginated)
       tags:
       - vaccination
@@ -849,7 +994,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handler.Response'
+            allOf:
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.ProvinceVaccinationResponse'
+                  type: array
+              type: object
       summary: Get Sulawesi Tengah vaccination data (paginated)
       tags:
       - vaccination
