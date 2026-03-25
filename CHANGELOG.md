@@ -100,6 +100,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+
+## [v2.6.0] - 2026-03-16
+
+### Added
+
+- Add pagination to hospitals, vaccination, regencies, and task-force endpoints ([8dd09036](https://x-access-token:ghs_20RzSAyPWuWvofxgjetv5CUGy6X8Vg3HsG1Q@github.com/banua-coder/pico-api-go/commit/8dd09036743bbc22a65040f979cb248b3da56c9c))
+
+### Fixed
+
+- Handle errcheck lint issues in getpaginatedbyprovinceid ([057a22ee](https://x-access-token:ghs_20RzSAyPWuWvofxgjetv5CUGy6X8Vg3HsG1Q@github.com/banua-coder/pico-api-go/commit/057a22ee182d30c4f530fcbe14f14c5610d620a3))
+- Use update-version.sh script for develop version bump ([750a7e7f](https://x-access-token:ghs_20RzSAyPWuWvofxgjetv5CUGy6X8Vg3HsG1Q@github.com/banua-coder/pico-api-go/commit/750a7e7fdf4e1c2d40752738ce21c58888bd8e40))
+
+### Documentation
+
+- Update changelog for v2.5.1 ([59992313](https://x-access-token:ghs_20RzSAyPWuWvofxgjetv5CUGy6X8Vg3HsG1Q@github.com/banua-coder/pico-api-go/commit/59992313650247aab20b9f1a4d385f48f6905681))
+
+### Tests
+
+- Push coverage to 82.3% (above 80% ci threshold) ([988ccc5a](https://x-access-token:ghs_20RzSAyPWuWvofxgjetv5CUGy6X8Vg3HsG1Q@github.com/banua-coder/pico-api-go/commit/988ccc5a9523867d91eae3b96b41c2ad560441dc))
+- Push code coverage from 57% to 80.5% ([adc36b55](https://x-access-token:ghs_20RzSAyPWuWvofxgjetv5CUGy6X8Vg3HsG1Q@github.com/banua-coder/pico-api-go/commit/adc36b55e3a59d930d552c072590a411ba8d79fb))
+- Improve code coverage from 47% to 61.6% ([63552acc](https://x-access-token:ghs_20RzSAyPWuWvofxgjetv5CUGy6X8Vg3HsG1Q@github.com/banua-coder/pico-api-go/commit/63552acc69b053b79f8469506880ae47d6a50703))
+
+### CI/CD
+
+- Exclude cmd, docs, pkg/database from coverage calculation ([aba5f170](https://x-access-token:ghs_20RzSAyPWuWvofxgjetv5CUGy6X8Vg3HsG1Q@github.com/banua-coder/pico-api-go/commit/aba5f17038916e4ca1de175aabf04a71d6576dec))
+
+### Maintenance
+
+- Correct version to 2.6.0 (not 4.6.0) ([6fa7209d](https://x-access-token:ghs_20RzSAyPWuWvofxgjetv5CUGy6X8Vg3HsG1Q@github.com/banua-coder/pico-api-go/commit/6fa7209def16d7a32ffd2f15caca86bba1e69af6))
+- Bump version to 4.6.0 and fix lint errors ([f6a1bd1a](https://x-access-token:ghs_20RzSAyPWuWvofxgjetv5CUGy6X8Vg3HsG1Q@github.com/banua-coder/pico-api-go/commit/f6a1bd1a50c5714b91d8942edba74c8522856666))
+- Bump version to v2.6.0 for next development cycle ([85e547b2](https://x-access-token:ghs_20RzSAyPWuWvofxgjetv5CUGy6X8Vg3HsG1Q@github.com/banua-coder/pico-api-go/commit/85e547b23618c91616471f302328ec2a0e425d6a))
+
 ## [v2.5.0] - 2026-03-15
 
 ### Hotfixes
