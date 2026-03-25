@@ -350,7 +350,7 @@ func (h *CovidHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	health := map[string]interface{}{
 		"status":    "healthy",
 		"service":   "COVID-19 API",
-		"version": "2.6.0",
+		"version": "2.6.1",
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
 	}
 
@@ -406,7 +406,7 @@ func (h *CovidHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 // @Param day path int true "Day number"
 // @Success 200 {object} Response
 // @Failure 404 {object} Response
-// @Router /api/v1/national/{day} [get]
+// @Router /national/{day} [get]
 func (h *CovidHandler) GetNationalCaseByDay(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	day, err := strconv.ParseInt(vars["day"], 10, 64)
@@ -434,7 +434,7 @@ func (h *CovidHandler) GetNationalCaseByDay(w http.ResponseWriter, r *http.Reque
 // @Param code path string true "Province ID"
 // @Success 200 {object} Response
 // @Failure 404 {object} Response
-// @Router /api/v1/provinces/{code} [get]
+// @Router /provinces/{code} [get]
 func (h *CovidHandler) GetProvinceByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	code := vars["code"]
@@ -459,7 +459,7 @@ func (h *CovidHandler) GetAPIIndex(w http.ResponseWriter, r *http.Request) {
 	endpoints := map[string]interface{}{
 		"api": map[string]interface{}{
 			"title":       "Sulawesi Tengah COVID-19 Data API",
-			"version": "2.6.0",
+			"version": "2.6.1",
 			"description": "A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central Sulawesi)",
 		},
 		"documentation": map[string]interface{}{

@@ -26,7 +26,7 @@ func NewHospitalHandler(service service.HospitalServiceInterface) *HospitalHandl
 // @Param per_page query int false "Items per page (default: 10, max: 100)"
 // @Param load_all query bool false "Set true to return all hospitals without pagination"
 // @Success 200 {object} Response
-// @Router /api/v1/hospitals [get]
+// @Router /hospitals [get]
 func (h *HospitalHandler) GetHospitals(w http.ResponseWriter, r *http.Request) {
 	p := parsePaginationParams(r)
 
@@ -56,7 +56,7 @@ func (h *HospitalHandler) GetHospitals(w http.ResponseWriter, r *http.Request) {
 // @Param code path string true "Hospital Code"
 // @Success 200 {object} Response
 // @Failure 404 {object} Response
-// @Router /api/v1/hospitals/{code} [get]
+// @Router /hospitals/{code} [get]
 func (h *HospitalHandler) GetHospitalByCode(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	code := vars["code"]

@@ -228,335 +228,6 @@ paths:
                   additionalProperties: true
                   type: object
               type: object
-  /api/v1/hospitals:
-    get:
-      description: Returns paginated list of hospitals. Use ?load_all=true to get
-        all without pagination.
-      parameters:
-      - description: 'Page number (default: 1)'
-        in: query
-        name: page
-        type: integer
-      - description: 'Items per page (default: 10, max: 100)'
-        in: query
-        name: per_page
-        type: integer
-      - description: Set true to return all hospitals without pagination
-        in: query
-        name: load_all
-        type: boolean
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: Get hospitals in Sulawesi Tengah (paginated)
-      tags:
-      - hospitals
-  /api/v1/hospitals/{code}:
-    get:
-      description: Returns a single hospital with bed availability and contacts
-      parameters:
-      - description: Hospital Code
-        in: path
-        name: code
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handler.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: Get a hospital by code
-      tags:
-      - hospitals
-  /api/v1/national/{day}:
-    get:
-      description: Get a list of all available API endpoints with descriptions
-      parameters:
-      - description: Day number
-        in: path
-        name: day
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handler.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: Get national case data for a specific day
-      tags:
-      - health
-      - national
-  /api/v1/provinces/{code}:
-    get:
-      parameters:
-      - description: Province ID
-        in: path
-        name: code
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handler.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: Get a single province by ID
-      tags:
-      - provinces
-  /api/v1/regencies:
-    get:
-      description: Returns paginated kabupaten/kota list. Use ?load_all=true to get
-        all.
-      parameters:
-      - description: 'Page number (default: 1)'
-        in: query
-        name: page
-        type: integer
-      - description: 'Items per page (default: 10, max: 100)'
-        in: query
-        name: per_page
-        type: integer
-      - description: Set true to return all regencies without pagination
-        in: query
-        name: load_all
-        type: boolean
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handler.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: Get regencies in Sulawesi Tengah (paginated)
-      tags:
-      - regencies
-  /api/v1/regencies/{code}:
-    get:
-      description: Returns a single regency by its ID (kode kabupaten)
-      parameters:
-      - description: Regency ID/Code
-        in: path
-        name: code
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handler.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: Get a regency by ID
-      tags:
-      - regencies
-  /api/v1/regencies/{code}/cases:
-    get:
-      description: Returns all daily COVID-19 case data for a specific regency
-      parameters:
-      - description: Regency ID/Code
-        in: path
-        name: code
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handler.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: Get daily cases for a regency
-      tags:
-      - regencies
-  /api/v1/stats/gender:
-    get:
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: Get COVID-19 cases by gender and age group in Sulawesi Tengah
-      tags:
-      - province-stats
-  /api/v1/stats/gender/latest:
-    get:
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: Get latest gender/age case data for Sulawesi Tengah
-      tags:
-      - province-stats
-  /api/v1/stats/test-types:
-    get:
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: Get available COVID-19 test types
-      tags:
-      - province-stats
-  /api/v1/stats/tests:
-    get:
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: Get COVID-19 test data for Sulawesi Tengah
-      tags:
-      - province-stats
-  /api/v1/task-forces:
-    get:
-      description: Returns paginated gugus tugas/posko grouped by regency. Use ?load_all=true
-        for all.
-      parameters:
-      - description: 'Page number (default: 1)'
-        in: query
-        name: page
-        type: integer
-      - description: 'Items per page (default: 10, max: 100)'
-        in: query
-        name: per_page
-        type: integer
-      - description: Set true to return all task forces without pagination
-        in: query
-        name: load_all
-        type: boolean
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: Get task force posts in Sulawesi Tengah (paginated)
-      tags:
-      - task-forces
-  /api/v1/vaccination/locations:
-    get:
-      description: Returns paginated list of vaccination locations. Use ?load_all=true
-        to get all.
-      parameters:
-      - description: 'Page number (default: 1)'
-        in: query
-        name: page
-        type: integer
-      - description: 'Items per page (default: 10, max: 100)'
-        in: query
-        name: per_page
-        type: integer
-      - description: Set true to return all locations without pagination
-        in: query
-        name: load_all
-        type: boolean
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: Get vaccination centers in Sulawesi Tengah (paginated)
-      tags:
-      - vaccination
-  /api/v1/vaccination/national:
-    get:
-      description: Returns paginated national vaccination records. Use ?load_all=true
-        to get all.
-      parameters:
-      - description: 'Page number (default: 1)'
-        in: query
-        name: page
-        type: integer
-      - description: 'Items per page (default: 10, max: 100)'
-        in: query
-        name: per_page
-        type: integer
-      - description: Set true to return all records without pagination
-        in: query
-        name: load_all
-        type: boolean
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: Get national vaccination data (paginated)
-      tags:
-      - vaccination
-  /api/v1/vaccination/province:
-    get:
-      description: Returns paginated provincial vaccination records. Use ?load_all=true
-        to get all.
-      parameters:
-      - description: 'Page number (default: 1)'
-        in: query
-        name: page
-        type: integer
-      - description: 'Items per page (default: 10, max: 100)'
-        in: query
-        name: per_page
-        type: integer
-      - description: Set true to return all records without pagination
-        in: query
-        name: load_all
-        type: boolean
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handler.Response'
-      summary: Get Sulawesi Tengah vaccination data (paginated)
-      tags:
-      - vaccination
   /health:
     get:
       consumes:
@@ -588,6 +259,56 @@ paths:
       summary: Health check
       tags:
       - health
+  /hospitals:
+    get:
+      description: Returns paginated list of hospitals. Use ?load_all=true to get
+        all without pagination.
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 10, max: 100)'
+        in: query
+        name: per_page
+        type: integer
+      - description: Set true to return all hospitals without pagination
+        in: query
+        name: load_all
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: Get hospitals in Sulawesi Tengah (paginated)
+      tags:
+      - hospitals
+  /hospitals/{code}:
+    get:
+      description: Returns a single hospital with bed availability and contacts
+      parameters:
+      - description: Hospital Code
+        in: path
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: Get a hospital by code
+      tags:
+      - hospitals
   /national:
     get:
       consumes:
@@ -667,6 +388,30 @@ paths:
       summary: Get national COVID-19 cases
       tags:
       - national
+  /national/{day}:
+    get:
+      description: Get a list of all available API endpoints with descriptions
+      parameters:
+      - description: Day number
+        in: path
+        name: day
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: Get national case data for a specific day
+      tags:
+      - health
+      - national
   /national/latest:
     get:
       consumes:
@@ -725,6 +470,28 @@ paths:
           schema:
             $ref: '#/definitions/handler.Response'
       summary: Get provinces with COVID-19 data
+      tags:
+      - provinces
+  /provinces/{code}:
+    get:
+      parameters:
+      - description: Province ID
+        in: path
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: Get a single province by ID
       tags:
       - provinces
   /provinces/{provinceId}/cases:
@@ -853,6 +620,239 @@ paths:
       summary: Get province COVID-19 cases
       tags:
       - province-cases
+  /regencies:
+    get:
+      description: Returns paginated kabupaten/kota list. Use ?load_all=true to get
+        all.
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 10, max: 100)'
+        in: query
+        name: per_page
+        type: integer
+      - description: Set true to return all regencies without pagination
+        in: query
+        name: load_all
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: Get regencies in Sulawesi Tengah (paginated)
+      tags:
+      - regencies
+  /regencies/{code}:
+    get:
+      description: Returns a single regency by its ID (kode kabupaten)
+      parameters:
+      - description: Regency ID/Code
+        in: path
+        name: code
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: Get a regency by ID
+      tags:
+      - regencies
+  /regencies/{code}/cases:
+    get:
+      description: Returns all daily COVID-19 case data for a specific regency
+      parameters:
+      - description: Regency ID/Code
+        in: path
+        name: code
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: Get daily cases for a regency
+      tags:
+      - regencies
+  /stats/gender:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: Get COVID-19 cases by gender and age group in Sulawesi Tengah
+      tags:
+      - province-stats
+  /stats/gender/latest:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: Get latest gender/age case data for Sulawesi Tengah
+      tags:
+      - province-stats
+  /stats/test-types:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: Get available COVID-19 test types
+      tags:
+      - province-stats
+  /stats/tests:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: Get COVID-19 test data for Sulawesi Tengah
+      tags:
+      - province-stats
+  /task-forces:
+    get:
+      description: Returns paginated gugus tugas/posko grouped by regency. Use ?load_all=true
+        for all.
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 10, max: 100)'
+        in: query
+        name: per_page
+        type: integer
+      - description: Set true to return all task forces without pagination
+        in: query
+        name: load_all
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: Get task force posts in Sulawesi Tengah (paginated)
+      tags:
+      - task-forces
+  /vaccination/locations:
+    get:
+      description: Returns paginated list of vaccination locations. Use ?load_all=true
+        to get all.
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 10, max: 100)'
+        in: query
+        name: per_page
+        type: integer
+      - description: Set true to return all locations without pagination
+        in: query
+        name: load_all
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: Get vaccination centers in Sulawesi Tengah (paginated)
+      tags:
+      - vaccination
+  /vaccination/national:
+    get:
+      description: Returns paginated national vaccination records. Use ?load_all=true
+        to get all.
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 10, max: 100)'
+        in: query
+        name: per_page
+        type: integer
+      - description: Set true to return all records without pagination
+        in: query
+        name: load_all
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: Get national vaccination data (paginated)
+      tags:
+      - vaccination
+  /vaccination/province:
+    get:
+      description: Returns paginated provincial vaccination records. Use ?load_all=true
+        to get all.
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 10, max: 100)'
+        in: query
+        name: per_page
+        type: integer
+      - description: Set true to return all records without pagination
+        in: query
+        name: load_all
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: Get Sulawesi Tengah vaccination data (paginated)
+      tags:
+      - vaccination
 schemes:
 - https
 - http

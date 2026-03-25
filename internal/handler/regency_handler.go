@@ -28,7 +28,7 @@ func NewRegencyHandler(service service.RegencyServiceInterface) *RegencyHandler 
 // @Param load_all query bool false "Set true to return all regencies without pagination"
 // @Success 200 {object} Response
 // @Failure 500 {object} Response
-// @Router /api/v1/regencies [get]
+// @Router /regencies [get]
 func (h *RegencyHandler) GetRegencies(w http.ResponseWriter, r *http.Request) {
 	p := parsePaginationParams(r)
 
@@ -58,7 +58,7 @@ func (h *RegencyHandler) GetRegencies(w http.ResponseWriter, r *http.Request) {
 // @Param code path int true "Regency ID/Code"
 // @Success 200 {object} Response
 // @Failure 404 {object} Response
-// @Router /api/v1/regencies/{code} [get]
+// @Router /regencies/{code} [get]
 func (h *RegencyHandler) GetRegencyByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["code"])
@@ -87,7 +87,7 @@ func (h *RegencyHandler) GetRegencyByID(w http.ResponseWriter, r *http.Request) 
 // @Param code path int true "Regency ID/Code"
 // @Success 200 {object} Response
 // @Failure 404 {object} Response
-// @Router /api/v1/regencies/{code}/cases [get]
+// @Router /regencies/{code}/cases [get]
 func (h *RegencyHandler) GetRegencyCases(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["code"])
