@@ -209,7 +209,7 @@ info:
     url: https://opensource.org/licenses/MIT
   termsOfService: http://swagger.io/terms/
   title: Sulawesi Tengah COVID-19 Data API
-  version: 2.5.0
+  version: 2.6.0
 paths:
   /:
     get:
@@ -230,7 +230,21 @@ paths:
               type: object
   /api/v1/hospitals:
     get:
-      description: Returns all hospitals with bed availability and contacts
+      description: Returns paginated list of hospitals. Use ?load_all=true to get
+        all without pagination.
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 10, max: 100)'
+        in: query
+        name: per_page
+        type: integer
+      - description: Set true to return all hospitals without pagination
+        in: query
+        name: load_all
+        type: boolean
       produces:
       - application/json
       responses:
@@ -238,7 +252,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/handler.Response'
-      summary: Get all hospitals in Sulawesi Tengah
+      summary: Get hospitals in Sulawesi Tengah (paginated)
       tags:
       - hospitals
   /api/v1/hospitals/{code}:
@@ -312,7 +326,21 @@ paths:
       - provinces
   /api/v1/regencies:
     get:
-      description: Returns all kabupaten/kota in Sulawesi Tengah
+      description: Returns paginated kabupaten/kota list. Use ?load_all=true to get
+        all.
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 10, max: 100)'
+        in: query
+        name: per_page
+        type: integer
+      - description: Set true to return all regencies without pagination
+        in: query
+        name: load_all
+        type: boolean
       produces:
       - application/json
       responses:
@@ -324,7 +352,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/handler.Response'
-      summary: Get all regencies in Sulawesi Tengah
+      summary: Get regencies in Sulawesi Tengah (paginated)
       tags:
       - regencies
   /api/v1/regencies/{code}:
@@ -423,7 +451,21 @@ paths:
       - province-stats
   /api/v1/task-forces:
     get:
-      description: Returns all gugus tugas/posko grouped by regency with contacts
+      description: Returns paginated gugus tugas/posko grouped by regency. Use ?load_all=true
+        for all.
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 10, max: 100)'
+        in: query
+        name: per_page
+        type: integer
+      - description: Set true to return all task forces without pagination
+        in: query
+        name: load_all
+        type: boolean
       produces:
       - application/json
       responses:
@@ -431,11 +473,26 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/handler.Response'
-      summary: Get all task force posts in Sulawesi Tengah
+      summary: Get task force posts in Sulawesi Tengah (paginated)
       tags:
       - task-forces
   /api/v1/vaccination/locations:
     get:
+      description: Returns paginated list of vaccination locations. Use ?load_all=true
+        to get all.
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 10, max: 100)'
+        in: query
+        name: per_page
+        type: integer
+      - description: Set true to return all locations without pagination
+        in: query
+        name: load_all
+        type: boolean
       produces:
       - application/json
       responses:
@@ -443,11 +500,26 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/handler.Response'
-      summary: Get vaccination centers in Sulawesi Tengah
+      summary: Get vaccination centers in Sulawesi Tengah (paginated)
       tags:
       - vaccination
   /api/v1/vaccination/national:
     get:
+      description: Returns paginated national vaccination records. Use ?load_all=true
+        to get all.
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 10, max: 100)'
+        in: query
+        name: per_page
+        type: integer
+      - description: Set true to return all records without pagination
+        in: query
+        name: load_all
+        type: boolean
       produces:
       - application/json
       responses:
@@ -455,11 +527,26 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/handler.Response'
-      summary: Get national vaccination data
+      summary: Get national vaccination data (paginated)
       tags:
       - vaccination
   /api/v1/vaccination/province:
     get:
+      description: Returns paginated provincial vaccination records. Use ?load_all=true
+        to get all.
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 10, max: 100)'
+        in: query
+        name: per_page
+        type: integer
+      - description: Set true to return all records without pagination
+        in: query
+        name: load_all
+        type: boolean
       produces:
       - application/json
       responses:
@@ -467,7 +554,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/handler.Response'
-      summary: Get Sulawesi Tengah vaccination data
+      summary: Get Sulawesi Tengah vaccination data (paginated)
       tags:
       - vaccination
   /health:

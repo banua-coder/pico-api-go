@@ -17,7 +17,7 @@
             "name": "MIT",
             "url": "https://opensource.org/licenses/MIT"
         },
-        "version": "2.5.0"
+        "version": "2.6.0"
     },
     "host": "pico-api-go.banuacoder.com",
     "basePath": "/api/v1",
@@ -55,14 +55,34 @@
         },
         "/api/v1/hospitals": {
             "get": {
-                "description": "Returns all hospitals with bed availability and contacts",
+                "description": "Returns paginated list of hospitals. Use ?load_all=true to get all without pagination.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "hospitals"
                 ],
-                "summary": "Get all hospitals in Sulawesi Tengah",
+                "summary": "Get hospitals in Sulawesi Tengah (paginated)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page (default: 10, max: 100)",
+                        "name": "per_page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Set true to return all hospitals without pagination",
+                        "name": "load_all",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -180,14 +200,34 @@
         },
         "/api/v1/regencies": {
             "get": {
-                "description": "Returns all kabupaten/kota in Sulawesi Tengah",
+                "description": "Returns paginated kabupaten/kota list. Use ?load_all=true to get all.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "regencies"
                 ],
-                "summary": "Get all regencies in Sulawesi Tengah",
+                "summary": "Get regencies in Sulawesi Tengah (paginated)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page (default: 10, max: 100)",
+                        "name": "per_page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Set true to return all regencies without pagination",
+                        "name": "load_all",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -352,14 +392,34 @@
         },
         "/api/v1/task-forces": {
             "get": {
-                "description": "Returns all gugus tugas/posko grouped by regency with contacts",
+                "description": "Returns paginated gugus tugas/posko grouped by regency. Use ?load_all=true for all.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "task-forces"
                 ],
-                "summary": "Get all task force posts in Sulawesi Tengah",
+                "summary": "Get task force posts in Sulawesi Tengah (paginated)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page (default: 10, max: 100)",
+                        "name": "per_page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Set true to return all task forces without pagination",
+                        "name": "load_all",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -372,13 +432,34 @@
         },
         "/api/v1/vaccination/locations": {
             "get": {
+                "description": "Returns paginated list of vaccination locations. Use ?load_all=true to get all.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "vaccination"
                 ],
-                "summary": "Get vaccination centers in Sulawesi Tengah",
+                "summary": "Get vaccination centers in Sulawesi Tengah (paginated)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page (default: 10, max: 100)",
+                        "name": "per_page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Set true to return all locations without pagination",
+                        "name": "load_all",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -391,13 +472,34 @@
         },
         "/api/v1/vaccination/national": {
             "get": {
+                "description": "Returns paginated national vaccination records. Use ?load_all=true to get all.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "vaccination"
                 ],
-                "summary": "Get national vaccination data",
+                "summary": "Get national vaccination data (paginated)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page (default: 10, max: 100)",
+                        "name": "per_page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Set true to return all records without pagination",
+                        "name": "load_all",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -410,13 +512,34 @@
         },
         "/api/v1/vaccination/province": {
             "get": {
+                "description": "Returns paginated provincial vaccination records. Use ?load_all=true to get all.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "vaccination"
                 ],
-                "summary": "Get Sulawesi Tengah vaccination data",
+                "summary": "Get Sulawesi Tengah vaccination data (paginated)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page (default: 10, max: 100)",
+                        "name": "per_page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Set true to return all records without pagination",
+                        "name": "load_all",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
