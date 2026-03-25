@@ -1,4 +1,56 @@
 # Changelog
+## [2.7.0] - 2026-03-25
+
+### ✨ Features
+
+-  restructure gender stats response for better readability (#67) (ab2968f)
+-  restructure vaccination response payload for better readability (6eb9b35)
+-  add vaccination coverage percentage to response (af6133d)
+
+### 🐛 Bug Fixes
+
+-  use WORKFLOW_TOKEN for gh CLI calls in release-branch-creation workflow (f8d618e)
+-  use WORKFLOW_PAT org secret instead of WORKFLOW_TOKEN (d6d932c)
+-  remove /api/v1 prefix from @Router annotations (d6ba522)
+-  remove /api/v1 prefix from @Router annotations (fdac8c4)
+-  remove /api/v1 prefix from @Router annotations (9e1d85e)
+-  remove /api/v1 prefix from @Router annotations (d56aeba)
+-  remove /api/v1 prefix from @Router annotations (a2e3f46)
+-  remove /api/v1 prefix from @Router annotations (208a4c7)
+-  accept both v-prefixed and plain semver tags in deploy trigger (684e843)
+-  use WORKFLOW_TOKEN for gh CLI calls in release-branch-creation workflow (662fd4c)
+-  rewrite vaccination DTO tests to match actual struct fields (e67b84b)
+-  remove duplicate bump-develop-version job (handled by reusable workflow) (a50d92f)
+-  remove duplicate release-branch-creation workflow (fully handled by reusable workflow) (a4ba4d7)
+
+### 📚 Documentation
+
+-  update changelog for v2.6.0 (ebde3af)
+-  regenerate swagger with fixed paths (no double /api/v1) (a659834)
+-  regenerate swagger with fixed paths (no double /api/v1) (9b4bcee)
+-  regenerate swagger with fixed paths (no double /api/v1) (30d9fd5)
+-  update changelog for 2.6.1 (cf610ca)
+
+### 🔧 Chores
+
+-  bump version to v2.7.0 for next development cycle (6356336)
+-  bump version to 2.6.1 (520cf6d)
+-  bump version to v2.7.0 for next development cycle (be91838)
+-  prepare v2.7.0 release (5fc39d9)
+
+### 📝 Other Changes
+
+- Merge pull request #62 from banua-coder/fix/release-workflow-token (b70fa3c)
+- Merge pull request #60 from banua-coder/chore/bump-next-version (8ac5cd0)
+- Merge branch 'develop' into chore/back-merge-v2.6.0 (c8c5136)
+- Merge pull request #63 from banua-coder/chore/back-merge-v2.6.0 (7c96678)
+- Merge pull request #64 from banua-coder/hotfix/2.6.1 (e4adcd0)
+- Merge pull request #65 from banua-coder/chore/back-merge-2.6.1 (4e29a65)
+- Merge pull request #66 from banua-coder/feature/vaccination-response-restructure (934ac0c)
+- Merge pull request #69 from banua-coder/feature/vaccination-coverage-v2 (d5bf33d)
+- Merge pull request #72 from banua-coder/chore/prepare-release-v2.7.0 (e3c764d)
+- Merge pull request #70 from banua-coder/release/2.7.0 (802e888)
+
 ## [2.6.1] - 2026-03-25
 
 ### 🐛 Bug Fixes
@@ -171,6 +223,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+
+
+## [v2.7.0] - 2026-03-25
+
+### Added
+
+- Add vaccination coverage percentage to response ([af6133dc](https://x-access-token:ghs_xElwuof11GZrjZv1U555gtZHuHLXen0hJCDx@github.com/banua-coder/pico-api-go/commit/af6133dcfeeb3577b774513149f93b4035612731))
+- Restructure vaccination response payload for better readability ([6eb9b350](https://x-access-token:ghs_xElwuof11GZrjZv1U555gtZHuHLXen0hJCDx@github.com/banua-coder/pico-api-go/commit/6eb9b3503c55c53c4301a904db3df15d2668cf9a))
+- Restructure gender stats response for better readability (#67) ([ab2968f6](https://x-access-token:ghs_xElwuof11GZrjZv1U555gtZHuHLXen0hJCDx@github.com/banua-coder/pico-api-go/commit/ab2968f644bdf589ca51c1d8c63f9f616741e0dd))
+
+### Fixed
+
+- Rewrite vaccination dto tests to match actual struct fields ([e67b84b3](https://x-access-token:ghs_xElwuof11GZrjZv1U555gtZHuHLXen0hJCDx@github.com/banua-coder/pico-api-go/commit/e67b84b3be2c284a7cfe8762c4404cf0bad669df))
+- Use workflow_token for gh cli calls in release-branch-creation workflow ([662fd4c5](https://x-access-token:ghs_xElwuof11GZrjZv1U555gtZHuHLXen0hJCDx@github.com/banua-coder/pico-api-go/commit/662fd4c51d6637c1e1a3db50e7fb5d19f4921aa0))
+- Accept both v-prefixed and plain semver tags in deploy trigger ([684e843d](https://x-access-token:ghs_xElwuof11GZrjZv1U555gtZHuHLXen0hJCDx@github.com/banua-coder/pico-api-go/commit/684e843d0965378905948ba44ba674818f742599))
+- Remove /api/v1 prefix from @router annotations ([208a4c77](https://x-access-token:ghs_xElwuof11GZrjZv1U555gtZHuHLXen0hJCDx@github.com/banua-coder/pico-api-go/commit/208a4c778ef2d8dd4d8dbf330286c8f860301985))
+- Remove /api/v1 prefix from @router annotations ([a2e3f46d](https://x-access-token:ghs_xElwuof11GZrjZv1U555gtZHuHLXen0hJCDx@github.com/banua-coder/pico-api-go/commit/a2e3f46d89240a8aa1117b98024b2da9555eed0d))
+- Remove /api/v1 prefix from @router annotations ([d56aeba8](https://x-access-token:ghs_xElwuof11GZrjZv1U555gtZHuHLXen0hJCDx@github.com/banua-coder/pico-api-go/commit/d56aeba895c8d624563c0d166fc952540a92196f))
+- Remove /api/v1 prefix from @router annotations ([9e1d85e8](https://x-access-token:ghs_xElwuof11GZrjZv1U555gtZHuHLXen0hJCDx@github.com/banua-coder/pico-api-go/commit/9e1d85e863c9de9ca8da654f0b5b37a8477449de))
+- Remove /api/v1 prefix from @router annotations ([fdac8c4a](https://x-access-token:ghs_xElwuof11GZrjZv1U555gtZHuHLXen0hJCDx@github.com/banua-coder/pico-api-go/commit/fdac8c4a8576d974f2f1e75723698f641fc33856))
+- Remove /api/v1 prefix from @router annotations ([d6ba522d](https://x-access-token:ghs_xElwuof11GZrjZv1U555gtZHuHLXen0hJCDx@github.com/banua-coder/pico-api-go/commit/d6ba522dca902246bfee5f4276a79f9de6a410ef))
+- Use workflow_pat org secret instead of workflow_token ([d6d932c6](https://x-access-token:ghs_xElwuof11GZrjZv1U555gtZHuHLXen0hJCDx@github.com/banua-coder/pico-api-go/commit/d6d932c6a295afd69a03b554a38cb5a18236bde4))
+- Use workflow_token for gh cli calls in release-branch-creation workflow ([f8d618eb](https://x-access-token:ghs_xElwuof11GZrjZv1U555gtZHuHLXen0hJCDx@github.com/banua-coder/pico-api-go/commit/f8d618eb7617b32b11f333fbd92e759570417977))
+
+### Documentation
+
+- Update changelog for 2.6.1 ([cf610cad](https://x-access-token:ghs_xElwuof11GZrjZv1U555gtZHuHLXen0hJCDx@github.com/banua-coder/pico-api-go/commit/cf610cada7b0caad0ed5b0d726586c256cf35cc3))
+- Regenerate swagger with fixed paths (no double /api/v1) ([30d9fd5f](https://x-access-token:ghs_xElwuof11GZrjZv1U555gtZHuHLXen0hJCDx@github.com/banua-coder/pico-api-go/commit/30d9fd5f4d0915733f88c31e09944c04d58a174d))
+- Regenerate swagger with fixed paths (no double /api/v1) ([9b4bcee4](https://x-access-token:ghs_xElwuof11GZrjZv1U555gtZHuHLXen0hJCDx@github.com/banua-coder/pico-api-go/commit/9b4bcee4c7426ce654ba3e7dba0d888b6103862d))
+- Regenerate swagger with fixed paths (no double /api/v1) ([a6598347](https://x-access-token:ghs_xElwuof11GZrjZv1U555gtZHuHLXen0hJCDx@github.com/banua-coder/pico-api-go/commit/a6598347595d16eaf622913298f458fc6df3368f))
+- Update changelog for v2.6.0 ([ebde3afb](https://x-access-token:ghs_xElwuof11GZrjZv1U555gtZHuHLXen0hJCDx@github.com/banua-coder/pico-api-go/commit/ebde3afb5b2efc83aab6400d559bc710e39fa99a))
+
+### Maintenance
+
+- Bump version to v2.7.0 for next development cycle ([be91838f](https://x-access-token:ghs_xElwuof11GZrjZv1U555gtZHuHLXen0hJCDx@github.com/banua-coder/pico-api-go/commit/be91838fd5faf918e67f86923b142a650338d4e5))
+- Bump version to 2.6.1 ([520cf6d7](https://x-access-token:ghs_xElwuof11GZrjZv1U555gtZHuHLXen0hJCDx@github.com/banua-coder/pico-api-go/commit/520cf6d7c099df460bf3da25e4c59294645fddf9))
+- Bump version to v2.7.0 for next development cycle ([63563362](https://x-access-token:ghs_xElwuof11GZrjZv1U555gtZHuHLXen0hJCDx@github.com/banua-coder/pico-api-go/commit/63563362f07beac63049bb2759044a323073a809))
 
 ## [v2.6.0] - 2026-03-16
 

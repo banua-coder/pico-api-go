@@ -786,6 +786,7 @@ const docTemplate = `{
         },
         "/stats/gender": {
             "get": {
+                "description": "Returns all COVID-19 case records grouped by gender (male/female) and age groups (0-14, 15-19, 20-24, 25-49, 50-54, 55+) for positive and PDP categories.",
                 "produces": [
                     "application/json"
                 ],
@@ -797,6 +798,27 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/handler.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.GenderStatsResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
                             "$ref": "#/definitions/handler.Response"
                         }
                     }
@@ -805,6 +827,7 @@ const docTemplate = `{
         },
         "/stats/gender/latest": {
             "get": {
+                "description": "Returns the most recent COVID-19 case record grouped by gender and age groups for positive and PDP categories.",
                 "produces": [
                     "application/json"
                 ],
@@ -815,6 +838,24 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/handler.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.GenderStatsResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/handler.Response"
                         }
@@ -974,7 +1015,22 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handler.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/handler.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.VaccinationResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -1014,7 +1070,22 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handler.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/handler.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.ProvinceVaccinationResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -1022,6 +1093,180 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "dto.AgeGroups": {
+            "type": "object",
+            "properties": {
+                "0_14": {
+                    "type": "integer"
+                },
+                "15_19": {
+                    "type": "integer"
+                },
+                "20_24": {
+                    "type": "integer"
+                },
+                "25_49": {
+                    "type": "integer"
+                },
+                "50_54": {
+                    "type": "integer"
+                },
+                "55_plus": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.CategoryData": {
+            "type": "object",
+            "properties": {
+                "female": {
+                    "$ref": "#/definitions/dto.GenderData"
+                },
+                "male": {
+                    "$ref": "#/definitions/dto.GenderData"
+                }
+            }
+        },
+        "dto.CoverageData": {
+            "type": "object",
+            "properties": {
+                "dose_1": {
+                    "type": "number"
+                },
+                "dose_2": {
+                    "type": "number"
+                }
+            }
+        },
+        "dto.DoseData": {
+            "type": "object",
+            "properties": {
+                "dose_1": {
+                    "type": "integer"
+                },
+                "dose_2": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.GenderData": {
+            "type": "object",
+            "properties": {
+                "age_groups": {
+                    "$ref": "#/definitions/dto.AgeGroups"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.GenderStatsResponse": {
+            "description": "Nested gender and age group statistics",
+            "type": "object",
+            "properties": {
+                "day": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "pdp": {
+                    "$ref": "#/definitions/dto.CategoryData"
+                },
+                "positive": {
+                    "$ref": "#/definitions/dto.CategoryData"
+                },
+                "province_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.GroupData": {
+            "type": "object",
+            "properties": {
+                "coverage": {
+                    "$ref": "#/definitions/dto.CoverageData"
+                },
+                "cumulative": {
+                    "$ref": "#/definitions/dto.DoseData"
+                },
+                "daily": {
+                    "$ref": "#/definitions/dto.DoseData"
+                },
+                "target": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.ProvinceVaccinationResponse": {
+            "type": "object",
+            "properties": {
+                "date": {
+                    "type": "string"
+                },
+                "day": {
+                    "type": "integer"
+                },
+                "groups": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/dto.GroupData"
+                    }
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "province_id": {
+                    "type": "integer"
+                },
+                "target": {
+                    "type": "integer"
+                },
+                "total": {
+                    "$ref": "#/definitions/dto.VaccinationTotals"
+                }
+            }
+        },
+        "dto.VaccinationResponse": {
+            "type": "object",
+            "properties": {
+                "date": {
+                    "type": "string"
+                },
+                "day": {
+                    "type": "integer"
+                },
+                "groups": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/dto.GroupData"
+                    }
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "target": {
+                    "type": "integer"
+                },
+                "total": {
+                    "$ref": "#/definitions/dto.VaccinationTotals"
+                }
+            }
+        },
+        "dto.VaccinationTotals": {
+            "type": "object",
+            "properties": {
+                "coverage": {
+                    "$ref": "#/definitions/dto.CoverageData"
+                },
+                "cumulative": {
+                    "$ref": "#/definitions/dto.DoseData"
+                },
+                "daily": {
+                    "$ref": "#/definitions/dto.DoseData"
+                }
+            }
+        },
         "handler.Response": {
             "type": "object",
             "properties": {
@@ -1343,7 +1588,7 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "2.6.0",
+	Version:          "2.7.0",
 	Host:             "pico-api-go.banuacoder.com",
 	BasePath:         "/api/v1",
 	Schemes:          []string{"https", "http"},
