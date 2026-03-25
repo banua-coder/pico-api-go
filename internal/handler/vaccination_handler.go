@@ -23,7 +23,7 @@ func NewVaccinationHandler(service service.VaccinationServiceInterface) *Vaccina
 // @Param per_page query int false "Items per page (default: 10, max: 100)"
 // @Param load_all query bool false "Set true to return all records without pagination"
 // @Success 200 {object} Response
-// @Router /api/v1/vaccination/national [get]
+// @Router /vaccination/national [get]
 func (h *VaccinationHandler) GetNationalVaccinations(w http.ResponseWriter, r *http.Request) {
 	p := parsePaginationParams(r)
 
@@ -54,7 +54,7 @@ func (h *VaccinationHandler) GetNationalVaccinations(w http.ResponseWriter, r *h
 // @Param per_page query int false "Items per page (default: 10, max: 100)"
 // @Param load_all query bool false "Set true to return all records without pagination"
 // @Success 200 {object} Response
-// @Router /api/v1/vaccination/province [get]
+// @Router /vaccination/province [get]
 func (h *VaccinationHandler) GetProvinceVaccinations(w http.ResponseWriter, r *http.Request) {
 	p := parsePaginationParams(r)
 
@@ -85,7 +85,7 @@ func (h *VaccinationHandler) GetProvinceVaccinations(w http.ResponseWriter, r *h
 // @Param per_page query int false "Items per page (default: 10, max: 100)"
 // @Param load_all query bool false "Set true to return all locations without pagination"
 // @Success 200 {object} Response
-// @Router /api/v1/vaccination/locations [get]
+// @Router /vaccination/locations [get]
 func (h *VaccinationHandler) GetVaccineLocations(w http.ResponseWriter, r *http.Request) {
 	p := parsePaginationParams(r)
 

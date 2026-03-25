@@ -406,7 +406,7 @@ func (h *CovidHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 // @Param day path int true "Day number"
 // @Success 200 {object} Response
 // @Failure 404 {object} Response
-// @Router /api/v1/national/{day} [get]
+// @Router /national/{day} [get]
 func (h *CovidHandler) GetNationalCaseByDay(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	day, err := strconv.ParseInt(vars["day"], 10, 64)
@@ -434,7 +434,7 @@ func (h *CovidHandler) GetNationalCaseByDay(w http.ResponseWriter, r *http.Reque
 // @Param code path string true "Province ID"
 // @Success 200 {object} Response
 // @Failure 404 {object} Response
-// @Router /api/v1/provinces/{code} [get]
+// @Router /provinces/{code} [get]
 func (h *CovidHandler) GetProvinceByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	code := vars["code"]

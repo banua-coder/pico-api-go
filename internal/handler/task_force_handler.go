@@ -25,7 +25,7 @@ func NewTaskForceHandler(service service.TaskForceServiceInterface) *TaskForceHa
 // @Param per_page query int false "Items per page (default: 10, max: 100)"
 // @Param load_all query bool false "Set true to return all task forces without pagination"
 // @Success 200 {object} Response
-// @Router /api/v1/task-forces [get]
+// @Router /task-forces [get]
 func (h *TaskForceHandler) GetTaskForces(w http.ResponseWriter, r *http.Request) {
 	p := parsePaginationParams(r)
 

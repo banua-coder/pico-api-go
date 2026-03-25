@@ -17,4 +17,4 @@ jobs:
       main-branch: main
       develop-branch: develop
     secrets:
-      GH_PAT: ${{ secrets.WORKFLOW_TOKEN }}
+      GH_PAT: ${{ secrets.WORKFLOW_PAT }}
