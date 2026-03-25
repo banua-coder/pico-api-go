@@ -176,7 +176,7 @@ jobs:
       - name: Create required labels if they don't exist
         if: steps.pr_branch.outputs.has_changes == 'true'
         env:
-          GH_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "🏷️ Ensuring required labels exist..."
 
@@ -192,7 +192,7 @@ jobs:
       - name: Create preparation PR
         if: steps.pr_branch.outputs.has_changes == 'true'
         env:
-          GH_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION="${{ steps.version_info.outputs.version }}"
           TYPE="${{ steps.version_info.outputs.type }}"
@@ -310,7 +310,7 @@ jobs:
       - name: Check for existing PR to main
         id: check_existing_pr
         env:
-          GH_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           BRANCH_NAME="${{ steps.version_info.outputs.branch_name }}"
 
@@ -332,7 +332,7 @@ jobs:
       - name: Create required labels if they don't exist
         if: steps.check_existing_pr.outputs.skip_pr == 'false'
         env:
-          GH_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "🏷️ Ensuring required labels exist..."
 
@@ -348,7 +348,7 @@ jobs:
       - name: Create PR to main branch
         if: steps.check_existing_pr.outputs.skip_pr == 'false'
         env:
-          GH_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           BRANCH_NAME="${{ steps.version_info.outputs.branch_name }}"
           VERSION="${{ steps.version_info.outputs.version }}"
@@ -431,225 +431,3 @@ jobs:
             echo "- 📋 Added $TYPE checklist to PR description" >> $GITHUB_STEP_SUMMARY
           fi
 
-  # JOB 3: Bump develop branch version (only for releases, not hotfixes)
-  bump-develop-version:
-    if: github.event_name == 'create' && github.event.ref_type == 'branch' && startsWith(github.event.ref, 'release/')
-    needs: release-branch-setup
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-
-    steps:
-      - name: Checkout develop branch
-        uses: actions/checkout@v4
-        with:
-          ref: develop
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-          persist-credentials: true
-
-      - name: Check for existing version bump PRs
-        id: check_prs
-        env:
-          GH_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
-        run: |
-          # Check if there's already a version bump PR open for develop
-          EXISTING_PRS=$(gh pr list --base develop --state open --label "version-bump" --json number,title)
-
-          if [ "$(echo "$EXISTING_PRS" | jq '. | length')" -gt 0 ]; then
-            echo "⚠️ Found existing version bump PR(s):"
-            echo "$EXISTING_PRS" | jq -r '.[] | "#\(.number): \(.title)"'
-            echo "skip_bump=true" >> $GITHUB_OUTPUT
-            echo "Skipping version bump to avoid conflicts"
-          else
-            echo "✅ No existing version bump PRs found"
-            echo "skip_bump=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Configure Git
-        if: steps.check_prs.outputs.skip_bump == 'false'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
-
-      - name: Calculate next development version
-        if: steps.check_prs.outputs.skip_bump == 'false'
-        id: next_version
-        run: |
-          RELEASE_BRANCH="${{ github.event.ref }}"
-          CURRENT_VERSION=$(echo $RELEASE_BRANCH | sed 's/release\///')
-
-          # Ensure version starts with 'v'
-          if [[ ! $CURRENT_VERSION == v* ]]; then
-            CURRENT_VERSION="v$CURRENT_VERSION"
-          fi
-
-          # Auto-calculate next version (default behavior - always minor bump)
-          MAJOR=$(echo $CURRENT_VERSION | sed 's/v\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\).*/\1/')
-          MINOR=$(echo $CURRENT_VERSION | sed 's/v\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\).*/\2/')
-
-          # Increment minor version for next development cycle
-          NEXT_MINOR=$((MINOR + 1))
-          NEXT_VERSION="v$MAJOR.$NEXT_MINOR.0"
-          CLEAN_NEXT_VERSION="$MAJOR.$NEXT_MINOR.0"
-
-          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
-          echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
-          echo "clean_next_version=$CLEAN_NEXT_VERSION" >> $GITHUB_OUTPUT
-
-          echo "Current release: $CURRENT_VERSION"
-          echo "Next development version: $NEXT_VERSION"
-
-      - name: Check current develop version
-        if: steps.check_prs.outputs.skip_bump == 'false'
-        id: current_dev_version
-        run: |
-          # Try to get version from go.mod comment or version.go
-          CURRENT_DEV_VERSION=""
-
-          if [ -f "go.mod" ] && grep -q "// Version: " go.mod; then
-            CURRENT_DEV_VERSION=$(grep "// Version: " go.mod | awk '{print $3}')
-          elif [ -f "internal/version/version.go" ]; then
-            CURRENT_DEV_VERSION=$(grep 'const Version = ' internal/version/version.go | sed 's/.*"\(.*\)".*/\1/')
-          else
-            CURRENT_DEV_VERSION="0.0.0"
-          fi
-
-          NEXT_VERSION="${{ steps.next_version.outputs.clean_next_version }}"
-
-          echo "current_dev_version=$CURRENT_DEV_VERSION" >> $GITHUB_OUTPUT
-
-          # Check if develop already has a higher or equal version
-          if [ "$(printf '%s\n' "$CURRENT_DEV_VERSION" "$NEXT_VERSION" | sort -V | tail -n1)" = "$CURRENT_DEV_VERSION" ]; then
-            if [ "$CURRENT_DEV_VERSION" = "$NEXT_VERSION" ]; then
-              echo "⚠️ Develop already has the target version: $CURRENT_DEV_VERSION"
-            else
-              echo "⚠️ Develop already has a higher version: $CURRENT_DEV_VERSION > $NEXT_VERSION"
-            fi
-            echo "skip_update=true" >> $GITHUB_OUTPUT
-          else
-            echo "✅ Will update from $CURRENT_DEV_VERSION to $NEXT_VERSION"
-            echo "skip_update=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Update develop branch with next version
-        if: steps.check_prs.outputs.skip_bump == 'false' && steps.current_dev_version.outputs.skip_update == 'false'
-        run: |
-          CLEAN_VERSION="${{ steps.next_version.outputs.clean_next_version }}"
-          echo "📝 Updating develop branch to $CLEAN_VERSION using configuration..."
-
-          # Use the update-version script to update all files based on .version-config.yml
-          ./scripts/update-version.sh "$CLEAN_VERSION"
-
-      - name: Create required labels if they don't exist (develop bump)
-        if: steps.check_prs.outputs.skip_bump == 'false' && steps.current_dev_version.outputs.skip_update == 'false'
-        env:
-          GH_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
-        run: |
-          echo "🏷️ Ensuring required labels exist for version bump PR..."
-
-          # Create labels if they don't exist
-          gh label create "chore" --description "Maintenance and chore tasks" --color "0e8a16" || echo "Label 'chore' already exists"
-          gh label create "auto-generated" --description "Automatically generated by GitHub Actions" --color "bfdadc" || echo "Label 'auto-generated' already exists"
-          gh label create "version-bump" --description "Version bump changes" --color "0052cc" || echo "Label 'version-bump' already exists"
-
-          echo "✅ Label creation completed"
-
-      - name: Create version bump PR
-        if: steps.check_prs.outputs.skip_bump == 'false' && steps.current_dev_version.outputs.skip_update == 'false'
-        env:
-          GH_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
-        run: |
-          RELEASE_VERSION="${{ steps.next_version.outputs.current_version }}"
-          NEXT_VERSION="${{ steps.next_version.outputs.next_version }}"
-
-          # Create PR branch with timestamp to ensure uniqueness
-          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-          BASE_PR_BRANCH="chore/bump-version-to-$NEXT_VERSION-dev"
-
-          if git ls-remote --heads origin "$BASE_PR_BRANCH" | grep -q "$BASE_PR_BRANCH"; then
-            PR_BRANCH="${BASE_PR_BRANCH}-${TIMESTAMP}"
-            echo "⚠️ Base branch exists, using unique name: $PR_BRANCH"
-          else
-            PR_BRANCH="$BASE_PR_BRANCH"
-            echo "✅ Using base branch name: $PR_BRANCH"
-          fi
-
-          git checkout -b "$PR_BRANCH"
-
-          # Add and commit changes
-          git add .
-          git commit -m "chore: bump version to $NEXT_VERSION for next development cycle" \
-                     -m "" \
-                     -m "Following release branch creation for $RELEASE_VERSION, updating develop" \
-                     -m "branch to target the next minor version $NEXT_VERSION." \
-                     -m "" \
-                     -m "Changes:" \
-                     -m "- Update project version to ${{ steps.next_version.outputs.clean_next_version }}" \
-                     -m "- Prepare for next development cycle" \
-                     -m "" \
-                     -m "This maintains the Git Flow pattern where develop always contains" \
-                     -m "the next planned version."
-
-          # Push PR branch
-          git push origin "$PR_BRANCH"
-
-          # Create PR body
-          PR_BODY="## Summary
-          Automatic version bump following release branch creation.
-
-          ## Details
-          - **Release Branch Created**: \`${{ github.event.ref }}\`
-          - **Release Version**: $RELEASE_VERSION
-          - **Next Development Version**: $NEXT_VERSION
-
-          ## Changes Made
-          - 📝 Updated version in project files to ${{ steps.next_version.outputs.clean_next_version }}
-          - 🎯 Prepared develop branch for next development cycle
-
-          ## Git Flow Pattern
-          This maintains the Git Flow pattern where:
-          - \`develop\` always contains the next planned version
-          - Release branches contain the current release version
-          - After release cutoff, develop moves to next minor version
-
-          ## Auto-generated
-          This PR was automatically created when the release branch was created.
-
-          **Safe to merge** - contains only version bumps."
-
-          # Create pull request
-          gh pr create \
-            --base develop \
-            --head "$PR_BRANCH" \
-            --title "chore: bump version to $NEXT_VERSION for next development cycle" \
-            --body "$PR_BODY" \
-            --label "chore" \
-            --label "auto-generated" \
-            --label "version-bump"
-
-      - name: Create develop bump summary
-        if: always()
-        run: |
-          echo "## 🔄 Develop Version Bump" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Release Branch**: \`${{ github.event.ref }}\`" >> $GITHUB_STEP_SUMMARY
-
-          if [[ "${{ steps.check_prs.outputs.skip_bump }}" == "true" ]]; then
-            echo "**Status**: ⚠️ Skipped - existing version bump PR found" >> $GITHUB_STEP_SUMMARY
-          elif [[ "${{ steps.current_dev_version.outputs.skip_update }}" == "true" ]]; then
-            echo "**Status**: ⚠️ Skipped - develop already has target or higher version" >> $GITHUB_STEP_SUMMARY
-            echo "**Current Version**: ${{ steps.current_dev_version.outputs.current_dev_version }}" >> $GITHUB_STEP_SUMMARY
-          else
-            RELEASE_VERSION="${{ steps.next_version.outputs.current_version }}"
-            NEXT_VERSION="${{ steps.next_version.outputs.next_version }}"
-            echo "**Release Version**: $RELEASE_VERSION" >> $GITHUB_STEP_SUMMARY
-            echo "**Next Dev Version**: $NEXT_VERSION" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### ✅ Actions Completed" >> $GITHUB_STEP_SUMMARY
-            echo "- 🎯 Calculated next minor version: $NEXT_VERSION" >> $GITHUB_STEP_SUMMARY
-            echo "- 📝 Updated develop branch project files" >> $GITHUB_STEP_SUMMARY
-            echo "- 🔄 Created PR to merge version bump" >> $GITHUB_STEP_SUMMARY
-          fi
