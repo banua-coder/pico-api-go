@@ -1,4 +1,48 @@
 # Changelog
+## [v2.6.0] - 2026-03-25
+
+### ✨ Features
+
+-  add pagination to hospitals, vaccination, regencies, and task-force endpoints (8dd0903)
+
+### 🐛 Bug Fixes
+
+-  use update-version.sh script for develop version bump (750a7e7)
+-  handle errcheck lint issues in GetPaginatedByProvinceID (057a22e)
+
+### 📚 Documentation
+
+-  update changelog for v2.5.1 (5999231)
+
+### 🧪 Tests
+
+-  improve code coverage from 47% to 61.6% (63552ac)
+-  push code coverage from 57% to 80.5% (adc36b5)
+-  push coverage to 82.3% (above 80% CI threshold) (988ccc5)
+
+### 👷 CI
+
+-  exclude cmd, docs, pkg/database from coverage calculation (aba5f17)
+
+### 🔧 Chores
+
+-  bump version to v2.6.0 for next development cycle (85e547b)
+-  bump version to 4.6.0 and fix lint errors (f6a1bd1)
+-  correct version to 2.6.0 (not 4.6.0) (6fa7209)
+-  bump version to v2.6.0 (59fcbca)
+-  prepare v2.6.0 release (2421171)
+
+### 📝 Other Changes
+
+- Merge pull request #49 from banua-coder/chore/bump-version-to-v2.6.0-dev (7f42cdc)
+- Merge branch 'develop' into chore/back-merge-v2.5.0 (46efc5f)
+- Merge pull request #53 from banua-coder/chore/back-merge-v2.5.0 (9b873c5)
+- Merge branch 'develop' into chore/back-merge-v2.5.1 (fb8a336)
+- Merge pull request #57 from banua-coder/chore/back-merge-v2.5.1 (bbffd95)
+- Merge pull request #58 from banua-coder/feature/pagination-and-restructure-api (d967794)
+- Merge pull request #61 from banua-coder/chore/prepare-release-v2.6.0 (999d8a1)
+- Merge pull request #59 from banua-coder/release/v2.6.0 (c675ca6)
+
 ## [v2.5.1] - 2026-03-15
 
 ### 🐛 Bug Fixes
