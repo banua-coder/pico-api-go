@@ -19,7 +19,7 @@ func NewProvinceStatsHandler(service service.ProvinceStatsServiceInterface) *Pro
 // @Tags province-stats
 // @Produce json
 // @Success 200 {object} Response
-// @Router /api/v1/stats/gender [get]
+// @Router /stats/gender [get]
 func (h *ProvinceStatsHandler) GetGenderCases(w http.ResponseWriter, r *http.Request) {
 	data, err := h.service.GetGenderCases()
 	if err != nil {
@@ -34,7 +34,7 @@ func (h *ProvinceStatsHandler) GetGenderCases(w http.ResponseWriter, r *http.Req
 // @Tags province-stats
 // @Produce json
 // @Success 200 {object} Response
-// @Router /api/v1/stats/gender/latest [get]
+// @Router /stats/gender/latest [get]
 func (h *ProvinceStatsHandler) GetLatestGenderCase(w http.ResponseWriter, r *http.Request) {
 	data, err := h.service.GetLatestGenderCase()
 	if err != nil {
@@ -49,7 +49,7 @@ func (h *ProvinceStatsHandler) GetLatestGenderCase(w http.ResponseWriter, r *htt
 // @Tags province-stats
 // @Produce json
 // @Success 200 {object} Response
-// @Router /api/v1/stats/tests [get]
+// @Router /stats/tests [get]
 func (h *ProvinceStatsHandler) GetTests(w http.ResponseWriter, r *http.Request) {
 	data, err := h.service.GetTests()
 	if err != nil {
@@ -64,7 +64,7 @@ func (h *ProvinceStatsHandler) GetTests(w http.ResponseWriter, r *http.Request) 
 // @Tags province-stats
 // @Produce json
 // @Success 200 {object} Response
-// @Router /api/v1/stats/test-types [get]
+// @Router /stats/test-types [get]
 func (h *ProvinceStatsHandler) GetTestTypes(w http.ResponseWriter, r *http.Request) {
 	data, err := h.service.GetTestTypes()
 	if err != nil {
