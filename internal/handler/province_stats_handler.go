@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 
+	"github.com/banua-coder/pico-api-go/internal/dto"
 	"github.com/banua-coder/pico-api-go/internal/service"
 )
 
@@ -16,9 +17,11 @@ func NewProvinceStatsHandler(service service.ProvinceStatsServiceInterface) *Pro
 
 // GetGenderCases godoc
 // @Summary Get COVID-19 cases by gender and age group in Sulawesi Tengah
+// @Description Returns all COVID-19 case records grouped by gender (male/female) and age groups (0-14, 15-19, 20-24, 25-49, 50-54, 55+) for positive and PDP categories.
 // @Tags province-stats
 // @Produce json
-// @Success 200 {object} Response
+// @Success 200 {object} Response{data=[]dto.GenderStatsResponse}
+// @Failure 500 {object} Response
 // @Router /stats/gender [get]
 func (h *ProvinceStatsHandler) GetGenderCases(w http.ResponseWriter, r *http.Request) {
 	data, err := h.service.GetGenderCases()
@@ -26,14 +29,16 @@ func (h *ProvinceStatsHandler) GetGenderCases(w http.ResponseWriter, r *http.Req
 		writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	writeSuccessResponse(w, data)
+	writeSuccessResponse(w, dto.ToGenderStatsResponseList(data))
 }
 
 // GetLatestGenderCase godoc
 // @Summary Get latest gender/age case data for Sulawesi Tengah
+// @Description Returns the most recent COVID-19 case record grouped by gender and age groups for positive and PDP categories.
 // @Tags province-stats
 // @Produce json
-// @Success 200 {object} Response
+// @Success 200 {object} Response{data=dto.GenderStatsResponse}
+// @Failure 500 {object} Response
 // @Router /stats/gender/latest [get]
 func (h *ProvinceStatsHandler) GetLatestGenderCase(w http.ResponseWriter, r *http.Request) {
 	data, err := h.service.GetLatestGenderCase()
@@ -41,7 +46,11 @@ func (h *ProvinceStatsHandler) GetLatestGenderCase(w http.ResponseWriter, r *htt
 		writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	writeSuccessResponse(w, data)
+	if data == nil {
+		writeSuccessResponse(w, nil)
+		return
+	}
+	writeSuccessResponse(w, dto.ToGenderStatsResponse(*data))
 }
 
 // GetTests godoc
