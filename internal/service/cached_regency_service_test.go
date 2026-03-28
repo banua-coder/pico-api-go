@@ -68,7 +68,7 @@ func TestCachedRegencyService_GetRegencies(t *testing.T) {
 		expected := []models.Regency{{}}
 		mockSvc.On("GetRegencies").Return(expected, nil).Once()
 
-		svc.GetRegencies()
+		_, _ = svc.GetRegencies()
 		result, err := svc.GetRegencies()
 		assert.NoError(t, err)
 		assert.Equal(t, expected, result)
@@ -109,7 +109,7 @@ func TestCachedRegencyService_GetRegenciesPaginated(t *testing.T) {
 		expected := []models.Regency{{}}
 		mockSvc.On("GetRegenciesPaginated", 10, 0).Return(expected, 1, nil).Once()
 
-		svc.GetRegenciesPaginated(10, 0)
+		_, _, _ = svc.GetRegenciesPaginated(10, 0)
 		items, total, err := svc.GetRegenciesPaginated(10, 0)
 		assert.NoError(t, err)
 		assert.Equal(t, expected, items)
@@ -150,7 +150,7 @@ func TestCachedRegencyService_GetRegencyByID(t *testing.T) {
 		expected := &models.Regency{}
 		mockSvc.On("GetRegencyByID", 1).Return(expected, nil).Once()
 
-		svc.GetRegencyByID(1)
+		_, _ = svc.GetRegencyByID(1)
 		result, err := svc.GetRegencyByID(1)
 		assert.NoError(t, err)
 		assert.Equal(t, expected, result)
@@ -190,7 +190,7 @@ func TestCachedRegencyService_GetRegencyCases(t *testing.T) {
 		expected := []models.RegencyCase{{}}
 		mockSvc.On("GetRegencyCases", 1).Return(expected, nil).Once()
 
-		svc.GetRegencyCases(1)
+		_, _ = svc.GetRegencyCases(1)
 		result, err := svc.GetRegencyCases(1)
 		assert.NoError(t, err)
 		assert.Equal(t, expected, result)
@@ -230,7 +230,7 @@ func TestCachedRegencyService_GetLatestRegencyCases(t *testing.T) {
 		expected := []models.RegencyCase{{}}
 		mockSvc.On("GetLatestRegencyCases").Return(expected, nil).Once()
 
-		svc.GetLatestRegencyCases()
+		_, _ = svc.GetLatestRegencyCases()
 		result, err := svc.GetLatestRegencyCases()
 		assert.NoError(t, err)
 		assert.Equal(t, expected, result)

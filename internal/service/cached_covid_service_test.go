@@ -173,7 +173,7 @@ func TestCachedCovidService_GetNationalCases(t *testing.T) {
 		expected := []models.NationalCase{{}}
 		mockSvc.On("GetNationalCases").Return(expected, nil).Once()
 
-		svc.GetNationalCases() // prime cache
+		_, _ = svc.GetNationalCases() // prime cache
 		result, err := svc.GetNationalCases() // should hit cache
 		assert.NoError(t, err)
 		assert.Equal(t, expected, result)
@@ -237,7 +237,7 @@ func TestCachedCovidService_GetNationalCasesPaginated(t *testing.T) {
 	assert.Equal(t, 1, total)
 
 	// cache hit
-	svc.GetNationalCasesPaginated(10, 0)
+	_, _, _ = svc.GetNationalCasesPaginated(10, 0)
 	mockSvc.AssertNumberOfCalls(t, "GetNationalCasesPaginated", 1)
 }
 
@@ -265,7 +265,7 @@ func TestCachedCovidService_GetNationalCasesPaginatedSorted(t *testing.T) {
 	assert.Equal(t, expected, cases)
 	assert.Equal(t, 1, total)
 
-	svc.GetNationalCasesPaginatedSorted(10, 0, sp)
+	_, _, _ = svc.GetNationalCasesPaginatedSorted(10, 0, sp)
 	mockSvc.AssertNumberOfCalls(t, "GetNationalCasesPaginatedSorted", 1)
 }
 
@@ -292,7 +292,7 @@ func TestCachedCovidService_GetNationalCasesByDateRange(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)
 
-	svc.GetNationalCasesByDateRange("2021-01-01", "2021-12-31")
+	_, _ = svc.GetNationalCasesByDateRange("2021-01-01", "2021-12-31")
 	mockSvc.AssertNumberOfCalls(t, "GetNationalCasesByDateRange", 1)
 }
 
@@ -319,7 +319,7 @@ func TestCachedCovidService_GetNationalCasesByDateRangeSorted(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)
 
-	svc.GetNationalCasesByDateRangeSorted("2021-01-01", "2021-12-31", sp)
+	_, _ = svc.GetNationalCasesByDateRangeSorted("2021-01-01", "2021-12-31", sp)
 	mockSvc.AssertNumberOfCalls(t, "GetNationalCasesByDateRangeSorted", 1)
 }
 
@@ -347,7 +347,7 @@ func TestCachedCovidService_GetNationalCasesByDateRangePaginated(t *testing.T) {
 	assert.Equal(t, expected, cases)
 	assert.Equal(t, 1, total)
 
-	svc.GetNationalCasesByDateRangePaginated("2021-01-01", "2021-12-31", 10, 0)
+	_, _, _ = svc.GetNationalCasesByDateRangePaginated("2021-01-01", "2021-12-31", 10, 0)
 	mockSvc.AssertNumberOfCalls(t, "GetNationalCasesByDateRangePaginated", 1)
 }
 
@@ -375,7 +375,7 @@ func TestCachedCovidService_GetNationalCasesByDateRangePaginatedSorted(t *testin
 	assert.Equal(t, expected, cases)
 	assert.Equal(t, 1, total)
 
-	svc.GetNationalCasesByDateRangePaginatedSorted("2021-01-01", "2021-12-31", 10, 0, sp)
+	_, _, _ = svc.GetNationalCasesByDateRangePaginatedSorted("2021-01-01", "2021-12-31", 10, 0, sp)
 	mockSvc.AssertNumberOfCalls(t, "GetNationalCasesByDateRangePaginatedSorted", 1)
 }
 
@@ -403,7 +403,7 @@ func TestCachedCovidService_GetLatestNationalCase(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, expected, result)
 
-		svc.GetLatestNationalCase()
+		_, _ = svc.GetLatestNationalCase()
 		mockSvc.AssertNumberOfCalls(t, "GetLatestNationalCase", 1)
 	})
 
@@ -431,7 +431,7 @@ func TestCachedCovidService_GetNationalCaseByDay(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, expected, result)
 
-		svc.GetNationalCaseByDay(1)
+		_, _ = svc.GetNationalCaseByDay(1)
 		mockSvc.AssertNumberOfCalls(t, "GetNationalCaseByDay", 1)
 	})
 
@@ -458,7 +458,7 @@ func TestCachedCovidService_GetProvinces(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)
 
-	svc.GetProvinces()
+	_, _ = svc.GetProvinces()
 	mockSvc.AssertNumberOfCalls(t, "GetProvinces", 1)
 }
 
@@ -485,7 +485,7 @@ func TestCachedCovidService_GetProvinceByID(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, expected, result)
 
-		svc.GetProvinceByID("1")
+		_, _ = svc.GetProvinceByID("1")
 		mockSvc.AssertNumberOfCalls(t, "GetProvinceByID", 1)
 	})
 
@@ -512,7 +512,7 @@ func TestCachedCovidService_GetProvincesWithLatestCase(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)
 
-	svc.GetProvincesWithLatestCase()
+	_, _ = svc.GetProvincesWithLatestCase()
 	mockSvc.AssertNumberOfCalls(t, "GetProvincesWithLatestCase", 1)
 }
 
@@ -538,7 +538,7 @@ func TestCachedCovidService_GetProvinceCases(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)
 
-	svc.GetProvinceCases("p1")
+	_, _ = svc.GetProvinceCases("p1")
 	mockSvc.AssertNumberOfCalls(t, "GetProvinceCases", 1)
 }
 
@@ -565,7 +565,7 @@ func TestCachedCovidService_GetProvinceCasesSorted(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)
 
-	svc.GetProvinceCasesSorted("p1", sp)
+	_, _ = svc.GetProvinceCasesSorted("p1", sp)
 	mockSvc.AssertNumberOfCalls(t, "GetProvinceCasesSorted", 1)
 }
 
@@ -593,7 +593,7 @@ func TestCachedCovidService_GetProvinceCasesPaginated(t *testing.T) {
 	assert.Equal(t, expected, cases)
 	assert.Equal(t, 1, total)
 
-	svc.GetProvinceCasesPaginated("p1", 10, 0)
+	_, _, _ = svc.GetProvinceCasesPaginated("p1", 10, 0)
 	mockSvc.AssertNumberOfCalls(t, "GetProvinceCasesPaginated", 1)
 }
 
@@ -621,7 +621,7 @@ func TestCachedCovidService_GetProvinceCasesPaginatedSorted(t *testing.T) {
 	assert.Equal(t, expected, cases)
 	assert.Equal(t, 1, total)
 
-	svc.GetProvinceCasesPaginatedSorted("p1", 10, 0, sp)
+	_, _, _ = svc.GetProvinceCasesPaginatedSorted("p1", 10, 0, sp)
 	mockSvc.AssertNumberOfCalls(t, "GetProvinceCasesPaginatedSorted", 1)
 }
 
@@ -648,7 +648,7 @@ func TestCachedCovidService_GetProvinceCasesByDateRange(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)
 
-	svc.GetProvinceCasesByDateRange("p1", "2021-01-01", "2021-12-31")
+	_, _ = svc.GetProvinceCasesByDateRange("p1", "2021-01-01", "2021-12-31")
 	mockSvc.AssertNumberOfCalls(t, "GetProvinceCasesByDateRange", 1)
 }
 
@@ -675,7 +675,7 @@ func TestCachedCovidService_GetProvinceCasesByDateRangeSorted(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)
 
-	svc.GetProvinceCasesByDateRangeSorted("p1", "2021-01-01", "2021-12-31", sp)
+	_, _ = svc.GetProvinceCasesByDateRangeSorted("p1", "2021-01-01", "2021-12-31", sp)
 	mockSvc.AssertNumberOfCalls(t, "GetProvinceCasesByDateRangeSorted", 1)
 }
 
@@ -703,7 +703,7 @@ func TestCachedCovidService_GetProvinceCasesByDateRangePaginated(t *testing.T) {
 	assert.Equal(t, expected, cases)
 	assert.Equal(t, 1, total)
 
-	svc.GetProvinceCasesByDateRangePaginated("p1", "2021-01-01", "2021-12-31", 10, 0)
+	_, _, _ = svc.GetProvinceCasesByDateRangePaginated("p1", "2021-01-01", "2021-12-31", 10, 0)
 	mockSvc.AssertNumberOfCalls(t, "GetProvinceCasesByDateRangePaginated", 1)
 }
 
@@ -731,7 +731,7 @@ func TestCachedCovidService_GetProvinceCasesByDateRangePaginatedSorted(t *testin
 	assert.Equal(t, expected, cases)
 	assert.Equal(t, 1, total)
 
-	svc.GetProvinceCasesByDateRangePaginatedSorted("p1", "2021-01-01", "2021-12-31", 10, 0, sp)
+	_, _, _ = svc.GetProvinceCasesByDateRangePaginatedSorted("p1", "2021-01-01", "2021-12-31", 10, 0, sp)
 	mockSvc.AssertNumberOfCalls(t, "GetProvinceCasesByDateRangePaginatedSorted", 1)
 }
 
@@ -758,7 +758,7 @@ func TestCachedCovidService_GetAllProvinceCases(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)
 
-	svc.GetAllProvinceCases()
+	_, _ = svc.GetAllProvinceCases()
 	mockSvc.AssertNumberOfCalls(t, "GetAllProvinceCases", 1)
 }
 
@@ -785,7 +785,7 @@ func TestCachedCovidService_GetAllProvinceCasesSorted(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)
 
-	svc.GetAllProvinceCasesSorted(sp)
+	_, _ = svc.GetAllProvinceCasesSorted(sp)
 	mockSvc.AssertNumberOfCalls(t, "GetAllProvinceCasesSorted", 1)
 }
 
@@ -813,7 +813,7 @@ func TestCachedCovidService_GetAllProvinceCasesPaginated(t *testing.T) {
 	assert.Equal(t, expected, cases)
 	assert.Equal(t, 1, total)
 
-	svc.GetAllProvinceCasesPaginated(10, 0)
+	_, _, _ = svc.GetAllProvinceCasesPaginated(10, 0)
 	mockSvc.AssertNumberOfCalls(t, "GetAllProvinceCasesPaginated", 1)
 }
 
@@ -841,7 +841,7 @@ func TestCachedCovidService_GetAllProvinceCasesPaginatedSorted(t *testing.T) {
 	assert.Equal(t, expected, cases)
 	assert.Equal(t, 1, total)
 
-	svc.GetAllProvinceCasesPaginatedSorted(10, 0, sp)
+	_, _, _ = svc.GetAllProvinceCasesPaginatedSorted(10, 0, sp)
 	mockSvc.AssertNumberOfCalls(t, "GetAllProvinceCasesPaginatedSorted", 1)
 }
 
@@ -868,7 +868,7 @@ func TestCachedCovidService_GetAllProvinceCasesByDateRange(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)
 
-	svc.GetAllProvinceCasesByDateRange("2021-01-01", "2021-12-31")
+	_, _ = svc.GetAllProvinceCasesByDateRange("2021-01-01", "2021-12-31")
 	mockSvc.AssertNumberOfCalls(t, "GetAllProvinceCasesByDateRange", 1)
 }
 
@@ -895,7 +895,7 @@ func TestCachedCovidService_GetAllProvinceCasesByDateRangeSorted(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)
 
-	svc.GetAllProvinceCasesByDateRangeSorted("2021-01-01", "2021-12-31", sp)
+	_, _ = svc.GetAllProvinceCasesByDateRangeSorted("2021-01-01", "2021-12-31", sp)
 	mockSvc.AssertNumberOfCalls(t, "GetAllProvinceCasesByDateRangeSorted", 1)
 }
 
@@ -923,7 +923,7 @@ func TestCachedCovidService_GetAllProvinceCasesByDateRangePaginated(t *testing.T
 	assert.Equal(t, expected, cases)
 	assert.Equal(t, 1, total)
 
-	svc.GetAllProvinceCasesByDateRangePaginated("2021-01-01", "2021-12-31", 10, 0)
+	_, _, _ = svc.GetAllProvinceCasesByDateRangePaginated("2021-01-01", "2021-12-31", 10, 0)
 	mockSvc.AssertNumberOfCalls(t, "GetAllProvinceCasesByDateRangePaginated", 1)
 }
 
@@ -951,7 +951,7 @@ func TestCachedCovidService_GetAllProvinceCasesByDateRangePaginatedSorted(t *tes
 	assert.Equal(t, expected, cases)
 	assert.Equal(t, 1, total)
 
-	svc.GetAllProvinceCasesByDateRangePaginatedSorted("2021-01-01", "2021-12-31", 10, 0, sp)
+	_, _, _ = svc.GetAllProvinceCasesByDateRangePaginatedSorted("2021-01-01", "2021-12-31", 10, 0, sp)
 	mockSvc.AssertNumberOfCalls(t, "GetAllProvinceCasesByDateRangePaginatedSorted", 1)
 }
 
