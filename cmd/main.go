@@ -34,8 +34,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-
 	"os"
+	"time"
 
 	"github.com/banua-coder/pico-api-go/docs"
 	"github.com/banua-coder/pico-api-go/internal/config"
@@ -43,6 +43,7 @@ import (
 	"github.com/banua-coder/pico-api-go/internal/middleware"
 	"github.com/banua-coder/pico-api-go/internal/repository"
 	"github.com/banua-coder/pico-api-go/internal/service"
+	"github.com/banua-coder/pico-api-go/pkg/cache"
 	"github.com/banua-coder/pico-api-go/pkg/database"
 )
 
@@ -65,7 +66,14 @@ func main() {
 	provinceRepo := repository.NewProvinceRepository(db)
 	provinceCaseRepo := repository.NewProvinceCaseRepository(db)
 
-	covidService := service.NewCovidService(nationalCaseRepo, provinceRepo, provinceCaseRepo)
+	// Initialize in-memory cache
+	c := cache.New(time.Hour)
+	c.StartCleanup(5 * time.Minute)
+
+	covidService := service.NewCachedCovidService(
+		service.NewCovidService(nationalCaseRepo, provinceRepo, provinceCaseRepo),
+		c,
+	)
 
 	// New repositories and services for migrated Lumen endpoints
 	regencyRepo := repository.NewRegencyRepository(db)
@@ -73,7 +81,10 @@ func main() {
 	hospitalRepo := repository.NewHospitalRepository(db)
 	taskForceRepo := repository.NewTaskForceRepository(db)
 
-	regencyService := service.NewRegencyService(regencyRepo, regencyCaseRepo)
+	regencyService := service.NewCachedRegencyService(
+		service.NewRegencyService(regencyRepo, regencyCaseRepo),
+		c,
+	)
 	hospitalService := service.NewHospitalService(hospitalRepo)
 	taskForceService := service.NewTaskForceService(taskForceRepo)
 
@@ -98,6 +109,7 @@ func main() {
 	svc := handler.Services{
 		CovidService:     covidService,
 		RegencyService:   regencyService,
+		CacheInvalidator: c,
 		HospitalService:  hospitalService,
 		TaskForceService:    taskForceService,
 		VaccinationService:   vaccinationService,
