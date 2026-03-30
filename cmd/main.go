@@ -31,9 +31,11 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"os"
 
@@ -43,6 +45,7 @@ import (
 	"github.com/banua-coder/pico-api-go/internal/middleware"
 	"github.com/banua-coder/pico-api-go/internal/repository"
 	"github.com/banua-coder/pico-api-go/internal/service"
+	"github.com/banua-coder/pico-api-go/pkg/cache"
 	"github.com/banua-coder/pico-api-go/pkg/database"
 )
 
@@ -65,7 +68,35 @@ func main() {
 	provinceRepo := repository.NewProvinceRepository(db)
 	provinceCaseRepo := repository.NewProvinceCaseRepository(db)
 
-	covidService := service.NewCovidService(nationalCaseRepo, provinceRepo, provinceCaseRepo)
+	// Initialize Redis cache
+	redisAddr := os.Getenv("REDIS_ADDR")
+	if redisAddr == "" {
+		redisAddr = "redis:6379"
+	}
+	redisPassword := os.Getenv("REDIS_PASSWORD")
+
+	cacheTTL := 5 * time.Minute
+	var appCache cache.Cache
+
+	redisCache := cache.New(cache.Options{
+		Addr:     redisAddr,
+		Password: redisPassword,
+		DB:       0,
+	}, cacheTTL)
+
+	if err := redisCache.Ping(context.Background()); err != nil {
+		log.Printf("Redis unavailable (%v), falling back to in-memory cache", err)
+		appCache = cache.NewInMemory(cacheTTL)
+	} else {
+		log.Printf("Redis connected: %s", redisAddr)
+		appCache = redisCache
+	}
+
+	covidService := service.NewCachedCovidService(
+		service.NewCovidService(nationalCaseRepo, provinceRepo, provinceCaseRepo),
+		appCache,
+		cacheTTL,
+	)
 
 	// New repositories and services for migrated Lumen endpoints
 	regencyRepo := repository.NewRegencyRepository(db)
