@@ -12,11 +12,12 @@ import (
 // Services holds all service dependencies for route setup
 type Services struct {
 	CovidService         service.CovidService
-	RegencyService       *service.RegencyService
+	RegencyService       service.RegencyServiceInterface
 	HospitalService      *service.HospitalService
 	TaskForceService     *service.TaskForceService
 	VaccinationService   *service.VaccinationService
 	ProvinceStatsService service.ProvinceStatsServiceInterface
+	CacheInvalidator     service.CacheInvalidator
 }
 
 func SetupRoutes(svc Services, db *database.DB, enableSwagger bool) *mux.Router {
@@ -76,6 +77,12 @@ func SetupRoutes(svc Services, db *database.DB, enableSwagger bool) *mux.Router 
 		api.HandleFunc("/stats/gender/latest", statsHandler.GetLatestGenderCase).Methods("GET", "OPTIONS")
 		api.HandleFunc("/stats/tests", statsHandler.GetTests).Methods("GET", "OPTIONS")
 		api.HandleFunc("/stats/test-types", statsHandler.GetTestTypes).Methods("GET", "OPTIONS")
+	}
+
+	// Admin endpoints
+	if svc.CacheInvalidator != nil {
+		adminHandler := NewAdminHandler(svc.CacheInvalidator)
+		router.HandleFunc("/admin/cache/clear", adminHandler.ClearCache).Methods("POST", "OPTIONS")
 	}
 
 	// Conditionally add Swagger documentation based on environment
