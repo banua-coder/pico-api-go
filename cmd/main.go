@@ -66,8 +66,30 @@ func main() {
 	provinceRepo := repository.NewProvinceRepository(db)
 	provinceCaseRepo := repository.NewProvinceCaseRepository(db)
 
-	// Initialize in-memory cache
-	c := cache.New(time.Hour)
+	// Initialize cache — use Redis-backed dual-layer if REDIS_ADDR is set, otherwise in-memory only
+	var c *cache.Cache
+	var cacheInvalidator service.CacheInvalidator
+
+	redisAddr := os.Getenv("REDIS_ADDR")
+	if redisAddr != "" {
+		rac, err := cache.NewRedisAwareCache(time.Hour, cache.RedisOptions{
+			Addr:     redisAddr,
+			Password: os.Getenv("REDIS_PASSWORD"),
+			DB:       0,
+		})
+		if err != nil {
+			log.Printf("Redis unavailable (%v), falling back to in-memory cache only", err)
+			c = cache.New(time.Hour)
+			cacheInvalidator = c
+		} else {
+			log.Printf("Redis connected: %s (dual-layer cache active)", redisAddr)
+			c = rac.Unwrap()
+			cacheInvalidator = rac
+		}
+	} else {
+		c = cache.New(time.Hour)
+		cacheInvalidator = c
+	}
 	c.StartCleanup(5 * time.Minute)
 
 	covidService := service.NewCachedCovidService(
@@ -109,7 +131,7 @@ func main() {
 	svc := handler.Services{
 		CovidService:     covidService,
 		RegencyService:   regencyService,
-		CacheInvalidator: c,
+		CacheInvalidator: cacheInvalidator,
 		HospitalService:  hospitalService,
 		TaskForceService:    taskForceService,
 		VaccinationService:   vaccinationService,
