@@ -41,3 +41,14 @@ type ProvinceStatsServiceInterface interface {
 	GetTests() ([]models.ProvinceTest, error)
 	GetTestTypes() ([]models.TestType, error)
 }
+
+// ContentServiceInterface defines the contract for read-only site content.
+// For all list methods limit <= 0 means "no limit" (load_all).
+type ContentServiceInterface interface {
+	GetBanners(includeInactive bool, limit, offset int) ([]models.Banner, int, error)
+	GetInfographics(limit, offset int) ([]models.Infographic, int, error)
+	GetDonations(limit, offset int) ([]models.Donation, int, error)
+	GetTelemedicines(limit, offset int) ([]models.Telemedicine, int, error)
+	GetPartners(inFooter *bool, limit, offset int) ([]models.Partner, int, error)
+	GetContacts(ownerType string, ownerID int64, limit, offset int) ([]models.ContactEntry, int, error)
+}

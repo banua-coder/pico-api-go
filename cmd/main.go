@@ -116,6 +116,9 @@ func main() {
 	provinceStatsRepo := repository.NewProvinceStatsRepository(db)
 	provinceStatsService := service.NewProvinceStatsService(provinceStatsRepo)
 
+	contentRepo := repository.NewContentRepository(db)
+	contentService := service.NewCachedContentService(service.NewContentService(contentRepo), c)
+
 	// Override Swagger host/basePath from environment variables if set
 	if host := os.Getenv("SWAGGER_HOST"); host != "" {
 		docs.SwaggerInfo.Host = host
@@ -129,13 +132,14 @@ func main() {
 
 	enableSwagger := true
 	svc := handler.Services{
-		CovidService:     covidService,
-		RegencyService:   regencyService,
-		CacheInvalidator: cacheInvalidator,
-		HospitalService:  hospitalService,
-		TaskForceService:    taskForceService,
+		CovidService:         covidService,
+		RegencyService:       regencyService,
+		CacheInvalidator:     cacheInvalidator,
+		HospitalService:      hospitalService,
+		TaskForceService:     taskForceService,
 		VaccinationService:   vaccinationService,
 		ProvinceStatsService: provinceStatsService,
+		ContentService:       contentService,
 	}
 	router := handler.SetupRoutes(svc, db, enableSwagger)
 
