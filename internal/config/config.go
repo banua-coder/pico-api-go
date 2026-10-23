@@ -13,6 +13,13 @@ type Config struct {
 	Database  DatabaseConfig
 	Server    ServerConfig
 	RateLimit RateLimitConfig
+	Cache     CacheConfig
+}
+
+// CacheConfig controls Cache-Control headers on GET /api/v1 data endpoints.
+type CacheConfig struct {
+	MaxAge               time.Duration
+	StaleWhileRevalidate time.Duration
 }
 
 type DatabaseConfig struct {
@@ -65,6 +72,10 @@ func Load() *Config {
 			RequestsPerMinute: getEnvAsInt("RATE_LIMIT_REQUESTS_PER_MINUTE", 100),
 			BurstSize:         getEnvAsInt("RATE_LIMIT_BURST_SIZE", 20),
 			WindowSize:        getEnvAsDuration("RATE_LIMIT_WINDOW_SIZE", 1*time.Minute),
+		},
+		Cache: CacheConfig{
+			MaxAge:               getEnvAsDuration("HTTP_CACHE_MAX_AGE", 5*time.Minute),
+			StaleWhileRevalidate: getEnvAsDuration("HTTP_CACHE_STALE_WHILE_REVALIDATE", time.Hour),
 		},
 	}
 }
