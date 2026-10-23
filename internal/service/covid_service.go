@@ -81,7 +81,7 @@ func (s *covidService) GetNationalCasesByDateRange(startDate, endDate string) ([
 		return nil, fmt.Errorf("invalid start date format: %w", err)
 	}
 
-	end, err := time.Parse("2006-01-02", endDate)
+	end, err := parseEndDate(endDate)
 	if err != nil {
 		return nil, fmt.Errorf("invalid end date format: %w", err)
 	}
@@ -99,7 +99,7 @@ func (s *covidService) GetNationalCasesByDateRangeSorted(startDate, endDate stri
 		return nil, fmt.Errorf("invalid start date format: %w", err)
 	}
 
-	end, err := time.Parse("2006-01-02", endDate)
+	end, err := parseEndDate(endDate)
 	if err != nil {
 		return nil, fmt.Errorf("invalid end date format: %w", err)
 	}
@@ -157,7 +157,7 @@ func (s *covidService) GetNationalCasesByDateRangePaginated(startDate, endDate s
 		return nil, 0, fmt.Errorf("invalid start date format: %w", err)
 	}
 
-	end, err := time.Parse("2006-01-02", endDate)
+	end, err := parseEndDate(endDate)
 	if err != nil {
 		return nil, 0, fmt.Errorf("invalid end date format: %w", err)
 	}
@@ -175,7 +175,7 @@ func (s *covidService) GetNationalCasesByDateRangePaginatedSorted(startDate, end
 		return nil, 0, fmt.Errorf("invalid start date format: %w", err)
 	}
 
-	end, err := time.Parse("2006-01-02", endDate)
+	end, err := parseEndDate(endDate)
 	if err != nil {
 		return nil, 0, fmt.Errorf("invalid end date format: %w", err)
 	}
@@ -239,7 +239,7 @@ func (s *covidService) GetProvinceCasesByDateRange(provinceID, startDate, endDat
 		return nil, fmt.Errorf("invalid start date format: %w", err)
 	}
 
-	end, err := time.Parse("2006-01-02", endDate)
+	end, err := parseEndDate(endDate)
 	if err != nil {
 		return nil, fmt.Errorf("invalid end date format: %w", err)
 	}
@@ -273,7 +273,7 @@ func (s *covidService) GetAllProvinceCasesByDateRange(startDate, endDate string)
 		return nil, fmt.Errorf("invalid start date format: %w", err)
 	}
 
-	end, err := time.Parse("2006-01-02", endDate)
+	end, err := parseEndDate(endDate)
 	if err != nil {
 		return nil, fmt.Errorf("invalid end date format: %w", err)
 	}
@@ -299,7 +299,7 @@ func (s *covidService) GetProvinceCasesByDateRangePaginated(provinceID, startDat
 		return nil, 0, fmt.Errorf("invalid start date format: %w", err)
 	}
 
-	end, err := time.Parse("2006-01-02", endDate)
+	end, err := parseEndDate(endDate)
 	if err != nil {
 		return nil, 0, fmt.Errorf("invalid end date format: %w", err)
 	}
@@ -325,7 +325,7 @@ func (s *covidService) GetAllProvinceCasesByDateRangePaginated(startDate, endDat
 		return nil, 0, fmt.Errorf("invalid start date format: %w", err)
 	}
 
-	end, err := time.Parse("2006-01-02", endDate)
+	end, err := parseEndDate(endDate)
 	if err != nil {
 		return nil, 0, fmt.Errorf("invalid end date format: %w", err)
 	}
@@ -351,7 +351,7 @@ func (s *covidService) GetAllProvinceCasesByDateRangeSorted(startDate, endDate s
 		return nil, fmt.Errorf("invalid start date format: %w", err)
 	}
 
-	end, err := time.Parse("2006-01-02", endDate)
+	end, err := parseEndDate(endDate)
 	if err != nil {
 		return nil, fmt.Errorf("invalid end date format: %w", err)
 	}
@@ -369,7 +369,7 @@ func (s *covidService) GetAllProvinceCasesByDateRangePaginatedSorted(startDate, 
 		return nil, 0, fmt.Errorf("invalid start date format: %w", err)
 	}
 
-	end, err := time.Parse("2006-01-02", endDate)
+	end, err := parseEndDate(endDate)
 	if err != nil {
 		return nil, 0, fmt.Errorf("invalid end date format: %w", err)
 	}
@@ -403,7 +403,7 @@ func (s *covidService) GetProvinceCasesByDateRangeSorted(provinceID, startDate, 
 		return nil, fmt.Errorf("invalid start date format: %w", err)
 	}
 
-	end, err := time.Parse("2006-01-02", endDate)
+	end, err := parseEndDate(endDate)
 	if err != nil {
 		return nil, fmt.Errorf("invalid end date format: %w", err)
 	}
@@ -421,7 +421,7 @@ func (s *covidService) GetProvinceCasesByDateRangePaginatedSorted(provinceID, st
 		return nil, 0, fmt.Errorf("invalid start date format: %w", err)
 	}
 
-	end, err := time.Parse("2006-01-02", endDate)
+	end, err := parseEndDate(endDate)
 	if err != nil {
 		return nil, 0, fmt.Errorf("invalid end date format: %w", err)
 	}
@@ -431,4 +431,14 @@ func (s *covidService) GetProvinceCasesByDateRangePaginatedSorted(provinceID, st
 		return nil, 0, fmt.Errorf("failed to get sorted province cases by date range paginated: %w", err)
 	}
 	return cases, total, nil
+}
+
+// parseEndDate parses a YYYY-MM-DD end date and returns the last second of that day,
+// so range filters (BETWEEN) include rows stamped after midnight on end_date.
+func parseEndDate(v string) (time.Time, error) {
+	t, err := time.Parse("2006-01-02", v)
+	if err != nil {
+		return t, err
+	}
+	return t.Add(24*time.Hour - time.Second), nil
 }

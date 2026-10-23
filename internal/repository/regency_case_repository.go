@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"log"
 	"fmt"
+	"log"
 
 	"github.com/banua-coder/pico-api-go/internal/models"
 	"github.com/banua-coder/pico-api-go/pkg/database"
@@ -81,6 +81,7 @@ func (r *RegencyCaseRepository) GetLatestByProvinceID(provinceID int) ([]models.
 		rc.person_under_supervision, rc.finished_person_under_supervision,
 		rc.cumulative_person_under_observation, rc.cumulative_finished_person_under_observation,
 		rc.cumulative_person_under_supervision, rc.cumulative_finished_person_under_supervision,
+		rc.rt, rc.rt_upper, rc.rt_lower,
 		nc.date, reg.id, reg.name
 		FROM regency_cases rc
 		JOIN national_cases nc ON rc.day = nc.id
@@ -114,6 +115,7 @@ func (r *RegencyCaseRepository) GetLatestByProvinceID(provinceID int) ([]models.
 			&c.PersonUnderSupervision, &c.FinishedPersonUnderSupervision,
 			&c.CumulativePersonUnderObservation, &c.CumulativeFinishedPersonUnderObservation,
 			&c.CumulativePersonUnderSupervision, &c.CumulativeFinishedPersonUnderSupervision,
+			&c.Rt, &c.RtUpper, &c.RtLower,
 			&c.Date, &regID, &regName); err != nil {
 			return nil, fmt.Errorf("failed to scan regency case: %w", err)
 		}

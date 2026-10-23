@@ -147,6 +147,8 @@ func main() {
 	router.Use(middleware.Logging)
 	router.Use(middleware.RateLimit(cfg.RateLimit))
 	router.Use(middleware.CORS)
+	router.Use(middleware.Gzip)
+	router.Use(middleware.Cache(cfg.Cache))
 
 	address := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 	log.Printf("Server starting on %s", address)
