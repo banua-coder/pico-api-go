@@ -121,3 +121,14 @@ func TestCachedContentService_ErrorNotCached(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, got, 1)
 }
+
+func TestCachedContentService_EmptyPageNotCached(t *testing.T) {
+	inner := new(MockContentRepository)
+	svc := NewCachedContentService(inner, cache.New(time.Minute))
+	inner.On("GetInfographics", 10, 9990).Return([]models.Infographic{}, 3, nil).Twice()
+	for i := 0; i < 2; i++ {
+		_, _, err := svc.GetInfographics(10, 9990)
+		assert.NoError(t, err)
+	}
+	inner.AssertExpectations(t)
+}

@@ -98,7 +98,7 @@ const docTemplate = `{
         },
         "/banners": {
             "get": {
-                "description": "Returns banners ordered by id. Only active banners unless include_inactive=true. link is url_type + url as stored; image is returned as stored.",
+                "description": "Returns banners ordered by id. Only active banners unless include_inactive=true. link is url_type + url as stored; image is returned as stored.\nResponse shape: with load_all=true data is a bare array; otherwise data is {data: [...], pagination: {...}}. Boolean params accept true/false/1/0 (case-insensitive); other values return 400. page is capped at 1000000.",
                 "produces": [
                     "application/json"
                 ],
@@ -138,13 +138,25 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/handler.Response"
                         }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
                     }
                 }
             }
         },
         "/contacts": {
             "get": {
-                "description": "Returns contacts of hospitals, task forces, donations and telemedicines, each with its contact type.",
+                "description": "Returns contacts of hospitals, task forces, donations and telemedicines, each with its contact type.\nResponse shape: with load_all=true data is a bare array; otherwise data is {data: [...], pagination: {...}}. Boolean params accept true/false/1/0 (case-insensitive); other values return 400. page is capped at 1000000.",
                 "produces": [
                     "application/json"
                 ],
@@ -179,7 +191,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "Id of the owner (requires nothing else, usually combined with owner_type)",
+                        "description": "Positive id of the owner (requires owner_type)",
                         "name": "owner_id",
                         "in": "query"
                     }
@@ -196,13 +208,19 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/handler.Response"
                         }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
                     }
                 }
             }
         },
         "/donations": {
             "get": {
-                "description": "Returns donation campaigns with bank accounts (including bank) and contacts.",
+                "description": "Returns donation campaigns with bank accounts (including bank) and contacts.\nResponse shape: with load_all=true data is a bare array; otherwise data is {data: [...], pagination: {...}}. Boolean params accept true/false/1/0 (case-insensitive); other values return 400. page is capped at 1000000.",
                 "produces": [
                     "application/json"
                 ],
@@ -233,6 +251,18 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/handler.Response"
                         }
@@ -372,7 +402,7 @@ const docTemplate = `{
         },
         "/infographics": {
             "get": {
-                "description": "Returns infographics newest first, each with images ordered by queue.",
+                "description": "Returns infographics newest first, each with images ordered by queue.\nResponse shape: with load_all=true data is a bare array; otherwise data is {data: [...], pagination: {...}}. Boolean params accept true/false/1/0 (case-insensitive); other values return 400. page is capped at 1000000.",
                 "produces": [
                     "application/json"
                 ],
@@ -403,6 +433,18 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/handler.Response"
                         }
@@ -615,7 +657,7 @@ const docTemplate = `{
         },
         "/partners": {
             "get": {
-                "description": "Returns partners and data sources. image is a file name as stored.",
+                "description": "Returns partners and data sources. image is a file name as stored.\nResponse shape: with load_all=true data is a bare array; otherwise data is {data: [...], pagination: {...}}. Boolean params accept true/false/1/0 (case-insensitive); other values return 400. page is capped at 1000000.",
                 "produces": [
                     "application/json"
                 ],
@@ -652,6 +694,18 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/handler.Response"
                         }
@@ -1214,7 +1268,7 @@ const docTemplate = `{
         },
         "/telemedicines": {
             "get": {
-                "description": "Returns telemedicine providers with schedules and contacts.",
+                "description": "Returns telemedicine providers with schedules and contacts.\nResponse shape: with load_all=true data is a bare array; otherwise data is {data: [...], pagination: {...}}. Boolean params accept true/false/1/0 (case-insensitive); other values return 400. page is capped at 1000000.",
                 "produces": [
                     "application/json"
                 ],
@@ -1245,6 +1299,18 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/handler.Response"
                         }
@@ -1899,7 +1965,7 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "2.9.0",
+	Version:          "2.10.0",
 	Host:             "pico-api-go.banuacoder.com",
 	BasePath:         "/api/v1",
 	Schemes:          []string{"https", "http"},

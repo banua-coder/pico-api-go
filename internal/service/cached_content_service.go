@@ -33,7 +33,12 @@ func cachedPage[T any](c *cache.Cache, key string, load func() ([]T, int, error)
 	if err != nil {
 		return nil, 0, err
 	}
-	c.Set(key, pageResult[T]{items, total}, ttlDefault)
+	// Empty pages (past the end, or unknown owner_id) are not stored, so
+	// arbitrary page/owner_id values cannot grow the cache; entries are bounded
+	// by the real data size.
+	if len(items) > 0 {
+		c.Set(key, pageResult[T]{items, total}, ttlDefault)
+	}
 	return items, total, nil
 }
 

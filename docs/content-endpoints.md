@@ -6,6 +6,7 @@ Read-only `GET` endpoints under `/api/v1` for site content that already lives in
 
 - Envelope: `{"status":"success","data":{"data":[...],"pagination":{...}}}` (same as `/hospitals`).
 - Pagination: `?page=1&per_page=10` (max 100). `?load_all=true` returns a plain list in `data` with no pagination block.
+- Validation: booleans (`load_all`, `include_inactive`, `in_footer`) use `strconv.ParseBool` (true/false/1/0, any case); empty means not provided, anything else is 400. `page` above 1,000,000 is 400; `per_page` above 100 is clamped to 100. Repository errors return a generic `internal server error` (details are logged). Empty pages are not cached.
 - Cache: in-memory via `cachedContentService`, TTL 1 hour (`ttlDefault`), one key per filter and page. Cleared by `POST /admin/cache/clear`.
 - Image and URL fields are returned exactly as stored. Many `image` values point at the expired `banuacoders.com` host, some are relative paths (`donations/July2021/x.jpg`) and partner images are bare file names. Clients must tolerate broken images.
 - Fields are English snake_case. Only columns that matter to clients are exposed (no `created_at` / `updated_at`).
@@ -19,7 +20,7 @@ Read-only `GET` endpoints under `/api/v1` for site content that already lives in
 | `GET /donations` | - | `donations`, `bank_accounts`, `banks`, `contacts`, `contact_types` | id asc |
 | `GET /telemedicines` | - | `telemedicines`, `telemedicine_schedules`, `contacts`, `contact_types` | id asc |
 | `GET /partners` | `in_footer=true\|false` | `partners` | id asc |
-| `GET /contacts` | `owner_type=hospital\|task_force\|donation\|telemedicine`, `owner_id=<int>` (400 on unknown owner_type) | `contacts`, `contact_types` | id asc |
+| `GET /contacts` | `owner_type=hospital\|task_force\|donation\|telemedicine`, `owner_id=<positive int>` (400 on unknown owner_type, invalid/non-positive owner_id, or owner_id without owner_type) | `contacts`, `contact_types` | id asc |
 
 No `?province=` filter: none of these tables has a province column.
 

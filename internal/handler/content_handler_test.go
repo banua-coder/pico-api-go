@@ -92,7 +92,8 @@ func TestGetBanners_Error(t *testing.T) {
 	svc.On("GetBanners", false, 10, 0).Return([]models.Banner(nil), 0, errors.New("db down"))
 	w := doContent(NewContentHandler(svc).GetBanners, "/api/v1/banners")
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
-	assert.Contains(t, w.Body.String(), "db down")
+	assert.Contains(t, w.Body.String(), "internal server error")
+	assert.NotContains(t, w.Body.String(), "db down")
 }
 
 func TestGetInfographics(t *testing.T) {
@@ -158,4 +159,67 @@ func TestContentRoutes_Registered(t *testing.T) {
 		var m mux.RouteMatch
 		assert.True(t, router.Match(httptest.NewRequest(http.MethodGet, "/api/v1/"+path, nil), &m), path)
 	}
+}
+
+func TestContent_PageBounds(t *testing.T) {
+	svc := new(MockContentService)
+	h := NewContentHandler(svc)
+	assert.Equal(t, http.StatusBadRequest, doContent(h.GetBanners, "/api/v1/banners?page=1000001").Code)
+	assert.Equal(t, http.StatusBadRequest, doContent(h.GetBanners, "/api/v1/banners?page=9223372036854775807&per_page=100").Code)
+	svc.AssertNotCalled(t, "GetBanners")
+}
+
+func TestContent_PageBeyondLast(t *testing.T) {
+	svc := new(MockContentService)
+	svc.On("GetBanners", false, 10, 990).Return([]models.Banner{}, 3, nil)
+	w := doContent(NewContentHandler(svc).GetBanners, "/api/v1/banners?page=100")
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), `"data":[]`)
+	svc.AssertExpectations(t)
+}
+
+func TestContent_PerPageClamped(t *testing.T) {
+	svc := new(MockContentService)
+	svc.On("GetBanners", false, 100, 0).Return([]models.Banner{}, 0, nil)
+	assert.Equal(t, http.StatusOK, doContent(NewContentHandler(svc).GetBanners, "/api/v1/banners?per_page=500").Code)
+	svc.AssertExpectations(t)
+}
+
+func TestGetPartners_InFooterStrict(t *testing.T) {
+	svc := new(MockContentService)
+	yes, no := true, false
+	svc.On("GetPartners", &yes, 10, 0).Return([]models.Partner{}, 0, nil)
+	svc.On("GetPartners", &no, 10, 0).Return([]models.Partner{}, 0, nil)
+	h := NewContentHandler(svc)
+	assert.Equal(t, http.StatusOK, doContent(h.GetPartners, "/api/v1/partners?in_footer=1").Code)
+	assert.Equal(t, http.StatusOK, doContent(h.GetPartners, "/api/v1/partners?in_footer=TRUE").Code)
+	assert.Equal(t, http.StatusOK, doContent(h.GetPartners, "/api/v1/partners?in_footer=0").Code)
+	w := doContent(h.GetPartners, "/api/v1/partners?in_footer=garbage")
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "in_footer")
+}
+
+func TestContent_StrictBoolParams(t *testing.T) {
+	svc := new(MockContentService)
+	svc.On("GetBanners", true, 10, 0).Return([]models.Banner{}, 0, nil)
+	svc.On("GetBanners", false, 0, 0).Return([]models.Banner{}, 0, nil)
+	h := NewContentHandler(svc)
+	assert.Equal(t, http.StatusOK, doContent(h.GetBanners, "/api/v1/banners?include_inactive=1").Code)
+	assert.Equal(t, http.StatusBadRequest, doContent(h.GetBanners, "/api/v1/banners?include_inactive=yes").Code)
+	assert.Equal(t, http.StatusOK, doContent(h.GetBanners, "/api/v1/banners?load_all=TRUE").Code)
+	assert.Equal(t, http.StatusBadRequest, doContent(h.GetBanners, "/api/v1/banners?load_all=maybe").Code)
+}
+
+func TestGetContacts_OwnerIDValidation(t *testing.T) {
+	svc := new(MockContentService)
+	h := NewContentHandler(svc)
+	for _, u := range []string{
+		"?owner_type=hospital&owner_id=abc",
+		"?owner_type=hospital&owner_id=-1",
+		"?owner_type=hospital&owner_id=0",
+		"?owner_id=4",
+	} {
+		assert.Equal(t, http.StatusBadRequest, doContent(h.GetContacts, "/api/v1/contacts"+u).Code, u)
+	}
+	svc.AssertNotCalled(t, "GetContacts")
 }

@@ -204,3 +204,8 @@ func TestContentRepository_GetContacts_UnknownOwnerType(t *testing.T) {
 	_, _, err := repo.GetContacts("bogus", 0, 10, 0)
 	assert.Error(t, err)
 }
+
+func TestOwnerShortName_Unknown(t *testing.T) {
+	assert.Equal(t, "hospital", ownerShortName(`App\Models\Hospital`))
+	assert.Equal(t, "unknown", ownerShortName(`App\Models\Secret`))
+}

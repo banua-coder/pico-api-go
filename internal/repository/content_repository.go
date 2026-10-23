@@ -389,7 +389,7 @@ func ownerShortName(class string) string {
 			return short
 		}
 	}
-	return class
+	return "unknown" // never leak raw PHP class names
 }
 
 func closeRows(rows interface{ Close() error }) {

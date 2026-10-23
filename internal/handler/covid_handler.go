@@ -350,7 +350,7 @@ func (h *CovidHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	health := map[string]interface{}{
 		"status":    "healthy",
 		"service":   "COVID-19 API",
-		"version":   "2.10.0",
+		"version": "2.10.0",
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
 	}
 
@@ -459,7 +459,7 @@ func (h *CovidHandler) GetAPIIndex(w http.ResponseWriter, r *http.Request) {
 	endpoints := map[string]interface{}{
 		"api": map[string]interface{}{
 			"title":       "Sulawesi Tengah COVID-19 Data API",
-			"version":     "2.10.0",
+			"version": "2.10.0",
 			"description": "A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central Sulawesi)",
 		},
 		"documentation": map[string]interface{}{
@@ -603,14 +603,14 @@ func (h *CovidHandler) GetAPIIndex(w http.ResponseWriter, r *http.Request) {
 			"Gender and test type statistics",
 		},
 		"examples": map[string]interface{}{
-			"sulawesi_tengah_cases": "/api/v1/provinces/72/cases",
-			"paginated_data":        "/api/v1/provinces/cases?limit=100&offset=50",
-			"date_range":            "/api/v1/national?start_date=2024-01-01&end_date=2024-12-31",
-			"complete_dataset":      "/api/v1/provinces/cases?all=true",
-			"regency_cases":         "/api/v1/regencies/7201/cases",
-			"hospital_list":         "/api/v1/hospitals",
-			"vaccination_province":  "/api/v1/vaccination/province?province_id=72",
-			"gender_stats":          "/api/v1/stats/gender",
+			"sulawesi_tengah_cases":   "/api/v1/provinces/72/cases",
+			"paginated_data":          "/api/v1/provinces/cases?limit=100&offset=50",
+			"date_range":              "/api/v1/national?start_date=2024-01-01&end_date=2024-12-31",
+			"complete_dataset":        "/api/v1/provinces/cases?all=true",
+			"regency_cases":           "/api/v1/regencies/7201/cases",
+			"hospital_list":           "/api/v1/hospitals",
+			"vaccination_province":    "/api/v1/vaccination/province?province_id=72",
+			"gender_stats":            "/api/v1/stats/gender",
 		},
 	}
 
