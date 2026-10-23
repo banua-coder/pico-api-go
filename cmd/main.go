@@ -1,7 +1,7 @@
 // Package main provides the entry point for the Sulawesi Tengah COVID-19 Data API
 //
 //	@title			Sulawesi Tengah COVID-19 Data API
-//	@version		2.9.0
+//	@version		2.10.0
 //	@description	A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central Sulawesi), with additional national and provincial data for context. Features enhanced ODP/PDP grouping, hybrid pagination, and rate limiting protection. Rate limiting: 100 requests per minute per IP address by default, with appropriate HTTP headers for client guidance.
 //	@termsOfService	http://swagger.io/terms/
 //
@@ -116,6 +116,9 @@ func main() {
 	provinceStatsRepo := repository.NewProvinceStatsRepository(db)
 	provinceStatsService := service.NewProvinceStatsService(provinceStatsRepo)
 
+	contentRepo := repository.NewContentRepository(db)
+	contentService := service.NewCachedContentService(service.NewContentService(contentRepo), c)
+
 	// Override Swagger host/basePath from environment variables if set
 	if host := os.Getenv("SWAGGER_HOST"); host != "" {
 		docs.SwaggerInfo.Host = host
@@ -129,13 +132,14 @@ func main() {
 
 	enableSwagger := true
 	svc := handler.Services{
-		CovidService:     covidService,
-		RegencyService:   regencyService,
-		CacheInvalidator: cacheInvalidator,
-		HospitalService:  hospitalService,
-		TaskForceService:    taskForceService,
+		CovidService:         covidService,
+		RegencyService:       regencyService,
+		CacheInvalidator:     cacheInvalidator,
+		HospitalService:      hospitalService,
+		TaskForceService:     taskForceService,
 		VaccinationService:   vaccinationService,
 		ProvinceStatsService: provinceStatsService,
+		ContentService:       contentService,
 	}
 	router := handler.SetupRoutes(svc, db, enableSwagger)
 

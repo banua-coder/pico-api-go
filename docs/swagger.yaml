@@ -322,7 +322,7 @@ info:
     url: https://opensource.org/licenses/MIT
   termsOfService: http://swagger.io/terms/
   title: Sulawesi Tengah COVID-19 Data API
-  version: 2.7.0
+  version: 2.10.0
 paths:
   /:
     get:
@@ -341,6 +341,154 @@ paths:
                   additionalProperties: true
                   type: object
               type: object
+  /admin/cache/clear:
+    post:
+      description: Clears all cached data. Requires X-Admin-Key header matching ADMIN_KEY
+        env var.
+      parameters:
+      - description: Admin key
+        in: header
+        name: X-Admin-Key
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Clear all in-memory cache
+      tags:
+      - admin
+  /banners:
+    get:
+      description: |-
+        Returns banners ordered by id. Only active banners unless include_inactive=true. link is url_type + url as stored; image is returned as stored.
+        Response shape: with load_all=true data is a bare array; otherwise data is {data: [...], pagination: {...}}. Boolean params accept true/false/1/0 (case-insensitive); other values return 400. page is capped at 1000000.
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 10, max: 100)'
+        in: query
+        name: per_page
+        type: integer
+      - description: Set true to return all without pagination
+        in: query
+        name: load_all
+        type: boolean
+      - description: Include banners with status 0
+        in: query
+        name: include_inactive
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: Get banners (paginated)
+      tags:
+      - content
+  /contacts:
+    get:
+      description: |-
+        Returns contacts of hospitals, task forces, donations and telemedicines, each with its contact type.
+        Response shape: with load_all=true data is a bare array; otherwise data is {data: [...], pagination: {...}}. Boolean params accept true/false/1/0 (case-insensitive); other values return 400. page is capped at 1000000.
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 10, max: 100)'
+        in: query
+        name: per_page
+        type: integer
+      - description: Set true to return all without pagination
+        in: query
+        name: load_all
+        type: boolean
+      - description: hospital, task_force, donation or telemedicine
+        in: query
+        name: owner_type
+        type: string
+      - description: Positive id of the owner (requires owner_type)
+        in: query
+        name: owner_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: Get contacts (paginated)
+      tags:
+      - content
+  /donations:
+    get:
+      description: |-
+        Returns donation campaigns with bank accounts (including bank) and contacts.
+        Response shape: with load_all=true data is a bare array; otherwise data is {data: [...], pagination: {...}}. Boolean params accept true/false/1/0 (case-insensitive); other values return 400. page is capped at 1000000.
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 10, max: 100)'
+        in: query
+        name: per_page
+        type: integer
+      - description: Set true to return all without pagination
+        in: query
+        name: load_all
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: Get donations (paginated)
+      tags:
+      - content
   /health:
     get:
       consumes:
@@ -422,6 +570,42 @@ paths:
       summary: Get a hospital by code
       tags:
       - hospitals
+  /infographics:
+    get:
+      description: |-
+        Returns infographics newest first, each with images ordered by queue.
+        Response shape: with load_all=true data is a bare array; otherwise data is {data: [...], pagination: {...}}. Boolean params accept true/false/1/0 (case-insensitive); other values return 400. page is capped at 1000000.
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 10, max: 100)'
+        in: query
+        name: per_page
+        type: integer
+      - description: Set true to return all without pagination
+        in: query
+        name: load_all
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: Get infographics (paginated)
+      tags:
+      - content
   /national:
     get:
       consumes:
@@ -553,6 +737,46 @@ paths:
       summary: Get latest national COVID-19 case
       tags:
       - national
+  /partners:
+    get:
+      description: |-
+        Returns partners and data sources. image is a file name as stored.
+        Response shape: with load_all=true data is a bare array; otherwise data is {data: [...], pagination: {...}}. Boolean params accept true/false/1/0 (case-insensitive); other values return 400. page is capped at 1000000.
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 10, max: 100)'
+        in: query
+        name: per_page
+        type: integer
+      - description: Set true to return all without pagination
+        in: query
+        name: load_all
+        type: boolean
+      - description: Filter on the in_footer flag
+        in: query
+        name: in_footer
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: Get partners (paginated)
+      tags:
+      - content
   /provinces:
     get:
       consumes:
@@ -910,6 +1134,42 @@ paths:
       summary: Get task force posts in Sulawesi Tengah (paginated)
       tags:
       - task-forces
+  /telemedicines:
+    get:
+      description: |-
+        Returns telemedicine providers with schedules and contacts.
+        Response shape: with load_all=true data is a bare array; otherwise data is {data: [...], pagination: {...}}. Boolean params accept true/false/1/0 (case-insensitive); other values return 400. page is capped at 1000000.
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 10, max: 100)'
+        in: query
+        name: per_page
+        type: integer
+      - description: Set true to return all without pagination
+        in: query
+        name: load_all
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: Get telemedicine providers (paginated)
+      tags:
+      - content
   /vaccination/locations:
     get:
       description: Returns paginated list of vaccination locations. Use ?load_all=true

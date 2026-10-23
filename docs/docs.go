@@ -55,6 +55,221 @@ const docTemplate = `{
                 }
             }
         },
+        "/admin/cache/clear": {
+            "post": {
+                "description": "Clears all cached data. Requires X-Admin-Key header matching ADMIN_KEY env var.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Clear all in-memory cache",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Admin key",
+                        "name": "X-Admin-Key",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/banners": {
+            "get": {
+                "description": "Returns banners ordered by id. Only active banners unless include_inactive=true. link is url_type + url as stored; image is returned as stored.\nResponse shape: with load_all=true data is a bare array; otherwise data is {data: [...], pagination: {...}}. Boolean params accept true/false/1/0 (case-insensitive); other values return 400. page is capped at 1000000.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "content"
+                ],
+                "summary": "Get banners (paginated)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page (default: 10, max: 100)",
+                        "name": "per_page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Set true to return all without pagination",
+                        "name": "load_all",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Include banners with status 0",
+                        "name": "include_inactive",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/contacts": {
+            "get": {
+                "description": "Returns contacts of hospitals, task forces, donations and telemedicines, each with its contact type.\nResponse shape: with load_all=true data is a bare array; otherwise data is {data: [...], pagination: {...}}. Boolean params accept true/false/1/0 (case-insensitive); other values return 400. page is capped at 1000000.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "content"
+                ],
+                "summary": "Get contacts (paginated)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page (default: 10, max: 100)",
+                        "name": "per_page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Set true to return all without pagination",
+                        "name": "load_all",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "hospital, task_force, donation or telemedicine",
+                        "name": "owner_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Positive id of the owner (requires owner_type)",
+                        "name": "owner_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/donations": {
+            "get": {
+                "description": "Returns donation campaigns with bank accounts (including bank) and contacts.\nResponse shape: with load_all=true data is a bare array; otherwise data is {data: [...], pagination: {...}}. Boolean params accept true/false/1/0 (case-insensitive); other values return 400. page is capped at 1000000.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "content"
+                ],
+                "summary": "Get donations (paginated)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page (default: 10, max: 100)",
+                        "name": "per_page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Set true to return all without pagination",
+                        "name": "load_all",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "description": "Check API health status and database connectivity",
@@ -178,6 +393,58 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/infographics": {
+            "get": {
+                "description": "Returns infographics newest first, each with images ordered by queue.\nResponse shape: with load_all=true data is a bare array; otherwise data is {data: [...], pagination: {...}}. Boolean params accept true/false/1/0 (case-insensitive); other values return 400. page is capped at 1000000.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "content"
+                ],
+                "summary": "Get infographics (paginated)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page (default: 10, max: 100)",
+                        "name": "per_page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Set true to return all without pagination",
+                        "name": "load_all",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/handler.Response"
                         }
@@ -381,6 +648,64 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/partners": {
+            "get": {
+                "description": "Returns partners and data sources. image is a file name as stored.\nResponse shape: with load_all=true data is a bare array; otherwise data is {data: [...], pagination: {...}}. Boolean params accept true/false/1/0 (case-insensitive); other values return 400. page is capped at 1000000.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "content"
+                ],
+                "summary": "Get partners (paginated)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page (default: 10, max: 100)",
+                        "name": "per_page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Set true to return all without pagination",
+                        "name": "load_all",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter on the in_footer flag",
+                        "name": "in_footer",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/handler.Response"
                         }
@@ -934,6 +1259,58 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/telemedicines": {
+            "get": {
+                "description": "Returns telemedicine providers with schedules and contacts.\nResponse shape: with load_all=true data is a bare array; otherwise data is {data: [...], pagination: {...}}. Boolean params accept true/false/1/0 (case-insensitive); other values return 400. page is capped at 1000000.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "content"
+                ],
+                "summary": "Get telemedicine providers (paginated)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page (default: 10, max: 100)",
+                        "name": "per_page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Set true to return all without pagination",
+                        "name": "load_all",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/handler.Response"
                         }
@@ -1588,7 +1965,7 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "2.7.0",
+	Version:          "2.10.0",
 	Host:             "pico-api-go.banuacoder.com",
 	BasePath:         "/api/v1",
 	Schemes:          []string{"https", "http"},
