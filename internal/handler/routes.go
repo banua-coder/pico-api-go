@@ -17,6 +17,7 @@ type Services struct {
 	TaskForceService     *service.TaskForceService
 	VaccinationService   *service.VaccinationService
 	ProvinceStatsService service.ProvinceStatsServiceInterface
+	ContentService       service.ContentServiceInterface
 	CacheInvalidator     service.CacheInvalidator
 }
 
@@ -77,6 +78,17 @@ func SetupRoutes(svc Services, db *database.DB, enableSwagger bool) *mux.Router 
 		api.HandleFunc("/stats/gender/latest", statsHandler.GetLatestGenderCase).Methods("GET", "OPTIONS")
 		api.HandleFunc("/stats/tests", statsHandler.GetTests).Methods("GET", "OPTIONS")
 		api.HandleFunc("/stats/test-types", statsHandler.GetTestTypes).Methods("GET", "OPTIONS")
+	}
+
+	// Content endpoints (banners, infographics, donations, telemedicines, partners, contacts)
+	if svc.ContentService != nil {
+		contentHandler := NewContentHandler(svc.ContentService)
+		api.HandleFunc("/banners", contentHandler.GetBanners).Methods("GET", "OPTIONS")
+		api.HandleFunc("/infographics", contentHandler.GetInfographics).Methods("GET", "OPTIONS")
+		api.HandleFunc("/donations", contentHandler.GetDonations).Methods("GET", "OPTIONS")
+		api.HandleFunc("/telemedicines", contentHandler.GetTelemedicines).Methods("GET", "OPTIONS")
+		api.HandleFunc("/partners", contentHandler.GetPartners).Methods("GET", "OPTIONS")
+		api.HandleFunc("/contacts", contentHandler.GetContacts).Methods("GET", "OPTIONS")
 	}
 
 	// Admin endpoints

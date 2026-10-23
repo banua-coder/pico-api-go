@@ -350,7 +350,7 @@ func (h *CovidHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	health := map[string]interface{}{
 		"status":    "healthy",
 		"service":   "COVID-19 API",
-		"version": "2.10.0",
+		"version":   "2.10.0",
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
 	}
 
@@ -459,7 +459,7 @@ func (h *CovidHandler) GetAPIIndex(w http.ResponseWriter, r *http.Request) {
 	endpoints := map[string]interface{}{
 		"api": map[string]interface{}{
 			"title":       "Sulawesi Tengah COVID-19 Data API",
-			"version": "2.10.0",
+			"version":     "2.10.0",
 			"description": "A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central Sulawesi)",
 		},
 		"documentation": map[string]interface{}{
@@ -535,6 +535,14 @@ func (h *CovidHandler) GetAPIIndex(w http.ResponseWriter, r *http.Request) {
 					"description": "Get hospital detail by code",
 				},
 			},
+			"content": map[string]interface{}{
+				"banners":       map[string]string{"url": "/api/v1/banners", "method": "GET", "description": "Active banners (?include_inactive=true for all)"},
+				"infographics":  map[string]string{"url": "/api/v1/infographics", "method": "GET", "description": "Infographics with ordered images"},
+				"donations":     map[string]string{"url": "/api/v1/donations", "method": "GET", "description": "Donation campaigns with bank accounts and contacts"},
+				"telemedicines": map[string]string{"url": "/api/v1/telemedicines", "method": "GET", "description": "Telemedicine providers with schedules and contacts"},
+				"partners":      map[string]string{"url": "/api/v1/partners", "method": "GET", "description": "Partners and data sources (?in_footer=true)"},
+				"contacts":      map[string]string{"url": "/api/v1/contacts", "method": "GET", "description": "Contacts (?owner_type=hospital|task_force|donation|telemedicine&owner_id=)"},
+			},
 			"task_forces": map[string]interface{}{
 				"list": map[string]string{
 					"url":         "/api/v1/task-forces",
@@ -595,14 +603,14 @@ func (h *CovidHandler) GetAPIIndex(w http.ResponseWriter, r *http.Request) {
 			"Gender and test type statistics",
 		},
 		"examples": map[string]interface{}{
-			"sulawesi_tengah_cases":   "/api/v1/provinces/72/cases",
-			"paginated_data":          "/api/v1/provinces/cases?limit=100&offset=50",
-			"date_range":              "/api/v1/national?start_date=2024-01-01&end_date=2024-12-31",
-			"complete_dataset":        "/api/v1/provinces/cases?all=true",
-			"regency_cases":           "/api/v1/regencies/7201/cases",
-			"hospital_list":           "/api/v1/hospitals",
-			"vaccination_province":    "/api/v1/vaccination/province?province_id=72",
-			"gender_stats":            "/api/v1/stats/gender",
+			"sulawesi_tengah_cases": "/api/v1/provinces/72/cases",
+			"paginated_data":        "/api/v1/provinces/cases?limit=100&offset=50",
+			"date_range":            "/api/v1/national?start_date=2024-01-01&end_date=2024-12-31",
+			"complete_dataset":      "/api/v1/provinces/cases?all=true",
+			"regency_cases":         "/api/v1/regencies/7201/cases",
+			"hospital_list":         "/api/v1/hospitals",
+			"vaccination_province":  "/api/v1/vaccination/province?province_id=72",
+			"gender_stats":          "/api/v1/stats/gender",
 		},
 	}
 
