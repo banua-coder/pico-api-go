@@ -288,6 +288,81 @@ definitions:
       name:
         type: string
     type: object
+  models.Regency:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      province_id:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  models.RegencyCase:
+    properties:
+      cumulative_deceased:
+        type: integer
+      cumulative_finished_person_under_observation:
+        type: integer
+      cumulative_finished_person_under_supervision:
+        type: integer
+      cumulative_person_under_observation:
+        type: number
+      cumulative_person_under_supervision:
+        type: number
+      cumulative_positive:
+        type: integer
+      cumulative_recovered:
+        type: integer
+      date:
+        type: string
+      day:
+        type: integer
+      deceased:
+        type: integer
+      finished_person_under_observation:
+        type: integer
+      finished_person_under_supervision:
+        type: integer
+      id:
+        type: integer
+      person_under_observation:
+        type: number
+      person_under_supervision:
+        type: number
+      positive:
+        type: integer
+      recovered:
+        type: integer
+      regency:
+        $ref: '#/definitions/models.Regency'
+      regency_id:
+        type: integer
+      rt:
+        type: number
+      rt_lower:
+        type: number
+      rt_upper:
+        type: number
+    type: object
+  models.RegencyWithLatestCase:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      latest_case:
+        $ref: '#/definitions/models.RegencyCase'
+      name:
+        type: string
+      province_id:
+        type: integer
+      updated_at:
+        type: string
+    type: object
   models.ReproductionRate:
     properties:
       lower_bound:
@@ -633,7 +708,7 @@ paths:
         in: query
         name: start_date
         type: string
-      - description: End date (YYYY-MM-DD)
+      - description: End date (YYYY-MM-DD), inclusive of the whole day
         in: query
         name: end_date
         type: string
@@ -664,7 +739,7 @@ paths:
                   type: array
               type: object
         "400":
-          description: Bad Request
+          description: Invalid start_date or end_date (expected YYYY-MM-DD)
           schema:
             $ref: '#/definitions/handler.Response'
         "429":
@@ -862,12 +937,12 @@ paths:
         in: query
         name: start_date
         type: string
-      - description: End date (YYYY-MM-DD)
+      - description: End date (YYYY-MM-DD), inclusive of the whole day
         in: query
         name: end_date
         type: string
       - description: 'Sort by field:order (e.g., date:desc, positive:asc). Default:
-          date:asc'
+          date:asc for all provinces, date:desc for a single province'
         in: query
         name: sort
         type: string
@@ -886,7 +961,11 @@ paths:
                   type: array
               type: object
         "400":
-          description: Bad Request
+          description: Invalid start_date or end_date (expected YYYY-MM-DD)
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "404":
+          description: Unknown province
           schema:
             $ref: '#/definitions/handler.Response'
         "500":
@@ -923,12 +1002,12 @@ paths:
         in: query
         name: start_date
         type: string
-      - description: End date (YYYY-MM-DD)
+      - description: End date (YYYY-MM-DD), inclusive of the whole day
         in: query
         name: end_date
         type: string
       - description: 'Sort by field:order (e.g., date:desc, positive:asc). Default:
-          date:asc'
+          date:asc for all provinces, date:desc for a single province'
         in: query
         name: sort
         type: string
@@ -947,7 +1026,11 @@ paths:
                   type: array
               type: object
         "400":
-          description: Bad Request
+          description: Invalid start_date or end_date (expected YYYY-MM-DD)
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "404":
+          description: Unknown province
           schema:
             $ref: '#/definitions/handler.Response'
         "500":
@@ -974,13 +1057,25 @@ paths:
         in: query
         name: load_all
         type: boolean
+      - description: Set true to add a latest_case object (most recent case row, with
+          date and rt) to each regency
+        in: query
+        name: include_latest_case
+        type: boolean
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Regencies with latest_case when include_latest_case=true
           schema:
-            $ref: '#/definitions/handler.Response'
+            allOf:
+            - $ref: '#/definitions/handler.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.RegencyWithLatestCase'
+                  type: array
+              type: object
         "500":
           description: Internal Server Error
           schema:

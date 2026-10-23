@@ -548,3 +548,28 @@ func TestProvinceCaseRepository_GetAllSorted_UnknownField(t *testing.T) {
 	assert.Len(t, cases, 1)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
+
+func TestProvinceCaseRepository_GetByProvinceIDSorted_HonoursSort(t *testing.T) {
+	db, mock := setupMockDB(t)
+	defer func() { _ = db.Close() }()
+
+	repo := NewProvinceCaseRepository(db)
+
+	cols := []string{
+		"id", "day", "province_id", "positive", "recovered", "deceased",
+		"person_under_observation", "finished_person_under_observation",
+		"person_under_supervision", "finished_person_under_supervision",
+		"cumulative_positive", "cumulative_recovered", "cumulative_deceased",
+		"cumulative_person_under_observation", "cumulative_finished_person_under_observation",
+		"cumulative_person_under_supervision", "cumulative_finished_person_under_supervision",
+		"rt", "rt_upper", "rt_lower", "date", "name",
+	}
+	mock.ExpectQuery(`WHERE pc\.province_id = \? ORDER BY nc\.date ASC`).
+		WithArgs("72").
+		WillReturnRows(sqlmock.NewRows(cols))
+
+	_, err := repo.GetByProvinceIDSorted("72", utils.SortParams{Field: "date", Order: "asc"})
+
+	assert.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}

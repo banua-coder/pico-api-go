@@ -394,7 +394,8 @@ func TestCovidHandler_GetProvinceCases_SpecificProvince_Paginated(t *testing.T) 
 	}
 	expectedTotal := 50
 
-	mockService.On("GetProvinceCasesPaginatedSorted", "11", 50, 0, utils.SortParams{Field: "date", Order: "asc"}).Return(expectedCases, expectedTotal, nil)
+	mockService.On("GetProvinceByID", "11").Return(&models.Province{ID: "11", Name: "Aceh"}, nil)
+	mockService.On("GetProvinceCasesPaginatedSorted", "11", 50, 0, utils.SortParams{Field: "date", Order: "desc"}).Return(expectedCases, expectedTotal, nil)
 
 	req, err := http.NewRequest("GET", "/api/v1/provinces/11/cases", nil)
 	assert.NoError(t, err)
@@ -563,7 +564,8 @@ func TestCovidHandler_GetProvinceCases_SpecificProvince_AllData(t *testing.T) {
 		{ProvinceCase: models.ProvinceCase{ID: 1, ProvinceID: "31", Positive: 200}},
 	}
 
-	mockService.On("GetProvinceCasesSorted", "31", utils.SortParams{Field: "date", Order: "asc"}).Return(expectedCases, nil)
+	mockService.On("GetProvinceByID", "31").Return(&models.Province{ID: "31", Name: "DKI Jakarta"}, nil)
+	mockService.On("GetProvinceCasesSorted", "31", utils.SortParams{Field: "date", Order: "desc"}).Return(expectedCases, nil)
 
 	req, err := http.NewRequest("GET", "/api/v1/provinces/31/cases?all=true", nil)
 	assert.NoError(t, err)
@@ -794,4 +796,48 @@ func TestCovidHandler_GetProvinceByID_Error(t *testing.T) {
 
 	assert.Equal(t, http.StatusInternalServerError, rr.Code)
 	svc.AssertExpectations(t)
+}
+
+func serveProvinceCases(h *CovidHandler, url string) *httptest.ResponseRecorder {
+	req := httptest.NewRequest(http.MethodGet, url, nil)
+	rr := httptest.NewRecorder()
+	router := mux.NewRouter()
+	router.HandleFunc("/api/v1/provinces/{provinceId}/cases", h.GetProvinceCases)
+	router.HandleFunc("/api/v1/national", h.GetNationalCases)
+	router.ServeHTTP(rr, req)
+	return rr
+}
+
+func TestCovidHandler_GetProvinceCases_UnknownProvince404(t *testing.T) {
+	mockService := new(MockCovidService)
+	mockService.On("GetProvinceByID", "99").Return(nil, nil)
+
+	rr := serveProvinceCases(NewCovidHandler(mockService, nil), "/api/v1/provinces/99/cases?all=true")
+
+	assert.Equal(t, http.StatusNotFound, rr.Code)
+	mockService.AssertNotCalled(t, "GetProvinceCasesSorted")
+}
+
+func TestCovidHandler_GetProvinceCases_HonoursExplicitSort(t *testing.T) {
+	mockService := new(MockCovidService)
+	mockService.On("GetProvinceByID", "72").Return(&models.Province{ID: "72"}, nil)
+	mockService.On("GetProvinceCasesSorted", "72", utils.SortParams{Field: "date", Order: "asc"}).Return([]models.ProvinceCaseWithDate{}, nil)
+
+	rr := serveProvinceCases(NewCovidHandler(mockService, nil), "/api/v1/provinces/72/cases?all=true&sort=date:asc")
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	mockService.AssertExpectations(t)
+}
+
+func TestCovidHandler_InvalidDates400(t *testing.T) {
+	for _, url := range []string{
+		"/api/v1/provinces/72/cases?start_date=2021-01-01&end_date=nope",
+		"/api/v1/provinces/72/cases?start_date=2021-13-01",
+		"/api/v1/national?end_date=2021/01/01",
+	} {
+		mockService := new(MockCovidService)
+		rr := serveProvinceCases(NewCovidHandler(mockService, nil), url)
+		assert.Equal(t, http.StatusBadRequest, rr.Code, url)
+		mockService.AssertExpectations(t)
+	}
 }

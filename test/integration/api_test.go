@@ -276,7 +276,7 @@ func TestAPI_GetNationalCasesWithDateRange(t *testing.T) {
 	defer server.Close()
 
 	startDate := time.Date(2020, 3, 1, 0, 0, 0, 0, time.UTC)
-	endDate := time.Date(2020, 3, 31, 0, 0, 0, 0, time.UTC)
+	endDate := time.Date(2020, 3, 31, 23, 59, 59, 0, time.UTC)
 	expectedCases := []models.NationalCase{
 		{ID: 1, Date: startDate, Positive: 100},
 	}
