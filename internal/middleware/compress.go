@@ -172,6 +172,11 @@ func Cache(cfg config.CacheConfig) func(http.Handler) http.Handler {
 				w.Header().Set("ETag", etag)
 				w.Header().Set("Cache-Control", policy)
 				if etagMatches(r.Header.Get("If-None-Match"), etag) {
+					// Quota headers set upstream describe the 200 path; drop them on 304 so clients
+					// do not cache a stale remaining count.
+					for _, h := range []string{"X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"} {
+						w.Header().Del(h)
+					}
 					w.WriteHeader(http.StatusNotModified)
 					return
 				}
