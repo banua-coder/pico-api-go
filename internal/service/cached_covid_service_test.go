@@ -478,7 +478,7 @@ func TestCachedCovidService_GetProvinceByID(t *testing.T) {
 		c := newTestCache()
 		svc := NewCachedCovidService(mockSvc, c)
 
-		expected := &models.Province{}
+		expected := &models.Province{ID: "1"}
 		mockSvc.On("GetProvinceByID", "1").Return(expected, nil).Once()
 
 		result, err := svc.GetProvinceByID("1")
@@ -513,6 +513,23 @@ func TestCachedCovidService_GetProvinceByID_DoesNotCacheUnknown(t *testing.T) {
 	}
 	mockSvc.AssertNumberOfCalls(t, "GetProvinceByID", 3)
 	_, cached := c.Get("province:999")
+	assert.False(t, cached)
+}
+
+func TestCachedCovidService_GetProvinceByID_NonCanonicalIDsCreateNoKeys(t *testing.T) {
+	mockSvc := new(MockCovidService)
+	c := newTestCache()
+	svc := NewCachedCovidService(mockSvc, c)
+
+	for _, id := range []string{"072", "72abc", "+72", "72.0"} {
+		mockSvc.On("GetProvinceByID", id).Return(&models.Province{ID: "72", Name: "Sulawesi Tengah"}, nil)
+		p, err := svc.GetProvinceByID(id)
+		assert.NoError(t, err)
+		assert.Equal(t, "72", p.ID)
+		_, cached := c.Get("province:" + id)
+		assert.False(t, cached, id)
+	}
+	_, cached := c.Get("province:72")
 	assert.False(t, cached)
 }
 

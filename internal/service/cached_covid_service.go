@@ -202,7 +202,11 @@ func (s *cachedCovidService) GetProvinceByID(id string) (*models.Province, error
 	if err != nil || p == nil {
 		return nil, err
 	}
-	s.cache.Set(key, p, ttlDefault)
+	// The database coerces '072' or '72abc' to 72. Only cache under the canonical id, and only
+	// when the request used it, so variants cannot create extra keys.
+	if p.ID == id {
+		s.cache.Set(key, p, ttlDefault)
+	}
 	return p, nil
 }
 
