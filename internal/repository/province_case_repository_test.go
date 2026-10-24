@@ -573,3 +573,10 @@ func TestProvinceCaseRepository_GetByProvinceIDSorted_HonoursSort(t *testing.T) 
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
+
+func TestProvinceCaseRepository_buildOrderClause_StableTieBreaker(t *testing.T) {
+	r := &provinceCaseRepository{}
+	assert.Equal(t, "pc.positive DESC, p.name ASC, pc.id DESC", r.buildOrderClause(utils.SortParams{Field: "positive", Order: "desc"}))
+	assert.Equal(t, "p.name ASC, pc.id DESC", r.buildOrderClause(utils.SortParams{Field: "province_name", Order: "asc"}))
+	assert.Equal(t, "nc.date ASC, p.name ASC, pc.id DESC", r.buildOrderClause(utils.SortParams{Field: "bogus", Order: "asc"}))
+}

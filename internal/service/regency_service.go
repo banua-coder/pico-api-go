@@ -39,7 +39,7 @@ func (s *RegencyService) GetRegencyCases(regencyID int) ([]models.RegencyCase, e
 	return s.regencyCaseRepo.GetByRegencyID(regencyID)
 }
 
-// GetLatestRegencyCases returns latest case for each regency
+// GetLatestRegencyCases returns the latest case for each regency, across all provinces
 func (s *RegencyService) GetLatestRegencyCases() ([]models.RegencyCase, error) {
-	return s.regencyCaseRepo.GetLatestByProvinceID(72)
+	return s.regencyCaseRepo.GetLatest()
 }

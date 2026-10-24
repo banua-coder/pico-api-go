@@ -75,7 +75,7 @@ func Load() *Config {
 		},
 		Cache: CacheConfig{
 			MaxAge:               getEnvAsDuration("HTTP_CACHE_MAX_AGE", 5*time.Minute),
-			StaleWhileRevalidate: getEnvAsDuration("HTTP_CACHE_STALE_WHILE_REVALIDATE", time.Hour),
+			StaleWhileRevalidate: getEnvAsDuration("HTTP_CACHE_STALE_WHILE_REVALIDATE", 10*time.Minute),
 		},
 	}
 }
