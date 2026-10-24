@@ -28,7 +28,7 @@ func NewRegencyHandler(service service.RegencyServiceInterface) *RegencyHandler 
 // @Param page query int false "Page number (default: 1)"
 // @Param per_page query int false "Items per page (default: 10, max: 100)"
 // @Param load_all query bool false "Set true to return all regencies without pagination"
-// @Param include_latest_case query bool false "Set true to add a latest_case object (most recent case row, with date and rt) to each regency"
+// @Param include_latest_case query bool false "Set true to add a latest_case object (most recent non-zero case row, with date and rt) to each regency. Covers every regency that has regency_cases rows, in any province; regencies without data get null"
 // @Success 200 {object} Response{data=[]models.RegencyWithLatestCase} "Regencies with latest_case when include_latest_case=true"
 // @Failure 500 {object} Response
 // @Router /regencies [get]

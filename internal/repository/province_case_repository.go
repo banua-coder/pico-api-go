@@ -371,12 +371,14 @@ func (r *provinceCaseRepository) buildOrderClause(sortParams utils.SortParams) s
 		order = "DESC"
 	}
 
-	// Add secondary sort for consistency
+	// Secondary sort for consistency, then the primary key as a final tie-breaker so
+	// LIMIT/OFFSET pages are stable for non-unique sort keys (e.g. positive, province_id).
+	const tieBreaker = ", pc.id DESC"
 	if sortParams.Field != "province_name" {
-		return dbField + " " + order + ", p.name ASC"
+		return dbField + " " + order + ", p.name ASC" + tieBreaker
 	}
 
-	return dbField + " " + order
+	return dbField + " " + order + tieBreaker
 }
 
 // The province-scoped sorted methods honour sortParams (default callers pass date:desc).

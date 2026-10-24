@@ -11,7 +11,7 @@ import (
 // RegencyCaseRepositoryInterface defines the contract for regency case repository operations
 type RegencyCaseRepositoryInterface interface {
 	GetByRegencyID(regencyID int) ([]models.RegencyCase, error)
-	GetLatestByProvinceID(provinceID int) ([]models.RegencyCase, error)
+	GetLatest() ([]models.RegencyCase, error)
 }
 
 // RegencyCaseRepository handles database operations for regency cases
@@ -73,8 +73,15 @@ func (r *RegencyCaseRepository) GetByRegencyID(regencyID int) ([]models.RegencyC
 	return cases, rows.Err()
 }
 
-// GetLatestByProvinceID returns the latest case for each regency in a province
-func (r *RegencyCaseRepository) GetLatestByProvinceID(provinceID int) ([]models.RegencyCase, error) {
+// GetLatest returns the latest case for every regency that has data, in any province.
+func (r *RegencyCaseRepository) GetLatest() ([]models.RegencyCase, error) {
+	return r.queryLatest()
+}
+
+// queryLatest picks, per regency, the row with the highest day that has any non-zero daily count.
+// The MAX(day) is computed once per regency in a non-correlated derived table; the earlier
+// correlated subquery re-scanned regency_cases for every outer row (about 18k x 1.4k rows).
+func (r *RegencyCaseRepository) queryLatest() ([]models.RegencyCase, error) {
 	query := `SELECT rc.id, rc.day, rc.regency_id, rc.positive, rc.recovered, rc.deceased,
 		rc.cumulative_positive, rc.cumulative_recovered, rc.cumulative_deceased,
 		rc.person_under_observation, rc.finished_person_under_observation,
@@ -84,15 +91,14 @@ func (r *RegencyCaseRepository) GetLatestByProvinceID(provinceID int) ([]models.
 		rc.rt, rc.rt_upper, rc.rt_lower,
 		nc.date, reg.id, reg.name
 		FROM regency_cases rc
+		JOIN (SELECT regency_id, MAX(day) AS day FROM regency_cases
+			WHERE (positive > 0 OR recovered > 0 OR deceased > 0)
+			GROUP BY regency_id) m ON m.regency_id = rc.regency_id AND m.day = rc.day
 		JOIN national_cases nc ON rc.day = nc.id
 		JOIN regencies reg ON rc.regency_id = reg.id
-		WHERE rc.regency_id LIKE ?
-		AND rc.day = (SELECT MAX(day) FROM regency_cases WHERE regency_id = rc.regency_id
-			AND (positive > 0 OR recovered > 0 OR deceased > 0))
 		ORDER BY reg.name`
 
-	likeParam := fmt.Sprintf("%d%%", provinceID)
-	rows, err := r.db.Query(query, likeParam)
+	rows, err := r.db.Query(query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query latest regency cases: %w", err)
 	}
