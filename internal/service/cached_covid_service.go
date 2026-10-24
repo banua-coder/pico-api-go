@@ -191,15 +191,19 @@ func (s *cachedCovidService) GetProvinces() ([]models.Province, error) {
 	return v.([]models.Province), nil
 }
 
+// GetProvinceByID caches positive hits only. Unknown ids are never stored, so random ids
+// cannot fill the cache (each miss is a cheap primary-key lookup, and the API is rate limited).
 func (s *cachedCovidService) GetProvinceByID(id string) (*models.Province, error) {
 	key := fmt.Sprintf("province:%s", id)
-	v, err := s.getOrSet(key, ttlDefault, func() (interface{}, error) {
-		return s.svc.GetProvinceByID(id)
-	})
-	if err != nil {
+	if v, ok := s.cache.Get(key); ok {
+		return v.(*models.Province), nil
+	}
+	p, err := s.svc.GetProvinceByID(id)
+	if err != nil || p == nil {
 		return nil, err
 	}
-	return v.(*models.Province), nil
+	s.cache.Set(key, p, ttlDefault)
+	return p, nil
 }
 
 func (s *cachedCovidService) GetProvincesWithLatestCase() ([]models.ProvinceWithLatestCase, error) {
