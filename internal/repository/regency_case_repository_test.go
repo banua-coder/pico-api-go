@@ -22,7 +22,7 @@ var regencyCaseCols = []string{
 	"date", "reg_id", "reg_name",
 }
 
-// cols for GetLatestByProvinceID (cumulative order differs from GetByRegencyID)
+// cols for GetLatest (cumulative order differs from GetByRegencyID)
 var regencyCaseLatestCols = []string{
 	"id", "day", "regency_id", "positive", "recovered", "deceased",
 	"cumulative_positive", "cumulative_recovered", "cumulative_deceased",
@@ -118,7 +118,7 @@ func TestRegencyCaseRepository_GetLatest_AllProvinces(t *testing.T) {
 
 func TestRegencyCaseRepository_GetLatest_UsesNonCorrelatedJoin(t *testing.T) {
 	repo, mock := setupRegencyCaseRepo(t)
-	mock.ExpectQuery(`JOIN \(SELECT regency_id, MAX\(day\) AS day FROM regency_cases\s+WHERE \(positive > 0 OR recovered > 0 OR deceased > 0\)\s+GROUP BY regency_id\) m ON m.regency_id = rc.regency_id AND m.day = rc.day`).
+	mock.ExpectQuery(`(?s)JOIN \(SELECT regency_id, MAX\(day\) AS day FROM regency_cases\s+WHERE \(positive > 0 OR recovered > 0 OR deceased > 0\)\s+GROUP BY regency_id\) m ON m.regency_id = rc.regency_id AND m.day = rc.day.*ORDER BY reg\.name, reg\.id, rc\.id`).
 		WithArgs().
 		WillReturnRows(sqlmock.NewRows(regencyCaseLatestCols).AddRow(regencyCaseLatestRow(7201)...))
 	got, err := repo.GetLatest()
