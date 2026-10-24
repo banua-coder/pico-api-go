@@ -31,7 +31,7 @@ func acceptsGzip(r *http.Request) bool {
 		coding = strings.TrimSpace(coding)
 		ok := qValueOK(params)
 		switch {
-		case strings.EqualFold(coding, "gzip"):
+		case strings.EqualFold(coding, "gzip"), strings.EqualFold(coding, "x-gzip"): // x-gzip is an alias (RFC 9110 8.4.1)
 			return ok
 		case coding == "*":
 			star, starSeen = ok, true

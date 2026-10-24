@@ -19,7 +19,9 @@ func rawGet(t *testing.T, method, url string, hdr map[string]string) (*http.Resp
 	for k, v := range hdr {
 		req.Header.Set(k, v)
 	}
-	resp, err := (&http.Transport{DisableCompression: true}).RoundTrip(req)
+	tr := &http.Transport{DisableCompression: true}
+	defer tr.CloseIdleConnections()
+	resp, err := tr.RoundTrip(req)
 	require.NoError(t, err)
 	defer func() { _ = resp.Body.Close() }()
 	b, _ := io.ReadAll(resp.Body)
@@ -44,11 +46,13 @@ func TestRealServer_GzipClientConditionalGets304(t *testing.T) {
 	srv := newGzipCacheServer(strings.Repeat(`{"a":1},`, 500))
 	defer srv.Close()
 	first, _ := rawGet(t, http.MethodGet, srv.URL+"/api/v1/national", map[string]string{"Accept-Encoding": "gzip"})
+	require.Equal(t, "gzip", first.Header.Get("Content-Encoding"))
+	require.NotEmpty(t, first.Header.Get("ETag"))
 	resp, b := rawGet(t, http.MethodGet, srv.URL+"/api/v1/national",
 		map[string]string{"Accept-Encoding": "gzip", "If-None-Match": first.Header.Get("ETag")})
 	assert.Equal(t, http.StatusNotModified, resp.StatusCode)
 	assert.Empty(t, b)
-	assert.Empty(t, resp.Header.Get("Content-Encoding"))
+	assert.Equal(t, first.Header.Get("ETag"), resp.Header.Get("ETag"))
 }
 
 func TestRealServer_LargeBodyRoundTrips(t *testing.T) {
@@ -68,7 +72,7 @@ func TestRealServer_AcceptEncodingQValues(t *testing.T) {
 	srv := newGzipCacheServer(strings.Repeat(`{"a":1},`, 500))
 	defer srv.Close()
 	for in, want := range map[string]string{
-		"GZIP": "gzip", "*": "gzip", "gzip;q=0.5": "gzip",
+		"GZIP": "gzip", "x-gzip": "gzip", "X-Gzip;q=0": "", "*": "gzip", "gzip;q=0.5": "gzip",
 		"gzip;q=0": "", "gzip;q=0.000": "", "*;q=0": "",
 	} {
 		resp, _ := rawGet(t, http.MethodGet, srv.URL+"/api/v1/national", map[string]string{"Accept-Encoding": in})

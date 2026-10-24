@@ -208,6 +208,10 @@ func (h *CovidHandler) GetProvinces(w http.ResponseWriter, r *http.Request) {
 func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	provinceID := vars["provinceId"]
+	if !canonicalProvinceCode(provinceID) {
+		writeErrorResponse(w, http.StatusNotFound, "Province with ID "+provinceID+" not found")
+		return
+	}
 
 	// Parse query parameters
 	limit := utils.ParseIntQueryParam(r, "limit", 50)
@@ -461,6 +465,10 @@ func (h *CovidHandler) GetNationalCaseByDay(w http.ResponseWriter, r *http.Reque
 func (h *CovidHandler) GetProvinceByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	code := vars["code"]
+	if !canonicalProvinceCode(code) {
+		writeErrorResponse(w, http.StatusNotFound, "Provinsi dengan kode "+code+" tidak ditemukan")
+		return
+	}
 
 	province, err := h.covidService.GetProvinceByID(code)
 	if err != nil {
@@ -652,4 +660,16 @@ func validateDateParams(w http.ResponseWriter, startDate, endDate string) bool {
 		}
 	}
 	return true
+}
+
+// canonicalProvinceCode reports whether code is a plain positive integer without sign,
+// leading zeros or trailing text. The database coerces '072' or '72abc' to 72, so such
+// variants would otherwise be distinct cache keys for the same province. An empty code
+// (the all-provinces route) is allowed.
+func canonicalProvinceCode(code string) bool {
+	if code == "" {
+		return true
+	}
+	n, err := strconv.Atoi(code)
+	return err == nil && n > 0 && strconv.Itoa(n) == code
 }

@@ -185,7 +185,8 @@ func TestAcceptsGzip(t *testing.T) {
 		"gzip;q=0, *":      false, // explicit gzip beats wildcard
 		"identity":         false,
 		"deflate":          false,
-		"x-gzip":           false,
+		"x-gzip":           true,
+		"X-GZIP;q=0":       false,
 		"gzip;level=1;q=0": false,
 	}
 	for in, want := range cases {
