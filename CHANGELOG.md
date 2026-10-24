@@ -1,4 +1,124 @@
 # Changelog
+## [2.12.0] - 2026-10-24
+
+### ✨ Features
+
+-  restructure gender stats response for better readability (#67) (ab2968f)
+-  restructure vaccination response payload for better readability (6eb9b35)
+-  add vaccination coverage percentage to response (af6133d)
+- feat(cache): add in-memory caching layer with TTL and admin invalidation (dd0dba8)
+- feat(cache): add Redis-backed dual-layer cache support (d79cd9b)
+- feat(api): add content endpoints for banners, infographics, donations, telemedicine, partners and contacts (918ffd9)
+- feat(api): add gzip compression and cache headers (53a518c)
+- feat(api): add include_latest_case to GET /regencies (99a65a9)
+- feat(regencies): include_latest_case joins latest cases for all provinces (b3a8d4a)
+
+### 🐛 Bug Fixes
+
+-  use WORKFLOW_TOKEN for gh CLI calls in release-branch-creation workflow (f8d618e)
+-  use WORKFLOW_PAT org secret instead of WORKFLOW_TOKEN (d6d932c)
+-  remove /api/v1 prefix from @Router annotations (d6ba522)
+-  remove /api/v1 prefix from @Router annotations (fdac8c4)
+-  remove /api/v1 prefix from @Router annotations (9e1d85e)
+-  remove /api/v1 prefix from @Router annotations (d56aeba)
+-  remove /api/v1 prefix from @Router annotations (a2e3f46)
+-  remove /api/v1 prefix from @Router annotations (208a4c7)
+-  accept both v-prefixed and plain semver tags in deploy trigger (684e843)
+-  use WORKFLOW_TOKEN for gh CLI calls in release-branch-creation workflow (662fd4c)
+-  rewrite vaccination DTO tests to match actual struct fields (e67b84b)
+-  remove duplicate bump-develop-version job (handled by reusable workflow) (a50d92f)
+-  remove duplicate release-branch-creation workflow (fully handled by reusable workflow) (a4ba4d7)
+-  resolve errcheck linter errors in cached service tests (92aebd4)
+- fix(docker): bump alpine runtime base to clear libcrypto3 CVE-2026-31789 (5dae362)
+- fix(api): address review findings for content endpoints (09283b0)
+- fix(api): honour province sort, inclusive end_date, 400/404 validation (898a2ff)
+- fix(service): cache province lookup positive hits only (036f871)
+- fix(middleware): parse Accept-Encoding q-values per RFC 9110 (41fb432)
+- fix(repository): add pc.id tie-breaker to province case ordering (9ffc886)
+- fix(config): default stale-while-revalidate to 10m (4289b2d)
+- fix(provinces): reject non-canonical province codes and cache by canonical id (1b3c0c4)
+- fix(middleware): treat x-gzip as gzip; tighten real-server tests; document province codes and HEAD (fe293cf)
+- fix(regencies): deterministic latest-regency ordering; document province code 404s (fb190f9)
+
+### ⚡ Performance
+
+- perf(regencies): non-correlated join for latest regency cases; drop unused GetLatestByProvinceID (987b2a9)
+
+### 📚 Documentation
+
+-  update changelog for v2.6.0 (ebde3af)
+-  regenerate swagger with fixed paths (no double /api/v1) (a659834)
+-  regenerate swagger with fixed paths (no double /api/v1) (9b4bcee)
+-  regenerate swagger with fixed paths (no double /api/v1) (30d9fd5)
+-  update changelog for 2.6.1 (cf610ca)
+-  update changelog for 2.7.0 (67f765f)
+-  update changelog for 2.8.0 (0c459a7)
+-  update changelog for 2.9.0 (28e09d4)
+-  update changelog for 2.10.0 (c6f0532)
+-  update changelog for 2.10.0 (36db081)
+-  update changelog for 2.11.0 (cb01da6)
+-  document review follow-ups and include_latest_case coverage (401c0a1)
+
+### 🧪 Tests
+
+-  add unit tests for cached services and admin handler (39f1559)
+- test(middleware): real-server HEAD, gzip 304, 1MiB, q-value cases; drop X-RateLimit-* on 304 (f26e37b)
+
+### 🔧 Chores
+
+-  bump version to v2.7.0 for next development cycle (6356336)
+-  bump version to 2.6.1 (520cf6d)
+-  bump version to v2.7.0 for next development cycle (be91838)
+-  prepare v2.7.0 release (5fc39d9)
+-  bump version to 2.8.0 for next development cycle (3927c36)
+-  bump version to 2.9.0 for next development cycle (7be7194)
+-  bump version to 2.9.0 (b95125a)
+-  back-merge 2.8.0 to develop (4c6cd59)
+-  bump version to 2.10.0 for next development cycle (ab305e4)
+-  bump version to 2.11.0 for next development cycle (9be35d0)
+-  bump version to 2.11.0 (773cd55)
+-  bump version to 2.12.0 for next development cycle (356d50e)
+-  bump version to 2.12.0 (983aa72)
+
+### 📝 Other Changes
+
+- Merge pull request #62 from banua-coder/fix/release-workflow-token (b70fa3c)
+- Merge pull request #60 from banua-coder/chore/bump-next-version (8ac5cd0)
+- Merge branch 'develop' into chore/back-merge-v2.6.0 (c8c5136)
+- Merge pull request #63 from banua-coder/chore/back-merge-v2.6.0 (7c96678)
+- Merge pull request #64 from banua-coder/hotfix/2.6.1 (e4adcd0)
+- Merge pull request #65 from banua-coder/chore/back-merge-2.6.1 (4e29a65)
+- Merge pull request #66 from banua-coder/feature/vaccination-response-restructure (934ac0c)
+- Merge pull request #69 from banua-coder/feature/vaccination-coverage-v2 (d5bf33d)
+- Merge pull request #72 from banua-coder/chore/prepare-release-v2.7.0 (e3c764d)
+- Merge pull request #74 from banua-coder/chore/bump-version-to-v2.8.0-dev (9d67911)
+- Merge pull request #70 from banua-coder/release/2.7.0 (802e888)
+- Merge branch 'develop' into chore/back-merge-2.7.0 (213c3ad)
+- Merge pull request #77 from banua-coder/chore/back-merge-2.7.0 (3509785)
+- Merge branch 'develop' into feat/in-memory-cache (a805d9c)
+- Merge pull request #78 from banua-coder/feat/in-memory-cache (8b547c2)
+- release: 2.8.0 (448e788)
+- Merge branch 'develop' into chore/back-merge-2.8.0 (760eea6)
+- Merge pull request #83 from banua-coder/fix/bump-alpine-base-cve (0959686)
+- Merge pull request #84 from banua-coder/release/2.9.0 (9733db4)
+- Merge pull request #86 from banua-coder/chore/back-merge-2.9.0 (2d57a71)
+- Merge pull request #85 from banua-coder/chore/bump-version-to-2.10.0-dev (3380d5c)
+- Merge pull request #87 from banua-coder/feature/content-endpoints (c8ddfee)
+- Merge pull request #88 from banua-coder/release/2.10.0 (7dc3e18)
+- Merge pull request #91 from banua-coder/feature/api-performance (03a57a0)
+- Merge pull request #90 from banua-coder/chore/back-merge-2.10.0 (5aac4b0)
+- Merge pull request #89 from banua-coder/chore/bump-version-to-2.11.0-dev (e1b0af6)
+- Merge pull request #92 from banua-coder/release/2.11.0 (018bd47)
+- Merge pull request #95 from banua-coder/fix/api-review-followups (2ec76a5)
+- Merge pull request #96 from banua-coder/fix/api-review-followups-2 (ad4a733)
+- Merge branch 'develop' into chore/back-merge-2.11.0 (0e906c3)
+- Merge branch 'develop' into chore/bump-version-to-2.12.0-dev (695bf0d)
+- Merge pull request #94 from banua-coder/chore/back-merge-2.11.0 (4028038)
+- Merge develop into chore/bump-version-to-2.12.0-dev (95823c2)
+- Merge pull request #93 from banua-coder/chore/bump-version-to-2.12.0-dev (94c4fc3)
+- Merge pull request #97 from banua-coder/chore/review-nits-2.12 (ec58586)
+- Merge pull request #98 from banua-coder/release/2.12.0 (c07292e)
+
 ## [2.11.0] - 2026-10-24
 
 ### ✨ Features
