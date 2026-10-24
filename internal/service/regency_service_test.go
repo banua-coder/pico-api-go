@@ -43,11 +43,6 @@ func (m *MockRegencyCaseRepository) GetByRegencyID(regencyID int) ([]models.Rege
 	return args.Get(0).([]models.RegencyCase), args.Error(1)
 }
 
-func (m *MockRegencyCaseRepository) GetLatestByProvinceID(provinceID int) ([]models.RegencyCase, error) {
-	args := m.Called(provinceID)
-	return args.Get(0).([]models.RegencyCase), args.Error(1)
-}
-
 func (m *MockRegencyCaseRepository) GetLatest() ([]models.RegencyCase, error) {
 	args := m.Called()
 	return args.Get(0).([]models.RegencyCase), args.Error(1)
