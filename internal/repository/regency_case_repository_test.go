@@ -126,3 +126,19 @@ func TestRegencyCaseRepository_GetLatestByProvinceID_Error(t *testing.T) {
 	_, err := repo.GetLatestByProvinceID(72)
 	assert.Error(t, err)
 }
+
+func TestRegencyCaseRepository_GetLatest_AllProvinces(t *testing.T) {
+	repo, mock := setupRegencyCaseRepo(t)
+
+	// No province filter and no args: regencies from several provinces come back.
+	mock.ExpectQuery(`SELECT rc.id[\s\S]*WHERE rc.day = \(SELECT MAX`).
+		WithArgs().
+		WillReturnRows(sqlmock.NewRows(regencyCaseLatestCols).
+			AddRow(regencyCaseLatestRow(7201)...).
+			AddRow(regencyCaseLatestRow(1101)...))
+
+	result, err := repo.GetLatest()
+	assert.NoError(t, err)
+	assert.Len(t, result, 2)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}

@@ -12,6 +12,7 @@ import (
 type RegencyCaseRepositoryInterface interface {
 	GetByRegencyID(regencyID int) ([]models.RegencyCase, error)
 	GetLatestByProvinceID(provinceID int) ([]models.RegencyCase, error)
+	GetLatest() ([]models.RegencyCase, error)
 }
 
 // RegencyCaseRepository handles database operations for regency cases
@@ -75,6 +76,15 @@ func (r *RegencyCaseRepository) GetByRegencyID(regencyID int) ([]models.RegencyC
 
 // GetLatestByProvinceID returns the latest case for each regency in a province
 func (r *RegencyCaseRepository) GetLatestByProvinceID(provinceID int) ([]models.RegencyCase, error) {
+	return r.queryLatest("WHERE rc.regency_id LIKE ? AND", fmt.Sprintf("%d%%", provinceID))
+}
+
+// GetLatest returns the latest case for every regency that has data, in any province.
+func (r *RegencyCaseRepository) GetLatest() ([]models.RegencyCase, error) {
+	return r.queryLatest("WHERE")
+}
+
+func (r *RegencyCaseRepository) queryLatest(where string, args ...interface{}) ([]models.RegencyCase, error) {
 	query := `SELECT rc.id, rc.day, rc.regency_id, rc.positive, rc.recovered, rc.deceased,
 		rc.cumulative_positive, rc.cumulative_recovered, rc.cumulative_deceased,
 		rc.person_under_observation, rc.finished_person_under_observation,
@@ -86,13 +96,11 @@ func (r *RegencyCaseRepository) GetLatestByProvinceID(provinceID int) ([]models.
 		FROM regency_cases rc
 		JOIN national_cases nc ON rc.day = nc.id
 		JOIN regencies reg ON rc.regency_id = reg.id
-		WHERE rc.regency_id LIKE ?
-		AND rc.day = (SELECT MAX(day) FROM regency_cases WHERE regency_id = rc.regency_id
+		` + where + ` rc.day = (SELECT MAX(day) FROM regency_cases WHERE regency_id = rc.regency_id
 			AND (positive > 0 OR recovered > 0 OR deceased > 0))
 		ORDER BY reg.name`
 
-	likeParam := fmt.Sprintf("%d%%", provinceID)
-	rows, err := r.db.Query(query, likeParam)
+	rows, err := r.db.Query(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query latest regency cases: %w", err)
 	}

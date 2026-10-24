@@ -48,6 +48,11 @@ func (m *MockRegencyCaseRepository) GetLatestByProvinceID(provinceID int) ([]mod
 	return args.Get(0).([]models.RegencyCase), args.Error(1)
 }
 
+func (m *MockRegencyCaseRepository) GetLatest() ([]models.RegencyCase, error) {
+	args := m.Called()
+	return args.Get(0).([]models.RegencyCase), args.Error(1)
+}
+
 func setupRegencyService() (*MockRegencyRepository, *MockRegencyCaseRepository, *RegencyService) {
 	mockRepo := new(MockRegencyRepository)
 	mockCaseRepo := new(MockRegencyCaseRepository)
@@ -154,7 +159,7 @@ func TestRegencyService_GetLatestRegencyCases(t *testing.T) {
 		{ID: 1, RegencyID: 7201, Positive: 10},
 		{ID: 2, RegencyID: 7202, Positive: 5},
 	}
-	mockCaseRepo.On("GetLatestByProvinceID", 72).Return(expected, nil)
+	mockCaseRepo.On("GetLatest").Return(expected, nil)
 
 	result, err := svc.GetLatestRegencyCases()
 
@@ -166,7 +171,7 @@ func TestRegencyService_GetLatestRegencyCases(t *testing.T) {
 func TestRegencyService_GetLatestRegencyCases_Error(t *testing.T) {
 	_, mockCaseRepo, svc := setupRegencyService()
 
-	mockCaseRepo.On("GetLatestByProvinceID", 72).Return([]models.RegencyCase{}, errors.New("db error"))
+	mockCaseRepo.On("GetLatest").Return([]models.RegencyCase{}, errors.New("db error"))
 
 	result, err := svc.GetLatestRegencyCases()
 
