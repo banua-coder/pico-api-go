@@ -379,23 +379,52 @@ func (r *provinceCaseRepository) buildOrderClause(sortParams utils.SortParams) s
 	return dbField + " " + order
 }
 
-// Stub implementations for other sorted methods - delegate to existing methods for now
+// The province-scoped sorted methods honour sortParams (default callers pass date:desc).
 func (r *provinceCaseRepository) GetByProvinceIDSorted(provinceID string, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, error) {
-	return r.GetByProvinceID(provinceID)
+	query := provinceCaseSelect + `WHERE pc.province_id = ?
+			  ORDER BY ` + r.buildOrderClause(sortParams)
+	return r.queryProvinceCases(query, provinceID)
 }
 
 func (r *provinceCaseRepository) GetByProvinceIDPaginatedSorted(provinceID string, limit, offset int, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, int, error) {
-	return r.GetByProvinceIDPaginated(provinceID, limit, offset)
+	var total int
+	if err := r.db.QueryRow(`SELECT COUNT(*) FROM province_cases pc
+				   JOIN national_cases nc ON pc.day = nc.id
+				   WHERE pc.province_id = ?`, provinceID).Scan(&total); err != nil {
+		return nil, 0, fmt.Errorf("failed to count province cases for province %s: %w", provinceID, err)
+	}
+	query := provinceCaseSelect + `WHERE pc.province_id = ?
+			  ORDER BY ` + r.buildOrderClause(sortParams) + ` LIMIT ? OFFSET ?`
+	cases, err := r.queryProvinceCases(query, provinceID, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+	return cases, total, nil
 }
 
 func (r *provinceCaseRepository) GetByProvinceIDAndDateRangeSorted(provinceID string, startDate, endDate time.Time, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, error) {
-	return r.GetByProvinceIDAndDateRange(provinceID, startDate, endDate)
+	query := provinceCaseSelect + `WHERE pc.province_id = ? AND nc.date BETWEEN ? AND ?
+			  ORDER BY ` + r.buildOrderClause(sortParams)
+	return r.queryProvinceCases(query, provinceID, startDate, endDate)
 }
 
 func (r *provinceCaseRepository) GetByProvinceIDAndDateRangePaginatedSorted(provinceID string, startDate, endDate time.Time, limit, offset int, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, int, error) {
-	return r.GetByProvinceIDAndDateRangePaginated(provinceID, startDate, endDate, limit, offset)
+	var total int
+	if err := r.db.QueryRow(`SELECT COUNT(*) FROM province_cases pc
+				   JOIN national_cases nc ON pc.day = nc.id
+				   WHERE pc.province_id = ? AND nc.date BETWEEN ? AND ?`, provinceID, startDate, endDate).Scan(&total); err != nil {
+		return nil, 0, fmt.Errorf("failed to count province cases for province %s in date range: %w", provinceID, err)
+	}
+	query := provinceCaseSelect + `WHERE pc.province_id = ? AND nc.date BETWEEN ? AND ?
+			  ORDER BY ` + r.buildOrderClause(sortParams) + ` LIMIT ? OFFSET ?`
+	cases, err := r.queryProvinceCases(query, provinceID, startDate, endDate, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+	return cases, total, nil
 }
 
+// Stub implementations for the all-province date-range sorted methods - delegate to existing methods for now
 func (r *provinceCaseRepository) GetByDateRangeSorted(startDate, endDate time.Time, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, error) {
 	return r.GetByDateRange(startDate, endDate)
 }
@@ -403,3 +432,15 @@ func (r *provinceCaseRepository) GetByDateRangeSorted(startDate, endDate time.Ti
 func (r *provinceCaseRepository) GetByDateRangePaginatedSorted(startDate, endDate time.Time, limit, offset int, sortParams utils.SortParams) ([]models.ProvinceCaseWithDate, int, error) {
 	return r.GetByDateRangePaginated(startDate, endDate, limit, offset)
 }
+
+const provinceCaseSelect = `SELECT pc.id, pc.day, pc.province_id, pc.positive, pc.recovered, pc.deceased,
+			  pc.person_under_observation, pc.finished_person_under_observation,
+			  pc.person_under_supervision, pc.finished_person_under_supervision,
+			  pc.cumulative_positive, pc.cumulative_recovered, pc.cumulative_deceased,
+			  pc.cumulative_person_under_observation, pc.cumulative_finished_person_under_observation,
+			  pc.cumulative_person_under_supervision, pc.cumulative_finished_person_under_supervision,
+			  pc.rt, pc.rt_upper, pc.rt_lower, nc.date, p.name
+			  FROM province_cases pc
+			  JOIN national_cases nc ON pc.day = nc.id
+			  LEFT JOIN provinces p ON pc.province_id = p.id
+			  `

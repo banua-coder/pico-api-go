@@ -37,11 +37,11 @@ func NewCovidHandler(covidService service.CovidService, db *database.DB) *CovidH
 // @Param page query integer false "Page number (1-based, alternative to offset)"
 // @Param all query boolean false "Return all data without pagination"
 // @Param start_date query string false "Start date (YYYY-MM-DD)"
-// @Param end_date query string false "End date (YYYY-MM-DD)"
+// @Param end_date query string false "End date (YYYY-MM-DD), inclusive of the whole day"
 // @Param sort query string false "Sort by field:order (e.g., date:desc, positive:asc). Default: date:asc"
 // @Success 200 {object} Response{data=models.PaginatedResponse{data=[]models.NationalCaseResponse}} "Paginated response"
 // @Success 200 {object} Response{data=[]models.NationalCaseResponse} "All data response when all=true"
-// @Failure 400 {object} Response
+// @Failure 400 {object} Response "Invalid start_date or end_date (expected YYYY-MM-DD)"
 // @Failure 429 {object} Response "Rate limit exceeded"
 // @Failure 500 {object} Response
 // @Header 200 {string} X-RateLimit-Limit "Request limit per window"
@@ -56,6 +56,9 @@ func (h *CovidHandler) GetNationalCases(w http.ResponseWriter, r *http.Request) 
 	all := utils.ParseBoolQueryParam(r, "all")
 	startDate := r.URL.Query().Get("start_date")
 	endDate := r.URL.Query().Get("end_date")
+	if !validateDateParams(w, startDate, endDate) {
+		return
+	}
 
 	// Parse sort parameters (default: date ascending)
 	sortParams := utils.ParseSortParam(r, "date")
@@ -193,11 +196,12 @@ func (h *CovidHandler) GetProvinces(w http.ResponseWriter, r *http.Request) {
 // @Param page query integer false "Page number (1-based, alternative to offset)"
 // @Param all query boolean false "Return all data without pagination"
 // @Param start_date query string false "Start date (YYYY-MM-DD)"
-// @Param end_date query string false "End date (YYYY-MM-DD)"
-// @Param sort query string false "Sort by field:order (e.g., date:desc, positive:asc). Default: date:asc"
+// @Param end_date query string false "End date (YYYY-MM-DD), inclusive of the whole day"
+// @Param sort query string false "Sort by field:order (e.g., date:desc, positive:asc). Default: date:asc for all provinces, date:desc for a single province"
 // @Success 200 {object} Response{data=models.PaginatedResponse{data=[]models.ProvinceCaseResponse}} "Paginated response"
 // @Success 200 {object} Response{data=[]models.ProvinceCaseResponse} "All data response when all=true"
-// @Failure 400 {object} Response
+// @Failure 400 {object} Response "Invalid start_date or end_date (expected YYYY-MM-DD)"
+// @Failure 404 {object} Response "Unknown province"
 // @Failure 500 {object} Response
 // @Router /provinces/cases [get]
 // @Router /provinces/{provinceId}/cases [get]
@@ -212,9 +216,16 @@ func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) 
 	all := utils.ParseBoolQueryParam(r, "all")
 	startDate := r.URL.Query().Get("start_date")
 	endDate := r.URL.Query().Get("end_date")
+	if !validateDateParams(w, startDate, endDate) {
+		return
+	}
 
 	// Parse sort parameters (default: date ascending)
 	sortParams := utils.ParseSortParam(r, "date")
+	if provinceID != "" && r.URL.Query().Get("sort") == "" {
+		// Province series have always been served newest first; keep that unless sort is given.
+		sortParams.Order = "desc"
+	}
 
 	// Convert page to offset if page is specified (page-based pagination)
 	if page > 0 {
@@ -223,6 +234,18 @@ func (h *CovidHandler) GetProvinceCases(w http.ResponseWriter, r *http.Request) 
 
 	// Validate pagination params
 	limit, offset = utils.ValidatePaginationParams(limit, offset)
+
+	if provinceID != "" {
+		province, err := h.covidService.GetProvinceByID(provinceID)
+		if err != nil {
+			writeErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		if province == nil {
+			writeErrorResponse(w, http.StatusNotFound, "Province with ID "+provinceID+" not found")
+			return
+		}
+	}
 
 	if provinceID == "" {
 		// Handle all provinces cases
@@ -350,7 +373,7 @@ func (h *CovidHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	health := map[string]interface{}{
 		"status":    "healthy",
 		"service":   "COVID-19 API",
-		"version": "2.10.0",
+		"version": "2.11.0",
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
 	}
 
@@ -459,7 +482,7 @@ func (h *CovidHandler) GetAPIIndex(w http.ResponseWriter, r *http.Request) {
 	endpoints := map[string]interface{}{
 		"api": map[string]interface{}{
 			"title":       "Sulawesi Tengah COVID-19 Data API",
-			"version": "2.10.0",
+			"version": "2.11.0",
 			"description": "A comprehensive REST API for COVID-19 data in Sulawesi Tengah (Central Sulawesi)",
 		},
 		"documentation": map[string]interface{}{
@@ -603,16 +626,30 @@ func (h *CovidHandler) GetAPIIndex(w http.ResponseWriter, r *http.Request) {
 			"Gender and test type statistics",
 		},
 		"examples": map[string]interface{}{
-			"sulawesi_tengah_cases":   "/api/v1/provinces/72/cases",
-			"paginated_data":          "/api/v1/provinces/cases?limit=100&offset=50",
-			"date_range":              "/api/v1/national?start_date=2024-01-01&end_date=2024-12-31",
-			"complete_dataset":        "/api/v1/provinces/cases?all=true",
-			"regency_cases":           "/api/v1/regencies/7201/cases",
-			"hospital_list":           "/api/v1/hospitals",
-			"vaccination_province":    "/api/v1/vaccination/province?province_id=72",
-			"gender_stats":            "/api/v1/stats/gender",
+			"sulawesi_tengah_cases": "/api/v1/provinces/72/cases",
+			"paginated_data":        "/api/v1/provinces/cases?limit=100&offset=50",
+			"date_range":            "/api/v1/national?start_date=2024-01-01&end_date=2024-12-31",
+			"complete_dataset":      "/api/v1/provinces/cases?all=true",
+			"regency_cases":         "/api/v1/regencies/7201/cases",
+			"hospital_list":         "/api/v1/hospitals",
+			"vaccination_province":  "/api/v1/vaccination/province?province_id=72",
+			"gender_stats":          "/api/v1/stats/gender",
 		},
 	}
 
 	writeSuccessResponse(w, endpoints)
+}
+
+// validateDateParams writes a 400 and returns false when a non-empty date is not YYYY-MM-DD.
+func validateDateParams(w http.ResponseWriter, startDate, endDate string) bool {
+	for name, v := range map[string]string{"start_date": startDate, "end_date": endDate} {
+		if v == "" {
+			continue
+		}
+		if _, err := time.Parse("2006-01-02", v); err != nil {
+			writeErrorResponse(w, http.StatusBadRequest, "Invalid "+name+": expected format YYYY-MM-DD")
+			return false
+		}
+	}
+	return true
 }

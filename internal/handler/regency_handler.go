@@ -4,7 +4,9 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/banua-coder/pico-api-go/internal/models"
 	"github.com/banua-coder/pico-api-go/internal/service"
+	"github.com/banua-coder/pico-api-go/pkg/utils"
 	"github.com/gorilla/mux"
 )
 
@@ -26,16 +28,22 @@ func NewRegencyHandler(service service.RegencyServiceInterface) *RegencyHandler 
 // @Param page query int false "Page number (default: 1)"
 // @Param per_page query int false "Items per page (default: 10, max: 100)"
 // @Param load_all query bool false "Set true to return all regencies without pagination"
-// @Success 200 {object} Response
+// @Param include_latest_case query bool false "Set true to add a latest_case object (most recent case row, with date and rt) to each regency"
+// @Success 200 {object} Response{data=[]models.RegencyWithLatestCase} "Regencies with latest_case when include_latest_case=true"
 // @Failure 500 {object} Response
 // @Router /regencies [get]
 func (h *RegencyHandler) GetRegencies(w http.ResponseWriter, r *http.Request) {
 	p := parsePaginationParams(r)
+	withLatest := utils.ParseBoolQueryParam(r, "include_latest_case")
 
 	if p.LoadAll {
 		regencies, err := h.service.GetRegencies()
 		if err != nil {
 			writeErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		if withLatest {
+			h.writeWithLatest(w, regencies, nil)
 			return
 		}
 		writeSuccessResponse(w, regencies)
@@ -47,7 +55,37 @@ func (h *RegencyHandler) GetRegencies(w http.ResponseWriter, r *http.Request) {
 		writeErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	if withLatest {
+		meta := buildPaginationMeta(p, total)
+		h.writeWithLatest(w, regencies, &meta)
+		return
+	}
 	writePaginatedResponse(w, regencies, buildPaginationMeta(p, total))
+}
+
+// writeWithLatest attaches each regency's latest case (cached in the service) and writes the response.
+// A nil meta means an unpaginated list.
+func (h *RegencyHandler) writeWithLatest(w http.ResponseWriter, regencies []models.Regency, meta *PaginationMeta) {
+	latest, err := h.service.GetLatestRegencyCases()
+	if err != nil {
+		writeErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	byRegency := make(map[int]*models.RegencyCase, len(latest))
+	for i := range latest {
+		c := latest[i]
+		c.Regency = nil // already represented by the parent object
+		byRegency[c.RegencyID] = &c
+	}
+	out := make([]models.RegencyWithLatestCase, len(regencies))
+	for i, reg := range regencies {
+		out[i] = models.RegencyWithLatestCase{Regency: reg, LatestCase: byRegency[reg.ID]}
+	}
+	if meta == nil {
+		writeSuccessResponse(w, out)
+		return
+	}
+	writePaginatedResponse(w, out, *meta)
 }
 
 // GetRegencyByID godoc

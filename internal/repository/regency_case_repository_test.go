@@ -22,7 +22,7 @@ var regencyCaseCols = []string{
 	"date", "reg_id", "reg_name",
 }
 
-// cols for GetLatestByProvinceID (20 cols: cumulative order differs, no rt fields)
+// cols for GetLatestByProvinceID (cumulative order differs from GetByRegencyID)
 var regencyCaseLatestCols = []string{
 	"id", "day", "regency_id", "positive", "recovered", "deceased",
 	"cumulative_positive", "cumulative_recovered", "cumulative_deceased",
@@ -30,6 +30,7 @@ var regencyCaseLatestCols = []string{
 	"person_under_supervision", "finished_person_under_supervision",
 	"cumulative_person_under_observation", "cumulative_finished_person_under_observation",
 	"cumulative_person_under_supervision", "cumulative_finished_person_under_supervision",
+	"rt", "rt_upper", "rt_lower",
 	"date", "reg_id", "reg_name",
 }
 
@@ -52,6 +53,7 @@ func regencyCaseLatestRow(regencyID int) []driver.Value {
 		int64(100), int64(80), int64(10),
 		int64(0), int64(0), int64(0), int64(0),
 		int64(0), int64(0), int64(0), int64(0),
+		1.2, 1.5, 0.9,
 		now, regencyID, "Kabupaten Test",
 	}
 }
@@ -108,6 +110,9 @@ func TestRegencyCaseRepository_GetLatestByProvinceID(t *testing.T) {
 	result, err := repo.GetLatestByProvinceID(72)
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
+	if assert.NotNil(t, result[0].Rt) {
+		assert.Equal(t, 1.2, *result[0].Rt)
+	}
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 

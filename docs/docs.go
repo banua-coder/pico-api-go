@@ -498,7 +498,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "End date (YYYY-MM-DD)",
+                        "description": "End date (YYYY-MM-DD), inclusive of the whole day",
                         "name": "end_date",
                         "in": "query"
                     },
@@ -542,7 +542,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid start_date or end_date (expected YYYY-MM-DD)",
                         "schema": {
                             "$ref": "#/definitions/handler.Response"
                         }
@@ -811,13 +811,13 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "End date (YYYY-MM-DD)",
+                        "description": "End date (YYYY-MM-DD), inclusive of the whole day",
                         "name": "end_date",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "Sort by field:order (e.g., date:desc, positive:asc). Default: date:asc",
+                        "description": "Sort by field:order (e.g., date:desc, positive:asc). Default: date:asc for all provinces, date:desc for a single province",
                         "name": "sort",
                         "in": "query"
                     }
@@ -845,7 +845,13 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid start_date or end_date (expected YYYY-MM-DD)",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Unknown province",
                         "schema": {
                             "$ref": "#/definitions/handler.Response"
                         }
@@ -945,13 +951,13 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "End date (YYYY-MM-DD)",
+                        "description": "End date (YYYY-MM-DD), inclusive of the whole day",
                         "name": "end_date",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "Sort by field:order (e.g., date:desc, positive:asc). Default: date:asc",
+                        "description": "Sort by field:order (e.g., date:desc, positive:asc). Default: date:asc for all provinces, date:desc for a single province",
                         "name": "sort",
                         "in": "query"
                     }
@@ -979,7 +985,13 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid start_date or end_date (expected YYYY-MM-DD)",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Unknown province",
                         "schema": {
                             "$ref": "#/definitions/handler.Response"
                         }
@@ -1021,13 +1033,34 @@ const docTemplate = `{
                         "description": "Set true to return all regencies without pagination",
                         "name": "load_all",
                         "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Set true to add a latest_case object (most recent case row, with date and rt) to each regency",
+                        "name": "include_latest_case",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Regencies with latest_case when include_latest_case=true",
                         "schema": {
-                            "$ref": "#/definitions/handler.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/handler.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/models.RegencyWithLatestCase"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "500": {
@@ -1910,6 +1943,120 @@ const docTemplate = `{
                     "$ref": "#/definitions/models.ProvinceCaseResponse"
                 },
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Regency": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "province_id": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.RegencyCase": {
+            "type": "object",
+            "properties": {
+                "cumulative_deceased": {
+                    "type": "integer"
+                },
+                "cumulative_finished_person_under_observation": {
+                    "type": "integer"
+                },
+                "cumulative_finished_person_under_supervision": {
+                    "type": "integer"
+                },
+                "cumulative_person_under_observation": {
+                    "type": "number"
+                },
+                "cumulative_person_under_supervision": {
+                    "type": "number"
+                },
+                "cumulative_positive": {
+                    "type": "integer"
+                },
+                "cumulative_recovered": {
+                    "type": "integer"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "day": {
+                    "type": "integer"
+                },
+                "deceased": {
+                    "type": "integer"
+                },
+                "finished_person_under_observation": {
+                    "type": "integer"
+                },
+                "finished_person_under_supervision": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "person_under_observation": {
+                    "type": "number"
+                },
+                "person_under_supervision": {
+                    "type": "number"
+                },
+                "positive": {
+                    "type": "integer"
+                },
+                "recovered": {
+                    "type": "integer"
+                },
+                "regency": {
+                    "$ref": "#/definitions/models.Regency"
+                },
+                "regency_id": {
+                    "type": "integer"
+                },
+                "rt": {
+                    "type": "number"
+                },
+                "rt_lower": {
+                    "type": "number"
+                },
+                "rt_upper": {
+                    "type": "number"
+                }
+            }
+        },
+        "models.RegencyWithLatestCase": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "latest_case": {
+                    "$ref": "#/definitions/models.RegencyCase"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "province_id": {
+                    "type": "integer"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }

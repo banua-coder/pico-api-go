@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -167,4 +168,61 @@ func TestGetRegencyCases_NotFound(t *testing.T) {
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
 	svc.AssertExpectations(t)
+}
+
+func TestGetRegencies_IncludeLatestCase(t *testing.T) {
+	svc := new(MockRegencyService)
+	rt := 0.8
+	svc.On("GetRegencies").Return([]models.Regency{{ID: 7201, Name: "Banggai"}, {ID: 7202, Name: "Poso"}}, nil)
+	svc.On("GetLatestRegencyCases").Return([]models.RegencyCase{
+		{RegencyID: 7201, Positive: 3, CumulativePositive: 90, Rt: &rt, Regency: &models.Regency{ID: 7201}},
+	}, nil)
+
+	h := NewRegencyHandler(svc)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/regencies?load_all=true&include_latest_case=true", nil)
+	w := httptest.NewRecorder()
+	h.GetRegencies(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var body struct {
+		Data []map[string]interface{} `json:"data"`
+	}
+	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &body))
+	assert.Len(t, body.Data, 2)
+	assert.Equal(t, "Banggai", body.Data[0]["name"])
+	latest, ok := body.Data[0]["latest_case"].(map[string]interface{})
+	assert.True(t, ok)
+	assert.Equal(t, float64(90), latest["cumulative_positive"])
+	assert.Equal(t, 0.8, latest["rt"])
+	assert.NotContains(t, latest, "regency")
+	assert.Nil(t, body.Data[1]["latest_case"])
+	svc.AssertExpectations(t)
+}
+
+func TestGetRegencies_IncludeLatestCase_Paginated(t *testing.T) {
+	svc := new(MockRegencyService)
+	svc.On("GetRegenciesPaginated", 10, 0).Return([]models.Regency{{ID: 7201, Name: "Banggai"}}, 1, nil)
+	svc.On("GetLatestRegencyCases").Return([]models.RegencyCase{{RegencyID: 7201}}, nil)
+
+	h := NewRegencyHandler(svc)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/regencies?include_latest_case=true", nil)
+	w := httptest.NewRecorder()
+	h.GetRegencies(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), `"latest_case"`)
+	assert.Contains(t, w.Body.String(), `"pagination"`)
+}
+
+func TestGetRegencies_IncludeLatestCase_Error(t *testing.T) {
+	svc := new(MockRegencyService)
+	svc.On("GetRegencies").Return([]models.Regency{{ID: 7201}}, nil)
+	svc.On("GetLatestRegencyCases").Return([]models.RegencyCase{}, errors.New("db error"))
+
+	h := NewRegencyHandler(svc)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/regencies?load_all=true&include_latest_case=true", nil)
+	w := httptest.NewRecorder()
+	h.GetRegencies(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
 }
