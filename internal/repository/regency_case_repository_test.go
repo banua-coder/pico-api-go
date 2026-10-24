@@ -22,7 +22,7 @@ var regencyCaseCols = []string{
 	"date", "reg_id", "reg_name",
 }
 
-// cols for GetLatestByProvinceID (cumulative order differs from GetByRegencyID)
+// cols for GetLatest (cumulative order differs from GetByRegencyID)
 var regencyCaseLatestCols = []string{
 	"id", "day", "regency_id", "positive", "recovered", "deceased",
 	"cumulative_positive", "cumulative_recovered", "cumulative_deceased",
@@ -100,29 +100,36 @@ func TestRegencyCaseRepository_GetByRegencyID_Empty(t *testing.T) {
 	assert.Nil(t, result)
 }
 
-func TestRegencyCaseRepository_GetLatestByProvinceID(t *testing.T) {
+func TestRegencyCaseRepository_GetLatest_AllProvinces(t *testing.T) {
 	repo, mock := setupRegencyCaseRepo(t)
 
+	// No province filter and no args: regencies from several provinces come back.
 	mock.ExpectQuery(`SELECT rc.id`).
-		WithArgs("72%").
-		WillReturnRows(sqlmock.NewRows(regencyCaseLatestCols).AddRow(regencyCaseLatestRow(7201)...))
+		WithArgs().
+		WillReturnRows(sqlmock.NewRows(regencyCaseLatestCols).
+			AddRow(regencyCaseLatestRow(7201)...).
+			AddRow(regencyCaseLatestRow(1101)...))
 
-	result, err := repo.GetLatestByProvinceID(72)
+	result, err := repo.GetLatest()
 	assert.NoError(t, err)
-	assert.Len(t, result, 1)
-	if assert.NotNil(t, result[0].Rt) {
-		assert.Equal(t, 1.2, *result[0].Rt)
-	}
+	assert.Len(t, result, 2)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestRegencyCaseRepository_GetLatestByProvinceID_Error(t *testing.T) {
+func TestRegencyCaseRepository_GetLatest_UsesNonCorrelatedJoin(t *testing.T) {
 	repo, mock := setupRegencyCaseRepo(t)
+	mock.ExpectQuery(`(?s)JOIN \(SELECT regency_id, MAX\(day\) AS day FROM regency_cases\s+WHERE \(positive > 0 OR recovered > 0 OR deceased > 0\)\s+GROUP BY regency_id\) m ON m.regency_id = rc.regency_id AND m.day = rc.day.*ORDER BY reg\.name, reg\.id, rc\.id`).
+		WithArgs().
+		WillReturnRows(sqlmock.NewRows(regencyCaseLatestCols).AddRow(regencyCaseLatestRow(7201)...))
+	got, err := repo.GetLatest()
+	assert.NoError(t, err)
+	assert.Len(t, got, 1)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
 
-	mock.ExpectQuery(`SELECT rc.id`).
-		WithArgs("72%").
-		WillReturnError(errors.New("db error"))
-
-	_, err := repo.GetLatestByProvinceID(72)
+func TestRegencyCaseRepository_GetLatest_Error(t *testing.T) {
+	repo, mock := setupRegencyCaseRepo(t)
+	mock.ExpectQuery(`SELECT rc.id`).WillReturnError(errors.New("db error"))
+	_, err := repo.GetLatest()
 	assert.Error(t, err)
 }
