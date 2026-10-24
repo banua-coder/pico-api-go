@@ -10,15 +10,15 @@ Middleware order: Recovery, Logging, RateLimit, CORS, Gzip, Cache.
 | Behaviour | Detail |
 |---|---|
 | gzip | Sent when `Accept-Encoding` allows gzip (`gzip;q=0` is honoured). Bodies under 1 KB and responses that already set `Content-Encoding` stay as they are. `Vary: Accept-Encoding` is always set. |
-| Cache-Control | 200 responses: `public, max-age=300, stale-while-revalidate=3600`. `/api/v1/health`: `no-store`. Errors carry no cache header. |
+| Cache-Control | 200 responses: `public, max-age=300, stale-while-revalidate=600`. `/api/v1/health`: `no-store`. Errors carry no cache header. |
 | ETag | Weak ETag (`W/"<sha256 prefix>"`) of the uncompressed body. A matching `If-None-Match` returns `304` with no body. |
 
 Config (Go durations, see `.env.example`):
 
 - `HTTP_CACHE_MAX_AGE` (default `5m`). `0` sends `no-cache`, so clients revalidate through the ETag.
-- `HTTP_CACHE_STALE_WHILE_REVALIDATE` (default `1h`). `0` omits the directive.
+- `HTTP_CACHE_STALE_WHILE_REVALIDATE` (default `10m`). `0` omits the directive.
 
-Note: `POST /admin/cache/clear` clears the server cache only. Browsers and CDNs may serve a response for up to `max-age` after a data change.
+Note: `POST /admin/cache/clear` clears the server cache only. Browsers and CDNs may serve a response for up to `max-age` plus `stale-while-revalidate` (15 minutes with the defaults) after a data change. If you front the API with a CDN, set a short `s-maxage` there or purge on clear. Lower `HTTP_CACHE_STALE_WHILE_REVALIDATE` to shrink the window.
 
 ## Fixes (pico-ko0.7)
 
@@ -38,4 +38,13 @@ Not changed: `/provinces/cases` (all provinces) with a date range still ignores 
 
 ## Latest case per regency (pico-ko0.8)
 
-`GET /api/v1/regencies?include_latest_case=true` (works with `load_all=true` and with pagination) adds `latest_case` to each regency, mirroring `/provinces`. It is the flat regency case row (daily `positive`/`recovered`/`deceased`, `cumulative_*`, `rt`, `rt_upper`, `rt_lower`, `date`), or `null` when a regency has none. The latest row is the one with the highest `day` that has any non-zero daily count. Served from the existing cached `GetLatestRegencyCases`.
+`GET /api/v1/regencies?include_latest_case=true` (works with `load_all=true` and with pagination) adds `latest_case` to each regency, mirroring `/provinces`. It is the flat regency case row (daily `positive`/`recovered`/`deceased`, `cumulative_*`, `rt`, `rt_upper`, `rt_lower`, `date`), or `null` when a regency has none. The latest row is the one with the highest `day` that has any non-zero daily count. Served from the cached `GetLatestRegencyCases`, which now covers every regency that has `regency_cases` rows, in any province (earlier it joined only province 72, Sulawesi Tengah; other provinces got `null`).
+
+## Review follow-ups (pico-ko0.14)
+
+| Change | Detail |
+|---|---|
+| `Accept-Encoding` | Parsed per RFC 9110: `q` read with `ParseFloat` (`q=0`, `q=0.0`, `q=0.000` refuse gzip), coding names are case-insensitive, `*` allows gzip unless an explicit `gzip` entry says otherwise, an unparsable `q` refuses gzip. |
+| Paging order | Province case queries end `ORDER BY ... , pc.id DESC`, so sorts on non-unique columns (`positive`, `province_id`, ...) page without repeats or gaps. |
+| Province 404 check | `GetProvinceByID` is cached for found provinces only. Unknown ids are never stored, so random ids cannot grow the cache. |
+| Rate-limit headers on `304` | `X-RateLimit-*` are removed from `304` responses. They describe the request quota at the time of the `200` and would be stale. They are advisory on `200` responses. A `304` still counts against the quota. |

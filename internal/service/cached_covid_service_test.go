@@ -500,6 +500,22 @@ func TestCachedCovidService_GetProvinceByID(t *testing.T) {
 	})
 }
 
+func TestCachedCovidService_GetProvinceByID_DoesNotCacheUnknown(t *testing.T) {
+	mockSvc := new(MockCovidService)
+	c := newTestCache()
+	svc := NewCachedCovidService(mockSvc, c)
+
+	mockSvc.On("GetProvinceByID", "999").Return(nil, nil)
+	for i := 0; i < 3; i++ {
+		p, err := svc.GetProvinceByID("999")
+		assert.NoError(t, err)
+		assert.Nil(t, p)
+	}
+	mockSvc.AssertNumberOfCalls(t, "GetProvinceByID", 3)
+	_, cached := c.Get("province:999")
+	assert.False(t, cached)
+}
+
 func TestCachedCovidService_GetProvincesWithLatestCase(t *testing.T) {
 	mockSvc := new(MockCovidService)
 	c := newTestCache()

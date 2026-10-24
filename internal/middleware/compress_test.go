@@ -164,3 +164,33 @@ func TestGzipAndCache_OverRealServer(t *testing.T) {
 	defer func() { _ = resp2.Body.Close() }()
 	assert.Equal(t, http.StatusNotModified, resp2.StatusCode)
 }
+
+func TestAcceptsGzip(t *testing.T) {
+	cases := map[string]bool{
+		"":                 false,
+		"gzip":             true,
+		"GZIP":             true,
+		"deflate, gzip":    true,
+		"gzip;q=0":         false,
+		"gzip;q=0.0":       false,
+		"gzip;q=0.00":      false,
+		"gzip;q=0.000":     false,
+		"gzip; q=0":        false,
+		"gzip;q=0.5":       true,
+		"gzip;q=1":         true,
+		"gzip;q=abc":       false,
+		"*":                true,
+		"*;q=0":            false,
+		"br, *;q=0.1":      true,
+		"gzip;q=0, *":      false, // explicit gzip beats wildcard
+		"identity":         false,
+		"deflate":          false,
+		"x-gzip":           false,
+		"gzip;level=1;q=0": false,
+	}
+	for in, want := range cases {
+		r := httptest.NewRequest("GET", "/api/v1/x", nil)
+		r.Header.Set("Accept-Encoding", in)
+		assert.Equal(t, want, acceptsGzip(r), "Accept-Encoding: %q", in)
+	}
+}

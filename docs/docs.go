@@ -1036,7 +1036,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "boolean",
-                        "description": "Set true to add a latest_case object (most recent case row, with date and rt) to each regency",
+                        "description": "Set true to add a latest_case object (most recent non-zero case row, with date and rt) to each regency. Covers every regency that has regency_cases rows, in any province; regencies without data get null",
                         "name": "include_latest_case",
                         "in": "query"
                     }
