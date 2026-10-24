@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/banua-coder/pico-api-go/internal/config"
@@ -21,14 +22,34 @@ func isAPIRead(r *http.Request) bool {
 	return (r.Method == http.MethodGet || r.Method == http.MethodHead) && strings.HasPrefix(r.URL.Path, apiPrefix)
 }
 
+// acceptsGzip follows RFC 9110 12.5.3: an explicit gzip entry wins over "*",
+// and a q-value of 0 means "not acceptable". An unparsable q is treated as not acceptable.
 func acceptsGzip(r *http.Request) bool {
+	star, starSeen := false, false
 	for _, part := range strings.Split(r.Header.Get("Accept-Encoding"), ",") {
 		coding, params, _ := strings.Cut(strings.TrimSpace(part), ";")
-		if strings.EqualFold(strings.TrimSpace(coding), "gzip") {
-			return strings.TrimSpace(params) != "q=0" && strings.TrimSpace(params) != "q=0.0"
+		coding = strings.TrimSpace(coding)
+		ok := qValueOK(params)
+		switch {
+		case strings.EqualFold(coding, "gzip"):
+			return ok
+		case coding == "*":
+			star, starSeen = ok, true
 		}
 	}
-	return false
+	return starSeen && star
+}
+
+// qValueOK reports whether the q parameter (default 1) is greater than zero.
+func qValueOK(params string) bool {
+	for _, p := range strings.Split(params, ";") {
+		k, v, found := strings.Cut(strings.TrimSpace(p), "=")
+		if found && strings.EqualFold(strings.TrimSpace(k), "q") {
+			q, err := strconv.ParseFloat(strings.TrimSpace(v), 64)
+			return err == nil && q > 0
+		}
+	}
+	return true
 }
 
 // gzipWriter decides on the first Write whether to compress.
