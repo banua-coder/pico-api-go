@@ -96,7 +96,7 @@ func (r *RegencyCaseRepository) queryLatest() ([]models.RegencyCase, error) {
 			GROUP BY regency_id) m ON m.regency_id = rc.regency_id AND m.day = rc.day
 		JOIN national_cases nc ON rc.day = nc.id
 		JOIN regencies reg ON rc.regency_id = reg.id
-		ORDER BY reg.name`
+		ORDER BY reg.name, reg.id, rc.id`
 
 	rows, err := r.db.Query(query)
 	if err != nil {
